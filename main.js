@@ -2,6 +2,8 @@ import { LoupedeckDevice } from './src/device/LoupedeckDevice.js'
 import { GridLayout } from './src/components/GridLayout.js'
 import { Clock } from './src/components/Clock.js'
 import { Button } from './src/components/Button.js'
+import { VolumeDisplay } from './src/components/VolumeDisplay.js'
+import { VolumeControl } from './src/utils/volumeControl.js'
 import { exec } from 'child_process'
 import { logger } from './src/utils/logger.js'
 
@@ -33,15 +35,21 @@ function launchApp(appName, vibration = null) {
  * メイン処理
  */
 async function main() {
+  let loupedeckDevice = null
+
   try {
     // デバイスに接続
-    const loupedeckDevice = new LoupedeckDevice()
+    loupedeckDevice = new LoupedeckDevice()
     await loupedeckDevice.connect()
 
     logger.info('コンポーネントを配置しています...\n')
 
     // 振動ユーティリティを取得
     const vibration = loupedeckDevice.getVibration()
+
+    // 音量制御を初期化
+    const volumeControl = new VolumeControl()
+    await volumeControl.initialize()
 
     // GridLayoutを作成
     const layout = new GridLayout(loupedeckDevice.getDevice())
@@ -69,12 +77,21 @@ async function main() {
       onClick: () => launchApp('firefox', vibration),
     })
 
-    // コンポーネントをレイアウトに追加
-    layout.addComponents([clock, firefoxButton])
+    // 音量表示（列0, 行0 = 時計と同じ位置、ノブ操作時のみ表示）
+    const volumeDisplay = new VolumeDisplay(0, 0, volumeControl, {
+      cellBgColor: '#1a1a2e',
+      cellBorderColor: '#4a6a8a',
+      barFillColor: '#4a9eff',
+      vibration: vibration,
+    })
+
+    // コンポーネントをレイアウトに追加（音量表示を最後に追加して上に重ねる）
+    layout.addComponents([clock, firefoxButton, volumeDisplay])
 
     logger.info('配置完了:')
     logger.info('  - 時計: (列0, 行0)')
     logger.info('  - Firefoxボタン: (列1, 行0)')
+    logger.info('  - 音量表示: (列0, 行0) ← 時計の位置に重ねて一時表示')
     logger.info('\n(Ctrl+C で終了)\n')
 
     // 自動更新を開始
@@ -88,11 +105,42 @@ async function main() {
     })
     logger.info('タッチイベントハンドラーの登録完了')
 
+    // ノブ回転イベントハンドラー（音量調整）
+    logger.info('ノブ回転イベントハンドラーを登録しています...')
+    loupedeckDevice.on('rotate', async ({ id, delta }) => {
+      logger.info(`🔄 ノブ ${id} 回転: ${delta > 0 ? '+' : ''}${delta}`)
+
+      // knobTL（左上のノブ）のみを音量調整に使用
+      if (id === 'knobTL') {
+        // delta値に基づいて音量を調整（通常 -1 または +1）
+        const step = delta * 5 // 5%ずつ調整
+        const newVolume = await volumeControl.adjustVolume(step)
+
+        logger.info(`🔊 音量を調整: ${newVolume}%`)
+
+        // 音量表示を一時的に表示（2秒間）
+        volumeDisplay.showTemporarily()
+
+        // 軽い振動フィードバック
+        if (vibration) {
+          await vibration.vibratePattern('tap')
+        }
+
+        // 画面を即座に更新して新しい音量を表示
+        await layout.update()
+      }
+    })
+    logger.info('ノブ回転イベントハンドラーの登録完了')
+
     // 終了処理のセットアップ
     loupedeckDevice.setupExitHandlers(async () => {
       logger.debug('自動更新を停止中...')
       layout.stopAutoUpdate(intervalId)
       logger.debug('自動更新を停止しました')
+
+      // VolumeDisplayのクリーンアップ
+      volumeDisplay.cleanup()
+      logger.debug('VolumeDisplayをクリーンアップしました')
     })
   } catch (error) {
     logger.error(`✗ エラーが発生しました: ${error.message}`)
