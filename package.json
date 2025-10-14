@@ -13,6 +13,7 @@
     "start:prod": "NODE_ENV=production tsx main.ts",
     "dev": "LOG_LEVEL=debug tsx watch main.ts",
     "dev:info": "LOG_LEVEL=info tsx watch main.ts",
+    "kill": "./scripts/kill-loupedeck.sh",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write \"**/*.{ts,js,json,md}\"",

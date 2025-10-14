@@ -167,9 +167,17 @@ export class LoupedeckDevice {
         logger.debug('イベントリスナーを削除しました')
       }
 
-      // デバイスのクローズ処理
+      // デバイスのクローズ処理（タイムアウト付き）
       if (typeof this.device.close === 'function') {
-        await this.device.close()
+        await Promise.race([
+          this.device.close(),
+          new Promise((resolve) =>
+            setTimeout(() => {
+              logger.warn('デバイスのクローズがタイムアウトしました')
+              resolve(undefined)
+            }, 3000)
+          ),
+        ])
         logger.debug('device.close() 完了')
       }
 
@@ -178,6 +186,9 @@ export class LoupedeckDevice {
       logger.info('✓ デバイスの切断が完了しました')
     } catch (error: any) {
       logger.error(`デバイスの切断中にエラーが発生しました: ${error.message}`)
+      // エラーが発生してもデバイスをnullにする
+      this.device = null
+      this.vibration = null
     }
   }
 
@@ -198,24 +209,41 @@ export class LoupedeckDevice {
       logger.info(`\n終了シグナルを受信しました (${signal})...`)
 
       try {
-        // クリーンアップコールバックを実行
-        if (cleanupCallback) {
-          logger.debug('クリーンアップコールバックを実行中...')
-          await cleanupCallback()
-        }
+        // 全クリーンアップ処理にタイムアウトを設定（10秒）
+        await Promise.race([
+          (async () => {
+            // クリーンアップコールバックを実行
+            if (cleanupCallback) {
+              logger.debug('クリーンアップコールバックを実行中...')
+              await cleanupCallback()
+            }
 
-        // デバイスを切断
-        await this.disconnect()
+            // デバイスを切断
+            await this.disconnect()
+          })(),
+          new Promise((resolve) =>
+            setTimeout(() => {
+              logger.warn('クリーンアップ処理がタイムアウトしました（強制終了）')
+              resolve(undefined)
+            }, 10000)
+          ),
+        ])
 
         logger.info('✓ 正常に終了しました')
-        process.exit(0)
+
+        // プロセスを終了（setTimeoutで少し遅延させる）
+        setTimeout(() => {
+          process.exit(0)
+        }, 100)
       } catch (error: any) {
         logger.error(`終了処理中にエラーが発生しました: ${error.message}`)
-        process.exit(1)
+        setTimeout(() => {
+          process.exit(1)
+        }, 100)
       }
     }
 
-    // 既存のハンドラーを削除（node --watchでの再起動時の重複を防ぐ）
+    // 既存のハンドラーを削除（tsx watchでの再起動時の重複を防ぐ）
     process.removeAllListeners('SIGINT')
     process.removeAllListeners('SIGTERM')
 
