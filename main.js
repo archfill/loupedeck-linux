@@ -4,14 +4,10 @@ import { Clock } from './src/components/Clock.js'
 import { Button } from './src/components/Button.js'
 import { VolumeDisplay } from './src/components/VolumeDisplay.js'
 import { VolumeControl } from './src/utils/volumeControl.js'
+import { VolumeHandler } from './src/handlers/VolumeHandler.js'
 import { exec } from 'child_process'
 import { logger } from './src/utils/logger.js'
-import {
-  VOLUME_STEP_PERCENT,
-  AUTO_UPDATE_INTERVAL_MS,
-  KNOB_IDS,
-  VIBRATION_PATTERNS,
-} from './src/config/constants.js'
+import { AUTO_UPDATE_INTERVAL_MS, VIBRATION_PATTERNS } from './src/config/constants.js'
 
 /**
  * アプリケーション起動関数
@@ -103,6 +99,9 @@ async function main() {
     // 自動更新を開始
     const intervalId = layout.startAutoUpdate(AUTO_UPDATE_INTERVAL_MS)
 
+    // 音量ハンドラーを作成
+    const volumeHandler = new VolumeHandler(volumeControl, volumeDisplay, layout, vibration)
+
     // タッチイベントハンドラー
     logger.info('タッチイベントハンドラーを登録しています...')
     loupedeckDevice.onTouch(async ({ id, col, row }) => {
@@ -114,57 +113,14 @@ async function main() {
     // ノブ回転イベントハンドラー（音量調整）
     logger.info('ノブ回転イベントハンドラーを登録しています...')
     loupedeckDevice.on('rotate', async ({ id, delta }) => {
-      logger.info(`🔄 ノブ ${id} 回転: ${delta > 0 ? '+' : ''}${delta}`)
-
-      // knobTL（左上のノブ）のみを音量調整に使用
-      if (id === KNOB_IDS.TOP_LEFT) {
-        // delta値に基づいて音量を調整（通常 -1 または +1）
-        const step = delta * VOLUME_STEP_PERCENT
-        const newVolume = await volumeControl.adjustVolume(step)
-
-        logger.info(`🔊 音量を調整: ${newVolume}%`)
-
-        // 音量表示を一時的に表示（2秒間）
-        volumeDisplay.showTemporarily()
-
-        // 軽い振動フィードバック
-        if (vibration) {
-          await vibration.vibratePattern(VIBRATION_PATTERNS.TAP)
-        }
-
-        // 画面を即座に更新して新しい音量を表示
-        await layout.update()
-      }
+      await volumeHandler.handleRotate(id, delta)
     })
     logger.info('ノブ回転イベントハンドラーの登録完了')
 
     // ノブクリックイベントハンドラー（ミュート切り替え）
     logger.info('ノブクリックイベントハンドラーを登録しています...')
     loupedeckDevice.on('down', async ({ id }) => {
-      // knobTL（左上のノブ）クリックでミュート切り替え
-      if (id === KNOB_IDS.TOP_LEFT) {
-        logger.info('🔘 ノブ knobTL クリック - ミュート切り替え')
-
-        // ミュート切り替え
-        const isMuted = await volumeControl.toggleMute()
-
-        // 音量表示を一時的に表示（2秒間）
-        volumeDisplay.showTemporarily()
-
-        // 振動フィードバック
-        if (vibration) {
-          if (isMuted) {
-            await vibration.vibratePattern(VIBRATION_PATTERNS.WARNING)
-          } else {
-            await vibration.vibratePattern(VIBRATION_PATTERNS.SUCCESS)
-          }
-        }
-
-        logger.info(`🔇 ミュート状態: ${isMuted ? 'ON' : 'OFF'}`)
-
-        // 画面を即座に更新
-        await layout.update()
-      }
+      await volumeHandler.handleDown(id)
     })
     logger.info('ノブクリックイベントハンドラーの登録完了')
 
