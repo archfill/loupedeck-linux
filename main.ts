@@ -46,10 +46,19 @@ async function main() {
     loupedeckDevice.showDeviceInfo()
 
     // 物理ボタンのLED色を設定（デバイス初期化を待つ）
-    logger.info('物理ボタンのLED色を設定中...')
-    await new Promise((resolve) => setTimeout(resolve, 500)) // 500ms待機
-    await loupedeckDevice.setButtonColors(BUTTON_LED_COLORS)
-    logger.info('✓ LED色の設定完了\n')
+    // 環境変数 SKIP_LED=true でスキップ可能
+    if (process.env.SKIP_LED !== 'true') {
+      logger.info('物理ボタンのLED色を設定中...')
+      await new Promise((resolve) => setTimeout(resolve, 500)) // 500ms待機
+      try {
+        await loupedeckDevice.setButtonColors(BUTTON_LED_COLORS)
+        logger.info('✓ LED色の設定完了\n')
+      } catch (error: any) {
+        logger.warn(`LED色の設定をスキップしました: ${error.message}\n`)
+      }
+    } else {
+      logger.info('LED色の設定をスキップしました（SKIP_LED=true）\n')
+    }
 
     // 振動ユーティリティを取得
     const vibration = loupedeckDevice.getVibration()

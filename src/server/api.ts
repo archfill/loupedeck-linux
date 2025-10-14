@@ -143,11 +143,11 @@ export class ApiServer {
   stop(): Promise<void> {
     return new Promise((resolve) => {
       if (this.server) {
-        // タイムアウトを設定（5秒）
+        // タイムアウトを設定（2秒）
         const timeout = setTimeout(() => {
           logger.warn('APIサーバーの停止がタイムアウトしました（強制終了）')
           resolve()
-        }, 5000)
+        }, 2000)
 
         this.server.close(() => {
           clearTimeout(timeout)

@@ -175,7 +175,7 @@ export class LoupedeckDevice {
             setTimeout(() => {
               logger.warn('デバイスのクローズがタイムアウトしました')
               resolve(undefined)
-            }, 3000)
+            }, 2000)
           ),
         ])
         logger.debug('device.close() 完了')
@@ -209,7 +209,7 @@ export class LoupedeckDevice {
       logger.info(`\n終了シグナルを受信しました (${signal})...`)
 
       try {
-        // 全クリーンアップ処理にタイムアウトを設定（10秒）
+        // 全クリーンアップ処理にタイムアウトを設定（5秒）
         await Promise.race([
           (async () => {
             // クリーンアップコールバックを実行
@@ -225,21 +225,17 @@ export class LoupedeckDevice {
             setTimeout(() => {
               logger.warn('クリーンアップ処理がタイムアウトしました（強制終了）')
               resolve(undefined)
-            }, 10000)
+            }, 5000)
           ),
         ])
 
         logger.info('✓ 正常に終了しました')
 
-        // プロセスを終了（setTimeoutで少し遅延させる）
-        setTimeout(() => {
-          process.exit(0)
-        }, 100)
+        // プロセスを即座に終了
+        process.exit(0)
       } catch (error: any) {
         logger.error(`終了処理中にエラーが発生しました: ${error.message}`)
-        setTimeout(() => {
-          process.exit(1)
-        }, 100)
+        process.exit(1)
       }
     }
 
@@ -280,10 +276,19 @@ export class LoupedeckDevice {
     }
 
     try {
-      await this.device.setButtonColor({ id: buttonId, color })
+      logger.debug(`ボタン ${buttonId} の色を設定中: ${color}`)
+
+      // タイムアウト付きでLED色を設定（2秒）
+      await Promise.race([
+        this.device.setButtonColor({ id: buttonId, color }),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('タイムアウト')), 2000)
+        ),
+      ])
+
       logger.debug(`ボタン ${buttonId} の色を設定完了: ${color}`)
     } catch (error: any) {
-      logger.error(`ボタン ${buttonId} の色設定に失敗: ${error.message}`)
+      logger.warn(`ボタン ${buttonId} の色設定に失敗（スキップ）: ${error.message}`)
     }
   }
 
