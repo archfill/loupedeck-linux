@@ -7,7 +7,8 @@ import { VolumeControl } from './src/utils/volumeControl.js'
 import { VolumeHandler } from './src/handlers/VolumeHandler.js'
 import { exec } from 'child_process'
 import { logger } from './src/utils/logger.js'
-import { AUTO_UPDATE_INTERVAL_MS, VIBRATION_PATTERNS } from './src/config/constants.js'
+import { AUTO_UPDATE_INTERVAL_MS } from './src/config/constants.js'
+import { clockConfig, firefoxButtonConfig, volumeDisplayConfig } from './src/config/components.js'
 
 /**
  * アプリケーション起動関数
@@ -57,43 +58,41 @@ async function main() {
     const layout = new GridLayout(loupedeckDevice.getDevice())
 
     // 時計コンポーネント（列0, 行0 = 左上）
-    const clock = new Clock(0, 0, {
-      cellBgColor: '#1a1a3e',
-      cellBorderColor: '#4466AA',
-      timeColor: '#FFFFFF',
-      dateColor: '#88AAFF',
-      showSeconds: true,
-    })
+    const clock = new Clock(clockConfig.position.col, clockConfig.position.row, clockConfig.options)
 
     // Firefoxボタン（列1, 行0 = 時計の右）
-    const firefoxButton = new Button(1, 0, {
-      label: 'Firefox',
-      iconImage: 'assets/icons/firefox.png', // 実際のアプリアイコン
-      iconSize: 48, // アイコンサイズ
-      bgColor: '#FF6611',
-      borderColor: '#FF8833',
-      textColor: '#FFFFFF',
-      hoverBgColor: '#FF7722',
-      vibration: vibration, // 振動フィードバック
-      vibrationPattern: VIBRATION_PATTERNS.TAP, // タップパターン
-      onClick: () => launchApp('firefox', vibration),
-    })
+    const firefoxButton = new Button(
+      firefoxButtonConfig.position.col,
+      firefoxButtonConfig.position.row,
+      {
+        ...firefoxButtonConfig.options,
+        vibration: vibration,
+        onClick: () => launchApp(firefoxButtonConfig.command, vibration),
+      }
+    )
 
     // 音量表示（列0, 行0 = 時計と同じ位置、ノブ操作時のみ表示）
-    const volumeDisplay = new VolumeDisplay(0, 0, volumeControl, {
-      cellBgColor: '#1a1a2e',
-      cellBorderColor: '#4a6a8a',
-      barFillColor: '#4a9eff',
-      vibration: vibration,
-    })
+    const volumeDisplay = new VolumeDisplay(
+      volumeDisplayConfig.position.col,
+      volumeDisplayConfig.position.row,
+      volumeControl,
+      {
+        ...volumeDisplayConfig.options,
+        vibration: vibration,
+      }
+    )
 
     // コンポーネントをレイアウトに追加（音量表示を最後に追加して上に重ねる）
     layout.addComponents([clock, firefoxButton, volumeDisplay])
 
     logger.info('配置完了:')
-    logger.info('  - 時計: (列0, 行0)')
-    logger.info('  - Firefoxボタン: (列1, 行0)')
-    logger.info('  - 音量表示: (列0, 行0) ← 時計の位置に重ねて一時表示')
+    logger.info(`  - 時計: (列${clockConfig.position.col}, 行${clockConfig.position.row})`)
+    logger.info(
+      `  - Firefoxボタン: (列${firefoxButtonConfig.position.col}, 行${firefoxButtonConfig.position.row})`
+    )
+    logger.info(
+      `  - 音量表示: (列${volumeDisplayConfig.position.col}, 行${volumeDisplayConfig.position.row}) ← 時計の位置に重ねて一時表示`
+    )
     logger.info('\n(Ctrl+C で終了)\n')
 
     // 自動更新を開始
