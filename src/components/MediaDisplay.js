@@ -35,6 +35,14 @@ export class MediaDisplay {
     // 表示状態管理
     this.visible = false
     this.hideTimer = null
+
+    // メディア情報のキャッシュ
+    this.cachedMetadata = {
+      title: 'メディアなし',
+      artist: '',
+      album: '',
+      status: 'Stopped',
+    }
   }
 
   /**
@@ -42,7 +50,7 @@ export class MediaDisplay {
    * @param {CanvasRenderingContext2D} ctx - Canvas描画コンテキスト
    * @param {Object} cellCoord - セルの座標情報
    */
-  async draw(ctx, cellCoord) {
+  draw(ctx, cellCoord) {
     // 非表示の場合は何も描画しない
     if (!this.visible) {
       return
@@ -50,8 +58,8 @@ export class MediaDisplay {
 
     const { x, y, width, height } = cellCoord
 
-    // 現在のメディア情報を取得
-    const metadata = await this.mediaControl.getMetadata()
+    // キャッシュされたメディア情報を使用
+    const metadata = this.cachedMetadata
 
     // セルの背景
     ctx.fillStyle = this.options.cellBgColor
@@ -64,20 +72,20 @@ export class MediaDisplay {
 
     // レイアウト設定
     const padding = 8
-    const iconSize = 24
-    const topMargin = 8
+    const iconSize = 20
+    const topMargin = 6
 
     // アイコンの位置（一番上）
     const iconY = y + topMargin + iconSize / 2
 
-    // タイトルの位置（アイコンの下）
-    const titleY = iconY + iconSize / 2 + 12
+    // タイトルの位置（アイコンの下、間隔を狭く）
+    const titleY = iconY + iconSize / 2 + 8
 
-    // アーティストの位置（タイトルの下）
-    const artistY = titleY + 12
+    // アーティストの位置（タイトルの下、間隔を狭く）
+    const artistY = titleY + 10
 
-    // ステータスの位置（一番下）
-    const statusY = artistY + 12
+    // ステータスの位置（アーティストの下、間隔を狭く）
+    const statusY = artistY + 10
 
     // アイコン（再生状態に応じて変更）
     ctx.textAlign = 'center'
@@ -98,22 +106,22 @@ export class MediaDisplay {
     // タイトル（アイコンの下）
     ctx.fillStyle = this.options.titleColor
     const title =
-      metadata.title.length > 15 ? metadata.title.substring(0, 15) + '...' : metadata.title
-    autoSizeText(ctx, title, width - padding * 2, 14, 10, 'bold', 'sans-serif')
+      metadata.title.length > 12 ? metadata.title.substring(0, 12) + '...' : metadata.title
+    autoSizeText(ctx, title, width - padding * 2, 12, 9, 'bold', 'sans-serif')
     ctx.fillText(title, x + width / 2, titleY)
 
     // アーティスト（タイトルの下）
     if (metadata.artist) {
       ctx.fillStyle = this.options.artistColor
       const artist =
-        metadata.artist.length > 18 ? metadata.artist.substring(0, 18) + '...' : metadata.artist
-      ctx.font = '10px sans-serif'
+        metadata.artist.length > 15 ? metadata.artist.substring(0, 15) + '...' : metadata.artist
+      ctx.font = '9px sans-serif'
       ctx.fillText(artist, x + width / 2, artistY)
     }
 
     // ステータステキスト（一番下）
     ctx.fillStyle = this.options.statusColor
-    ctx.font = '9px sans-serif'
+    ctx.font = '8px sans-serif'
     const statusText =
       metadata.status === 'Playing'
         ? 'PLAYING'
@@ -135,8 +143,11 @@ export class MediaDisplay {
    * メディア表示を一時的に表示
    * 指定時間後に自動的に非表示になる
    */
-  showTemporarily() {
+  async showTemporarily() {
     logger.debug('MediaDisplay: 一時表示開始')
+
+    // メディア情報を取得してキャッシュ
+    this.cachedMetadata = await this.mediaControl.getMetadata()
 
     // 既存のタイマーをクリア
     if (this.hideTimer) {

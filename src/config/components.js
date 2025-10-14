@@ -71,7 +71,7 @@ export const volumeDisplayConfig = {
  * メディア表示の設定
  */
 export const mediaDisplayConfig = {
-  position: { col: 2, row: 0 },
+  position: { col: 0, row: 1 },
   options: {
     cellBgColor: '#1a1a2e',
     cellBorderColor: '#8a4a6a',

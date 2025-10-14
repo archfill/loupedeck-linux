@@ -114,7 +114,7 @@ async function main() {
       `  - 音量表示: (列${volumeDisplayConfig.position.col}, 行${volumeDisplayConfig.position.row}) ← 時計の位置に重ねて一時表示`
     )
     logger.info(
-      `  - メディア表示: (列${mediaDisplayConfig.position.col}, 行${mediaDisplayConfig.position.row}) ← 1Passwordの位置に重ねて一時表示`
+      `  - メディア表示: (列${mediaDisplayConfig.position.col}, 行${mediaDisplayConfig.position.row}) ← 一時表示`
     )
     logger.info('\n(Ctrl+C で終了)\n')
 
