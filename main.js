@@ -11,7 +11,7 @@ import { MediaHandler } from './src/handlers/MediaHandler.js'
 import { AppLauncher } from './src/utils/appLauncher.js'
 import { IconResolver } from './src/utils/iconResolver.js'
 import { logger } from './src/utils/logger.js'
-import { AUTO_UPDATE_INTERVAL_MS } from './src/config/constants.js'
+import { AUTO_UPDATE_INTERVAL_MS, BUTTON_LED_COLORS } from './src/config/constants.js'
 import {
   clockConfig,
   firefoxButtonConfig,
@@ -38,6 +38,12 @@ async function main() {
 
     // デバイス情報を表示（物理ボタンの確認）
     loupedeckDevice.showDeviceInfo()
+
+    // 物理ボタンのLED色を設定（デバイス初期化を待つ）
+    logger.info('物理ボタンのLED色を設定中...')
+    await new Promise((resolve) => setTimeout(resolve, 500)) // 500ms待機
+    await loupedeckDevice.setButtonColors(BUTTON_LED_COLORS)
+    logger.info('✓ LED色の設定完了\n')
 
     // 振動ユーティリティを取得
     const vibration = loupedeckDevice.getVibration()

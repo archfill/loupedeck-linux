@@ -224,6 +224,37 @@ export class LoupedeckDevice {
   }
 
   /**
+   * 物理ボタンのLED色を設定
+   * @param {number} buttonId - ボタンID (0-3)
+   * @param {string} color - 色（例: 'red', '#FF0000', 'rgb(255,0,0)'）
+   */
+  async setButtonColor(buttonId, color) {
+    if (!this.device) {
+      logger.warn('デバイスが接続されていません')
+      return
+    }
+
+    try {
+      await this.device.setButtonColor({ id: buttonId, color })
+      logger.debug(`ボタン ${buttonId} の色を設定完了: ${color}`)
+    } catch (error) {
+      logger.error(`ボタン ${buttonId} の色設定に失敗: ${error.message}`)
+    }
+  }
+
+  /**
+   * 複数の物理ボタンのLED色を一括設定
+   * @param {Object} colorMap - { buttonId: colorString, ... }
+   */
+  async setButtonColors(colorMap) {
+    for (const [buttonId, color] of Object.entries(colorMap)) {
+      await this.setButtonColor(Number(buttonId), color)
+      // 各ボタン設定の間に少し待機
+      await new Promise((resolve) => setTimeout(resolve, 100))
+    }
+  }
+
+  /**
    * デバイス情報を表示
    */
   showDeviceInfo() {
