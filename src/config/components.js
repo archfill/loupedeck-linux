@@ -81,3 +81,21 @@ export const mediaDisplayConfig = {
     iconColor: '#FF88AA',
   },
 }
+
+/**
+ * ワークスペースセットアップボタンの設定
+ */
+export const workspaceSetupButtonConfig = {
+  position: { col: 1, row: 1 },
+  appName: 'preferences-system', // システム設定アイコン
+  options: {
+    label: 'Setup',
+    iconSize: 48,
+    bgColor: '#00AA55',
+    borderColor: '#22CC77',
+    textColor: '#FFFFFF',
+    hoverBgColor: '#22BB66',
+    vibrationPattern: VIBRATION_PATTERNS.TAP,
+  },
+  command: '/home/archfill/git/loupedeck-linux/scripts/workspace-setup.sh',
+}

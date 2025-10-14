@@ -18,6 +18,7 @@ import {
   onePasswordButtonConfig,
   volumeDisplayConfig,
   mediaDisplayConfig,
+  workspaceSetupButtonConfig,
 } from './src/config/components.js'
 
 /**
@@ -77,6 +78,18 @@ async function main() {
       }
     )
 
+    // ワークスペースセットアップボタン（列1, 行1）
+    const workspaceSetupButton = new Button(
+      workspaceSetupButtonConfig.position.col,
+      workspaceSetupButtonConfig.position.row,
+      {
+        ...workspaceSetupButtonConfig.options,
+        iconImage: IconResolver.resolve(workspaceSetupButtonConfig.appName),
+        vibration: vibration,
+        onClick: () => appLauncher.launch(workspaceSetupButtonConfig.command),
+      }
+    )
+
     // 音量表示（列0, 行0 = 時計と同じ位置、ノブ操作時のみ表示）
     const volumeDisplay = new VolumeDisplay(
       volumeDisplayConfig.position.col,
@@ -100,7 +113,14 @@ async function main() {
     )
 
     // コンポーネントをレイアウトに追加（表示を最後に追加して上に重ねる）
-    layout.addComponents([clock, firefoxButton, onePasswordButton, volumeDisplay, mediaDisplay])
+    layout.addComponents([
+      clock,
+      firefoxButton,
+      onePasswordButton,
+      workspaceSetupButton,
+      volumeDisplay,
+      mediaDisplay,
+    ])
 
     logger.info('配置完了:')
     logger.info(`  - 時計: (列${clockConfig.position.col}, 行${clockConfig.position.row})`)
@@ -109,6 +129,9 @@ async function main() {
     )
     logger.info(
       `  - 1Passwordボタン: (列${onePasswordButtonConfig.position.col}, 行${onePasswordButtonConfig.position.row})`
+    )
+    logger.info(
+      `  - セットアップボタン: (列${workspaceSetupButtonConfig.position.col}, 行${workspaceSetupButtonConfig.position.row})`
     )
     logger.info(
       `  - 音量表示: (列${volumeDisplayConfig.position.col}, 行${volumeDisplayConfig.position.row}) ← 時計の位置に重ねて一時表示`
