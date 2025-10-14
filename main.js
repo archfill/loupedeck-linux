@@ -6,6 +6,12 @@ import { VolumeDisplay } from './src/components/VolumeDisplay.js'
 import { VolumeControl } from './src/utils/volumeControl.js'
 import { exec } from 'child_process'
 import { logger } from './src/utils/logger.js'
+import {
+  VOLUME_STEP_PERCENT,
+  AUTO_UPDATE_INTERVAL_MS,
+  KNOB_IDS,
+  VIBRATION_PATTERNS,
+} from './src/config/constants.js'
 
 /**
  * アプリケーション起動関数
@@ -73,7 +79,7 @@ async function main() {
       textColor: '#FFFFFF',
       hoverBgColor: '#FF7722',
       vibration: vibration, // 振動フィードバック
-      vibrationPattern: 'tap', // タップパターン
+      vibrationPattern: VIBRATION_PATTERNS.TAP, // タップパターン
       onClick: () => launchApp('firefox', vibration),
     })
 
@@ -95,7 +101,7 @@ async function main() {
     logger.info('\n(Ctrl+C で終了)\n')
 
     // 自動更新を開始
-    const intervalId = layout.startAutoUpdate(1000)
+    const intervalId = layout.startAutoUpdate(AUTO_UPDATE_INTERVAL_MS)
 
     // タッチイベントハンドラー
     logger.info('タッチイベントハンドラーを登録しています...')
@@ -111,9 +117,9 @@ async function main() {
       logger.info(`🔄 ノブ ${id} 回転: ${delta > 0 ? '+' : ''}${delta}`)
 
       // knobTL（左上のノブ）のみを音量調整に使用
-      if (id === 'knobTL') {
+      if (id === KNOB_IDS.TOP_LEFT) {
         // delta値に基づいて音量を調整（通常 -1 または +1）
-        const step = delta * 5 // 5%ずつ調整
+        const step = delta * VOLUME_STEP_PERCENT
         const newVolume = await volumeControl.adjustVolume(step)
 
         logger.info(`🔊 音量を調整: ${newVolume}%`)
@@ -123,7 +129,7 @@ async function main() {
 
         // 軽い振動フィードバック
         if (vibration) {
-          await vibration.vibratePattern('tap')
+          await vibration.vibratePattern(VIBRATION_PATTERNS.TAP)
         }
 
         // 画面を即座に更新して新しい音量を表示
@@ -136,7 +142,7 @@ async function main() {
     logger.info('ノブクリックイベントハンドラーを登録しています...')
     loupedeckDevice.on('down', async ({ id }) => {
       // knobTL（左上のノブ）クリックでミュート切り替え
-      if (id === 'knobTL') {
+      if (id === KNOB_IDS.TOP_LEFT) {
         logger.info('🔘 ノブ knobTL クリック - ミュート切り替え')
 
         // ミュート切り替え
@@ -148,9 +154,9 @@ async function main() {
         // 振動フィードバック
         if (vibration) {
           if (isMuted) {
-            await vibration.vibratePattern('warning')
+            await vibration.vibratePattern(VIBRATION_PATTERNS.WARNING)
           } else {
-            await vibration.vibratePattern('success')
+            await vibration.vibratePattern(VIBRATION_PATTERNS.SUCCESS)
           }
         }
 

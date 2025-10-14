@@ -1,5 +1,6 @@
 import { autoSizeText } from '../utils/textUtils.js'
 import { logger } from '../utils/logger.js'
+import { VOLUME_DISPLAY_TIMEOUT_MS } from '../config/constants.js'
 
 /**
  * 音量表示コンポーネント
@@ -27,7 +28,7 @@ export class VolumeDisplay {
       textColor: options.textColor || '#FFFFFF',
       mutedTextColor: options.mutedTextColor || '#888888',
       labelColor: options.labelColor || '#88AAFF',
-      displayTimeout: options.displayTimeout || 2000, // 表示時間（ミリ秒）
+      displayTimeout: options.displayTimeout || VOLUME_DISPLAY_TIMEOUT_MS, // 表示時間（ミリ秒）
     }
 
     // 振動フィードバック
