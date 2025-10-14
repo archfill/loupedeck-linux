@@ -12,6 +12,7 @@ import { AppLauncher } from './src/utils/appLauncher.js'
 import { IconResolver } from './src/utils/iconResolver.js'
 import { logger } from './src/utils/logger.js'
 import { AUTO_UPDATE_INTERVAL_MS, BUTTON_LED_COLORS } from './src/config/constants.js'
+import { ApiServer } from './src/server/api.js'
 import {
   clockConfig,
   firefoxButtonConfig,
@@ -28,8 +29,13 @@ import {
  */
 async function main() {
   let loupedeckDevice = null
+  let apiServer = null
 
   try {
+    // APIサーバーを起動
+    apiServer = new ApiServer(3000)
+    await apiServer.start()
+
     // デバイスに接続
     loupedeckDevice = new LoupedeckDevice()
     await loupedeckDevice.connect()
@@ -237,6 +243,11 @@ async function main() {
       // MediaDisplayのクリーンアップ
       mediaDisplay.cleanup()
       logger.debug('MediaDisplayをクリーンアップしました')
+
+      // APIサーバーを停止
+      if (apiServer) {
+        await apiServer.stop()
+      }
     })
   } catch (error) {
     logger.error(`✗ エラーが発生しました: ${error.message}`)
@@ -245,7 +256,10 @@ async function main() {
     logger.error('2. udevルールが正しく適用されているか確認してください')
     logger.error('3. 公式Loupedeckソフトウェアが動作していないか確認してください')
 
-    // エラー時もデバイスを切断
+    // エラー時もリソースを解放
+    if (apiServer) {
+      await apiServer.stop()
+    }
     if (loupedeckDevice && loupedeckDevice.device) {
       await loupedeckDevice.disconnect()
     }

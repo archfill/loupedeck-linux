@@ -1,8 +1,12 @@
 {
   "name": "loupedeck-linux",
   "version": "1.0.0",
-  "description": "",
+  "description": "Loupedeck Live S Linux controller application with web UI",
+  "private": true,
   "main": "index.js",
+  "workspaces": [
+    "web"
+  ],
   "scripts": {
     "start": "LOG_LEVEL=info node main.js",
     "start:debug": "LOG_LEVEL=debug node main.js",
@@ -13,7 +17,12 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write \"**/*.{js,json,md}\"",
     "format:check": "prettier --check \"**/*.{js,json,md}\"",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev:all": "concurrently \"npm run dev\" \"npm run dev:web\" --names \"backend,web\" --prefix-colors \"cyan,magenta\"",
+    "dev:web": "npm run dev --workspace=web",
+    "build:web": "npm run build --workspace=web",
+    "preview:web": "npm run preview --workspace=web",
+    "install:all": "npm install && npm install --workspaces"
   },
   "keywords": [],
   "author": "",
@@ -21,11 +30,14 @@
   "type": "module",
   "dependencies": {
     "canvas": "^3.2.0",
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
     "loupedeck": "^7.0.3",
     "pino": "^10.0.0",
     "pino-pretty": "^13.1.2"
   },
   "devDependencies": {
+    "concurrently": "^9.2.1",
     "eslint": "^9.37.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.4",
