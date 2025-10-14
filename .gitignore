@@ -35,6 +35,7 @@ coverage/
 
 # Generated files
 loupedeck.service
+loupedeck-tray.desktop
 
 # Cache directories
 .cache/

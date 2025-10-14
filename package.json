@@ -25,6 +25,11 @@
     "service:restart": "./scripts/manage-systemd-service.sh restart",
     "service:status": "./scripts/manage-systemd-service.sh status",
     "service:logs": "./scripts/manage-systemd-service.sh logs",
+    "tray": "tsx tray.ts",
+    "tray:autostart:setup": "./scripts/setup-tray-autostart.sh setup",
+    "tray:autostart:enable": "./scripts/setup-tray-autostart.sh enable",
+    "tray:autostart:disable": "./scripts/setup-tray-autostart.sh disable",
+    "tray:autostart:status": "./scripts/setup-tray-autostart.sh status",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write \"**/*.{ts,js,json,md}\"",
@@ -46,7 +51,8 @@
     "express": "^5.1.0",
     "loupedeck": "^7.0.3",
     "pino": "^10.0.0",
-    "pino-pretty": "^13.1.2"
+    "pino-pretty": "^13.1.2",
+    "systray": "^1.0.5"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",

@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Loupedeck Tray
+Comment=Loupedeck Controller System Tray Application
+Exec={{NPX_PATH}} tsx {{WORKING_DIR}}/tray.ts
+Icon={{WORKING_DIR}}/assets/tray/icon.png
+Terminal=false
+Categories=Utility;
+X-GNOME-Autostart-enabled=true
