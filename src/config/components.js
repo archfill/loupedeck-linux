@@ -48,3 +48,18 @@ export const volumeDisplayConfig = {
     barFillColor: '#4a9eff',
   },
 }
+
+/**
+ * メディア表示の設定
+ */
+export const mediaDisplayConfig = {
+  position: { col: 2, row: 0 },
+  options: {
+    cellBgColor: '#1a1a2e',
+    cellBorderColor: '#8a4a6a',
+    titleColor: '#FFFFFF',
+    artistColor: '#FF88AA',
+    statusColor: '#AAAAAA',
+    iconColor: '#FF88AA',
+  },
+}

@@ -1,0 +1,83 @@
+import { logger } from '../utils/logger.js'
+import { KNOB_IDS, VIBRATION_PATTERNS } from '../config/constants.js'
+
+/**
+ * メディア制御イベントハンドラー
+ * ノブの回転とクリックによるメディア操作を処理
+ */
+export class MediaHandler {
+  /**
+   * @param {MediaControl} mediaControl - メディア制御インスタンス
+   * @param {MediaDisplay} mediaDisplay - メディア表示コンポーネント
+   * @param {GridLayout} layout - グリッドレイアウト
+   * @param {VibrationUtil} vibration - 振動ユーティリティ（オプショナル）
+   */
+  constructor(mediaControl, mediaDisplay, layout, vibration = null) {
+    this.mediaControl = mediaControl
+    this.mediaDisplay = mediaDisplay
+    this.layout = layout
+    this.vibration = vibration
+  }
+
+  /**
+   * ノブ回転イベントを処理（トラック移動）
+   * @param {string} id - ノブID
+   * @param {number} delta - 回転量（-1 または +1）
+   */
+  async handleRotate(id, delta) {
+    logger.info(`🔄 ノブ ${id} 回転: ${delta > 0 ? '+' : ''}${delta}`)
+
+    // knobCL（中央左のノブ）をメディア操作に使用
+    if (id === KNOB_IDS.CENTER_LEFT) {
+      if (delta > 0) {
+        // 時計回り：次のトラック
+        await this.mediaControl.next()
+        logger.info('🎵 次のトラック')
+      } else {
+        // 反時計回り：前のトラック
+        await this.mediaControl.previous()
+        logger.info('🎵 前のトラック')
+      }
+
+      // メディア表示を一時的に表示し、振動フィードバックを実行
+      await this.showMediaWithFeedback(VIBRATION_PATTERNS.TAP)
+    }
+  }
+
+  /**
+   * ノブクリックイベントを処理（再生/一時停止切り替え）
+   * @param {string} id - ノブID
+   */
+  async handleDown(id) {
+    // knobCL（中央左のノブ）クリックで再生/一時停止切り替え
+    if (id === KNOB_IDS.CENTER_LEFT) {
+      logger.info('🔘 ノブ knobCL クリック - 再生/一時停止切り替え')
+
+      // 再生/一時停止切り替え
+      const status = await this.mediaControl.togglePlayPause()
+
+      // 状態に応じた振動パターンで表示
+      const pattern = status === 'Playing' ? VIBRATION_PATTERNS.SUCCESS : VIBRATION_PATTERNS.WARNING
+      await this.showMediaWithFeedback(pattern)
+
+      logger.info(`🎵 状態: ${status}`)
+    }
+  }
+
+  /**
+   * メディア表示を一時的に表示し、振動フィードバックと画面更新を実行
+   * @param {string} pattern - 振動パターン名
+   */
+  async showMediaWithFeedback(pattern = VIBRATION_PATTERNS.TAP) {
+    // メディア表示を一時的に表示（2秒間）
+    this.mediaDisplay.showTemporarily()
+
+    // 振動フィードバック
+    if (this.vibration) {
+      await this.vibration.vibratePattern(pattern)
+    }
+
+    // 画面を即座に更新して新しいメディア情報を表示
+    await this.layout.update()
+  }
+}

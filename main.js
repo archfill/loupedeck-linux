@@ -3,12 +3,20 @@ import { GridLayout } from './src/components/GridLayout.js'
 import { Clock } from './src/components/Clock.js'
 import { Button } from './src/components/Button.js'
 import { VolumeDisplay } from './src/components/VolumeDisplay.js'
+import { MediaDisplay } from './src/components/MediaDisplay.js'
 import { VolumeControl } from './src/utils/volumeControl.js'
+import { MediaControl } from './src/utils/mediaControl.js'
 import { VolumeHandler } from './src/handlers/VolumeHandler.js'
+import { MediaHandler } from './src/handlers/MediaHandler.js'
 import { AppLauncher } from './src/utils/appLauncher.js'
 import { logger } from './src/utils/logger.js'
 import { AUTO_UPDATE_INTERVAL_MS } from './src/config/constants.js'
-import { clockConfig, firefoxButtonConfig, volumeDisplayConfig } from './src/config/components.js'
+import {
+  clockConfig,
+  firefoxButtonConfig,
+  volumeDisplayConfig,
+  mediaDisplayConfig,
+} from './src/config/components.js'
 
 /**
  * メイン処理
@@ -32,6 +40,10 @@ async function main() {
     // 音量制御を初期化
     const volumeControl = new VolumeControl()
     await volumeControl.initialize()
+
+    // メディア制御を初期化
+    const mediaControl = new MediaControl()
+    await mediaControl.initialize()
 
     // GridLayoutを作成
     const layout = new GridLayout(loupedeckDevice.getDevice())
@@ -61,8 +73,19 @@ async function main() {
       }
     )
 
-    // コンポーネントをレイアウトに追加（音量表示を最後に追加して上に重ねる）
-    layout.addComponents([clock, firefoxButton, volumeDisplay])
+    // メディア表示（列2, 行0、ノブ操作時のみ表示）
+    const mediaDisplay = new MediaDisplay(
+      mediaDisplayConfig.position.col,
+      mediaDisplayConfig.position.row,
+      mediaControl,
+      {
+        ...mediaDisplayConfig.options,
+        vibration: vibration,
+      }
+    )
+
+    // コンポーネントをレイアウトに追加（表示を最後に追加して上に重ねる）
+    layout.addComponents([clock, firefoxButton, volumeDisplay, mediaDisplay])
 
     logger.info('配置完了:')
     logger.info(`  - 時計: (列${clockConfig.position.col}, 行${clockConfig.position.row})`)
@@ -72,6 +95,9 @@ async function main() {
     logger.info(
       `  - 音量表示: (列${volumeDisplayConfig.position.col}, 行${volumeDisplayConfig.position.row}) ← 時計の位置に重ねて一時表示`
     )
+    logger.info(
+      `  - メディア表示: (列${mediaDisplayConfig.position.col}, 行${mediaDisplayConfig.position.row}) ← 一時表示`
+    )
     logger.info('\n(Ctrl+C で終了)\n')
 
     // 自動更新を開始
@@ -79,6 +105,9 @@ async function main() {
 
     // 音量ハンドラーを作成
     const volumeHandler = new VolumeHandler(volumeControl, volumeDisplay, layout, vibration)
+
+    // メディアハンドラーを作成
+    const mediaHandler = new MediaHandler(mediaControl, mediaDisplay, layout, vibration)
 
     // タッチイベントハンドラー
     logger.info('タッチイベントハンドラーを登録しています...')
@@ -88,17 +117,19 @@ async function main() {
     })
     logger.info('タッチイベントハンドラーの登録完了')
 
-    // ノブ回転イベントハンドラー（音量調整）
+    // ノブ回転イベントハンドラー（音量調整とメディア操作）
     logger.info('ノブ回転イベントハンドラーを登録しています...')
     loupedeckDevice.on('rotate', async ({ id, delta }) => {
       await volumeHandler.handleRotate(id, delta)
+      await mediaHandler.handleRotate(id, delta)
     })
     logger.info('ノブ回転イベントハンドラーの登録完了')
 
-    // ノブクリックイベントハンドラー（ミュート切り替え）
+    // ノブクリックイベントハンドラー（ミュート切り替えと再生/一時停止）
     logger.info('ノブクリックイベントハンドラーを登録しています...')
     loupedeckDevice.on('down', async ({ id }) => {
       await volumeHandler.handleDown(id)
+      await mediaHandler.handleDown(id)
     })
     logger.info('ノブクリックイベントハンドラーの登録完了')
 
@@ -111,6 +142,10 @@ async function main() {
       // VolumeDisplayのクリーンアップ
       volumeDisplay.cleanup()
       logger.debug('VolumeDisplayをクリーンアップしました')
+
+      // MediaDisplayのクリーンアップ
+      mediaDisplay.cleanup()
+      logger.debug('MediaDisplayをクリーンアップしました')
     })
   } catch (error) {
     logger.error(`✗ エラーが発生しました: ${error.message}`)
