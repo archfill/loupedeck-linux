@@ -1,16 +1,16 @@
 import { exec } from 'child_process'
 import { promisify } from 'util'
-import { logger } from './logger.js'
+import { logger } from './logger.ts'
 
 const execAsync = promisify(exec)
 
 /**
  * オーディオバックエンドの種類
  */
-const AudioBackend = {
-  PIPEWIRE: 'pipewire',
-  PULSEAUDIO: 'pulseaudio',
-  UNKNOWN: 'unknown',
+enum AudioBackend {
+  PIPEWIRE = 'pipewire',
+  PULSEAUDIO = 'pulseaudio',
+  UNKNOWN = 'unknown',
 }
 
 /**
@@ -18,6 +18,11 @@ const AudioBackend = {
  * PipeWire (wpctl) を優先的に使用し、フォールバックとしてPulseAudio (pactl) をサポート
  */
 export class VolumeControl {
+  private backend: AudioBackend
+  private currentVolume: number
+  private isMuted: boolean
+  private initialized: boolean
+
   constructor() {
     this.backend = AudioBackend.UNKNOWN
     this.currentVolume = 100 // パーセント単位
@@ -27,9 +32,9 @@ export class VolumeControl {
 
   /**
    * 利用可能なオーディオバックエンドを検出
-   * @returns {Promise<string>} バックエンドの種類
+   * @returns バックエンドの種類
    */
-  async detectBackend() {
+  async detectBackend(): Promise<AudioBackend> {
     if (this.backend !== AudioBackend.UNKNOWN) {
       return this.backend
     }
@@ -57,9 +62,9 @@ export class VolumeControl {
 
   /**
    * 初期化（バックエンド検出と現在の音量取得）
-   * @returns {Promise<boolean>} 初期化成功
+   * @returns 初期化成功
    */
-  async initialize() {
+  async initialize(): Promise<boolean> {
     if (this.initialized) {
       return true
     }
@@ -80,9 +85,9 @@ export class VolumeControl {
 
   /**
    * 現在の音量を取得
-   * @returns {Promise<number>} 音量（0-100のパーセント値）
+   * @returns 音量（0-100のパーセント値）
    */
-  async getVolume() {
+  async getVolume(): Promise<number> {
     try {
       if (this.backend === AudioBackend.PIPEWIRE) {
         return await this._getVolumePipeWire()
@@ -90,7 +95,7 @@ export class VolumeControl {
         return await this._getVolumePulseAudio()
       }
       return this.currentVolume
-    } catch (error) {
+    } catch (error: any) {
       logger.error(`音量取得エラー: ${error.message}`)
       return this.currentVolume
     }
@@ -100,11 +105,11 @@ export class VolumeControl {
    * PipeWireから音量を取得
    * @private
    */
-  async _getVolumePipeWire() {
+  private async _getVolumePipeWire(): Promise<number> {
     const { stdout } = await execAsync('wpctl get-volume @DEFAULT_AUDIO_SINK@')
     // 出力例: "Volume: 0.50" または "Volume: 0.50 [MUTED]"
     const match = stdout.match(/Volume:\s+([\d.]+)/)
-    if (match) {
+    if (match && match[1]) {
       const volume = Math.round(parseFloat(match[1]) * 100)
       this.currentVolume = volume
       this.isMuted = stdout.includes('[MUTED]')
@@ -118,11 +123,11 @@ export class VolumeControl {
    * PulseAudioから音量を取得
    * @private
    */
-  async _getVolumePulseAudio() {
+  private async _getVolumePulseAudio(): Promise<number> {
     const { stdout } = await execAsync('pactl get-sink-volume @DEFAULT_SINK@')
     // 出力例: "Volume: front-left: 32768 /  50% / -18.06 dB,   front-right: 32768 /  50% / -18.06 dB"
     const match = stdout.match(/(\d+)%/)
-    if (match) {
+    if (match && match[1]) {
       const volume = parseInt(match[1], 10)
       this.currentVolume = volume
       logger.debug(`音量取得（PulseAudio）: ${volume}%`)
@@ -133,10 +138,10 @@ export class VolumeControl {
 
   /**
    * 音量を設定
-   * @param {number} volume - 音量（0-100のパーセント値）
-   * @returns {Promise<boolean>} 成功したか
+   * @param volume - 音量（0-100のパーセント値）
+   * @returns 成功したか
    */
-  async setVolume(volume) {
+  async setVolume(volume: number): Promise<boolean> {
     // 0-100の範囲に制限
     const clampedVolume = Math.max(0, Math.min(100, Math.round(volume)))
 
@@ -152,7 +157,7 @@ export class VolumeControl {
       this.currentVolume = clampedVolume
       logger.debug(`音量設定: ${clampedVolume}%`)
       return true
-    } catch (error) {
+    } catch (error: any) {
       logger.error(`音量設定エラー: ${error.message}`)
       return false
     }
@@ -162,7 +167,7 @@ export class VolumeControl {
    * PipeWireで音量を設定
    * @private
    */
-  async _setVolumePipeWire(volume) {
+  private async _setVolumePipeWire(volume: number): Promise<void> {
     const volumeDecimal = (volume / 100).toFixed(2)
     await execAsync(`wpctl set-volume @DEFAULT_AUDIO_SINK@ ${volumeDecimal}`)
   }
@@ -171,16 +176,16 @@ export class VolumeControl {
    * PulseAudioで音量を設定
    * @private
    */
-  async _setVolumePulseAudio(volume) {
+  private async _setVolumePulseAudio(volume: number): Promise<void> {
     await execAsync(`pactl set-sink-volume @DEFAULT_SINK@ ${volume}%`)
   }
 
   /**
    * 音量を相対的に変更
-   * @param {number} delta - 変更量（正の値で増加、負の値で減少）
-   * @returns {Promise<number>} 新しい音量
+   * @param delta - 変更量（正の値で増加、負の値で減少）
+   * @returns 新しい音量
    */
-  async adjustVolume(delta) {
+  async adjustVolume(delta: number): Promise<number> {
     const newVolume = this.currentVolume + delta
     await this.setVolume(newVolume)
     return this.currentVolume
@@ -188,27 +193,27 @@ export class VolumeControl {
 
   /**
    * 音量を増やす
-   * @param {number} step - 増やす量（デフォルト: 5）
-   * @returns {Promise<number>} 新しい音量
+   * @param step - 増やす量（デフォルト: 5）
+   * @returns 新しい音量
    */
-  async increaseVolume(step = 5) {
+  async increaseVolume(step: number = 5): Promise<number> {
     return await this.adjustVolume(step)
   }
 
   /**
    * 音量を減らす
-   * @param {number} step - 減らす量（デフォルト: 5）
-   * @returns {Promise<number>} 新しい音量
+   * @param step - 減らす量（デフォルト: 5）
+   * @returns 新しい音量
    */
-  async decreaseVolume(step = 5) {
+  async decreaseVolume(step: number = 5): Promise<number> {
     return await this.adjustVolume(-step)
   }
 
   /**
    * ミュート/ミュート解除をトグル
-   * @returns {Promise<boolean>} ミュート状態
+   * @returns ミュート状態
    */
-  async toggleMute() {
+  async toggleMute(): Promise<boolean> {
     try {
       if (this.backend === AudioBackend.PIPEWIRE) {
         await execAsync('wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle')
@@ -221,7 +226,7 @@ export class VolumeControl {
       this.isMuted = !this.isMuted
       logger.info(`ミュート: ${this.isMuted ? 'ON' : 'OFF'}`)
       return this.isMuted
-    } catch (error) {
+    } catch (error: any) {
       logger.error(`ミュート切り替えエラー: ${error.message}`)
       return this.isMuted
     }
@@ -229,17 +234,17 @@ export class VolumeControl {
 
   /**
    * 現在の音量を取得（キャッシュ値）
-   * @returns {number} 音量（0-100）
+   * @returns 音量（0-100）
    */
-  getCurrentVolume() {
+  getCurrentVolume(): number {
     return this.currentVolume
   }
 
   /**
    * ミュート状態を取得
-   * @returns {boolean} ミュート中かどうか
+   * @returns ミュート中かどうか
    */
-  getIsMuted() {
+  getIsMuted(): boolean {
     return this.isMuted
   }
 }

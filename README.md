@@ -20,9 +20,9 @@ Linux用のLoupedeck Live Sコントローラーアプリケーションです�
 ```
 loupedeck-linux/
 ├── main.js                 # メインエントリーポイント
-├── src/                    # バックエンドソースコード
+├── src/                    # バックエンドソースコード（JavaScript + TypeScript）
 │   ├── components/        # UI コンポーネント（Clock, Button等）
-│   ├── config/            # 設定ファイル（components.js, constants.js）
+│   ├── config/            # 設定ファイル（components.ts, constants.ts） ✨ TypeScript
 │   ├── device/            # デバイス制御（LoupedeckDevice）
 │   ├── handlers/          # イベントハンドラー（Volume, Media）
 │   ├── server/            # Express API サーバー
@@ -163,6 +163,9 @@ npm run build:web
 # Web UIプレビュー
 npm run preview:web
 
+# TypeScript型チェック
+npx tsc --noEmit
+
 # リンター
 npm run lint
 npm run lint:fix
@@ -224,11 +227,16 @@ npm run format:check
 
 ### コンポーネント設定
 
-`src/config/components.js` でボタンの位置、ラベル、色、アイコン、コマンドを設定できます。
+`src/config/components.ts` でボタンの位置、ラベル、色、アイコン、コマンドを設定できます。
+
+**TypeScript型定義により、設定ミスを防止**：
+- `ButtonConfig`型で必須フィールドを強制
+- 位置（col, row）は`Position`型で型安全
+- 振動パターンは`VibrationPattern`型でリテラル値のみ許可
 
 例：
-```javascript
-export const firefoxButtonConfig = {
+```typescript
+export const firefoxButtonConfig: ButtonConfig = {
   position: { col: 1, row: 0 },
   appName: 'firefox',
   command: 'firefox',
@@ -236,14 +244,15 @@ export const firefoxButtonConfig = {
     label: 'Firefox',
     iconSize: 48,
     bgColor: '#FF7139',
-    fontSize: 12,
+    vibrationPattern: VIBRATION_PATTERNS.TAP,
+    // ... その他のオプション
   },
 }
 ```
 
 ### システム定数
 
-`src/config/constants.js` で以下を設定：
+`src/config/constants.ts` で以下を設定：
 - 自動更新間隔
 - 音量ステップ
 - 表示タイムアウト

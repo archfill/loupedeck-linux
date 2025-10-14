@@ -1,14 +1,91 @@
-import { VIBRATION_PATTERNS } from './constants.js'
+import { VIBRATION_PATTERNS, type VibrationPattern } from './constants.js'
 
 /**
  * コンポーネント設定
  * 各コンポーネントの位置とオプションを定義
  */
 
+// ========================================
+// 型定義
+// ========================================
+
+/** グリッド上の位置 */
+export interface Position {
+  col: number
+  row: number
+}
+
+/** 時計コンポーネントのオプション */
+export interface ClockOptions {
+  cellBgColor: string
+  cellBorderColor: string
+  timeColor: string
+  dateColor: string
+  showSeconds: boolean
+}
+
+/** 時計コンポーネントの設定 */
+export interface ClockConfig {
+  position: Position
+  options: ClockOptions
+}
+
+/** ボタンコンポーネントのオプション */
+export interface ButtonOptions {
+  label: string
+  iconSize: number
+  bgColor: string
+  borderColor: string
+  textColor: string
+  hoverBgColor: string
+  vibrationPattern: VibrationPattern
+}
+
+/** ボタンコンポーネントの設定 */
+export interface ButtonConfig {
+  position: Position
+  appName: string
+  options: ButtonOptions
+  command: string
+}
+
+/** 音量表示のオプション */
+export interface VolumeDisplayOptions {
+  cellBgColor: string
+  cellBorderColor: string
+  barFillColor: string
+}
+
+/** 音量表示の設定 */
+export interface VolumeDisplayConfig {
+  position: Position
+  options: VolumeDisplayOptions
+}
+
+/** メディア表示のオプション */
+export interface MediaDisplayOptions {
+  cellBgColor: string
+  cellBorderColor: string
+  titleColor: string
+  artistColor: string
+  statusColor: string
+  iconColor: string
+}
+
+/** メディア表示の設定 */
+export interface MediaDisplayConfig {
+  position: Position
+  options: MediaDisplayOptions
+}
+
+// ========================================
+// 設定値
+// ========================================
+
 /**
  * 時計コンポーネントの設定
  */
-export const clockConfig = {
+export const clockConfig: ClockConfig = {
   position: { col: 0, row: 0 },
   options: {
     cellBgColor: '#1a1a3e',
@@ -22,7 +99,7 @@ export const clockConfig = {
 /**
  * Firefoxボタンの設定
  */
-export const firefoxButtonConfig = {
+export const firefoxButtonConfig: ButtonConfig = {
   position: { col: 1, row: 0 },
   appName: 'firefox', // IconResolverで自動解決
   options: {
@@ -40,7 +117,7 @@ export const firefoxButtonConfig = {
 /**
  * 1Passwordボタンの設定
  */
-export const onePasswordButtonConfig = {
+export const onePasswordButtonConfig: ButtonConfig = {
   position: { col: 2, row: 0 },
   appName: '1password', // IconResolverで自動解決
   options: {
@@ -58,7 +135,7 @@ export const onePasswordButtonConfig = {
 /**
  * Thunderbirdボタンの設定
  */
-export const thunderbirdButtonConfig = {
+export const thunderbirdButtonConfig: ButtonConfig = {
   position: { col: 3, row: 0 },
   appName: 'thunderbird', // IconResolverで自動解決
   options: {
@@ -76,7 +153,7 @@ export const thunderbirdButtonConfig = {
 /**
  * 音量表示の設定
  */
-export const volumeDisplayConfig = {
+export const volumeDisplayConfig: VolumeDisplayConfig = {
   position: { col: 0, row: 0 },
   options: {
     cellBgColor: '#1a1a2e',
@@ -88,7 +165,7 @@ export const volumeDisplayConfig = {
 /**
  * メディア表示の設定
  */
-export const mediaDisplayConfig = {
+export const mediaDisplayConfig: MediaDisplayConfig = {
   position: { col: 0, row: 1 },
   options: {
     cellBgColor: '#1a1a2e',
@@ -103,7 +180,7 @@ export const mediaDisplayConfig = {
 /**
  * ワークスペースセットアップボタンの設定
  */
-export const workspaceSetupButtonConfig = {
+export const workspaceSetupButtonConfig: ButtonConfig = {
   position: { col: 0, row: 1 },
   appName: 'preferences-system', // システム設定アイコン
   options: {
@@ -121,7 +198,7 @@ export const workspaceSetupButtonConfig = {
 /**
  * 1Passwordロック解除ボタンの設定
  */
-export const onePasswordUnlockButtonConfig = {
+export const onePasswordUnlockButtonConfig: ButtonConfig = {
   position: { col: 2, row: 1 },
   appName: 'security-high', // セキュリティ・鍵アイコン
   options: {

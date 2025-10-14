@@ -1,4 +1,4 @@
-import { logger } from './logger.js'
+import { logger } from './logger.ts'
 
 /**
  * 振動パターン定義
@@ -29,22 +29,27 @@ export const VibrationPatterns = {
 
   // 通知 - 何かを知らせる時
   notification: [50, 100, 50, 100, 50],
-}
+} as const
+
+export type VibrationPatternName = keyof typeof VibrationPatterns
 
 /**
  * 振動ユーティリティクラス
  */
 export class VibrationUtil {
-  constructor(device) {
+  private device: any // TODO: Loupedeck型を定義
+  private enabled: boolean
+
+  constructor(device: any) {
     this.device = device
     this.enabled = true
   }
 
   /**
    * 振動を実行
-   * @param {Array<number>} pattern - 振動パターン
+   * @param pattern - 振動パターン
    */
-  async vibrate(pattern) {
+  async vibrate(pattern: readonly number[]): Promise<void> {
     if (!this.enabled || !this.device) {
       return
     }
@@ -52,17 +57,17 @@ export class VibrationUtil {
     try {
       await this.device.vibrate(pattern)
       logger.debug(`振動実行: [${pattern.join(', ')}]`)
-    } catch (error) {
+    } catch (error: any) {
       logger.warn(`振動の実行に失敗しました: ${error.message}`)
     }
   }
 
   /**
    * 定義済みパターンで振動
-   * @param {string} patternName - パターン名（'tap', 'success', 'error'など）
+   * @param patternName - パターン名（'tap', 'success', 'error'など）
    */
-  async vibratePattern(patternName) {
-    const pattern = VibrationPatterns[patternName]
+  async vibratePattern(patternName: VibrationPatternName | string): Promise<void> {
+    const pattern = VibrationPatterns[patternName as VibrationPatternName]
     if (!pattern) {
       logger.warn(`未定義の振動パターン: ${patternName}`)
       return
@@ -73,18 +78,18 @@ export class VibrationUtil {
 
   /**
    * 振動の有効/無効を切り替え
-   * @param {boolean} enabled - 有効にするか
+   * @param enabled - 有効にするか
    */
-  setEnabled(enabled) {
+  setEnabled(enabled: boolean): void {
     this.enabled = enabled
     logger.info(`振動: ${enabled ? '有効' : '無効'}`)
   }
 
   /**
    * 振動が有効かどうか
-   * @returns {boolean}
+   * @returns 有効かどうか
    */
-  isEnabled() {
+  isEnabled(): boolean {
     return this.enabled
   }
 }

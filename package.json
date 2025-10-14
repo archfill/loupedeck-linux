@@ -8,15 +8,15 @@
     "web"
   ],
   "scripts": {
-    "start": "LOG_LEVEL=info node main.js",
-    "start:debug": "LOG_LEVEL=debug node main.js",
-    "start:prod": "NODE_ENV=production node main.js",
-    "dev": "LOG_LEVEL=debug node --watch main.js",
-    "dev:info": "LOG_LEVEL=info node --watch main.js",
+    "start": "LOG_LEVEL=info tsx main.ts",
+    "start:debug": "LOG_LEVEL=debug tsx main.ts",
+    "start:prod": "NODE_ENV=production tsx main.ts",
+    "dev": "LOG_LEVEL=debug tsx watch main.ts",
+    "dev:info": "LOG_LEVEL=info tsx watch main.ts",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "format": "prettier --write \"**/*.{js,json,md}\"",
-    "format:check": "prettier --check \"**/*.{js,json,md}\"",
+    "format": "prettier --write \"**/*.{ts,js,json,md}\"",
+    "format:check": "prettier --check \"**/*.{ts,js,json,md}\"",
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev:all": "concurrently \"npm run dev\" \"npm run dev:web\" --names \"backend,web\" --prefix-colors \"cyan,magenta\"",
     "dev:web": "npm run dev --workspace=web",
@@ -37,10 +37,15 @@
     "pino-pretty": "^13.1.2"
   },
   "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.3",
+    "@types/node": "^24.7.2",
     "concurrently": "^9.2.1",
     "eslint": "^9.37.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.4",
-    "prettier": "^3.6.2"
+    "prettier": "^3.6.2",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.3"
   }
 }

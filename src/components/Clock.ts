@@ -1,16 +1,47 @@
-import { autoSizeText, formatDate, formatTime } from '../utils/textUtils.js'
+import { autoSizeText, formatDate, formatTime } from '../utils/textUtils.ts'
+
+/**
+ * Canvas描画コンテキストの型
+ */
+type CanvasRenderingContext2D = any
+
+/**
+ * セル座標
+ */
+interface CellCoord {
+  x: number
+  y: number
+  width: number
+  height: number
+}
+
+/**
+ * 時計コンポーネントのオプション
+ */
+interface ClockOptions {
+  cellBgColor?: string
+  cellBorderColor?: string
+  timeColor?: string
+  dateColor?: string
+  showSeconds?: boolean
+  gridColor?: string
+}
 
 /**
  * 時計コンポーネント
  * 指定されたセルに現在時刻と日付を表示
  */
 export class Clock {
+  col: number
+  row: number
+  private options: Required<ClockOptions>
+
   /**
-   * @param {number} col - 表示する列番号
-   * @param {number} row - 表示する行番号
-   * @param {Object} options - オプション設定
+   * @param col - 表示する列番号
+   * @param row - 表示する行番号
+   * @param options - オプション設定
    */
-  constructor(col = 0, row = 0, options = {}) {
+  constructor(col: number = 0, row: number = 0, options: ClockOptions = {}) {
     this.col = col
     this.row = row
 
@@ -27,10 +58,10 @@ export class Clock {
 
   /**
    * セルに時計を描画
-   * @param {CanvasRenderingContext2D} ctx - Canvas描画コンテキスト
-   * @param {Object} cellCoord - セルの座標情報
+   * @param ctx - Canvas描画コンテキスト
+   * @param cellCoord - セルの座標情報
    */
-  draw(ctx, cellCoord) {
+  draw(ctx: CanvasRenderingContext2D, cellCoord: CellCoord): void {
     const now = new Date()
     const timeStr = formatTime(now, this.options.showSeconds)
     const dateStr = formatDate(now)
@@ -65,9 +96,9 @@ export class Clock {
 
   /**
    * 位置を取得
-   * @returns {Object} { col, row }
+   * @returns { col, row }
    */
-  getPosition() {
+  getPosition(): { col: number; row: number } {
     return { col: this.col, row: this.row }
   }
 }

@@ -1,12 +1,36 @@
 /**
+ * Canvas描画コンテキストの型
+ */
+type CanvasRenderingContext2D = any
+
+/**
+ * セル座標
+ */
+export interface CellCoord {
+  x: number
+  y: number
+  width: number
+  height: number
+}
+
+/**
  * Loupedeck画面の基底クラス
  * グリッド描画と画面全体の管理を担当
  */
 export class Screen {
+  protected device: any // TODO: Loupedeck型を定義
+  protected screenWidth: number
+  protected screenHeight: number
+  protected keySize: number
+  protected columns: number
+  protected rows: number
+  protected totalWidth: number
+  protected marginX: number
+
   /**
-   * @param {Object} device - Loupedeckデバイスオブジェクト
+   * @param device - Loupedeckデバイスオブジェクト
    */
-  constructor(device) {
+  constructor(device: any) {
     this.device = device
     this.screenWidth = device.displays.center.width
     this.screenHeight = device.displays.center.height
@@ -19,10 +43,10 @@ export class Screen {
 
   /**
    * グリッドを描画
-   * @param {CanvasRenderingContext2D} ctx - Canvas描画コンテキスト
-   * @param {string} strokeColor - グリッド線の色
+   * @param ctx - Canvas描画コンテキスト
+   * @param strokeColor - グリッド線の色
    */
-  drawGrid(ctx, strokeColor = '#222222') {
+  drawGrid(ctx: CanvasRenderingContext2D, strokeColor: string = '#222222'): void {
     ctx.strokeStyle = strokeColor
     ctx.lineWidth = 1
 
@@ -37,11 +61,11 @@ export class Screen {
 
   /**
    * セルの座標を計算
-   * @param {number} col - 列番号
-   * @param {number} row - 行番号
-   * @returns {Object} { x, y, width, height }
+   * @param col - 列番号
+   * @param row - 行番号
+   * @returns { x, y, width, height }
    */
-  getCellCoordinates(col, row) {
+  getCellCoordinates(col: number, row: number): CellCoord {
     return {
       x: this.marginX + col * this.keySize,
       y: row * this.keySize,
@@ -52,19 +76,19 @@ export class Screen {
 
   /**
    * 背景をクリア
-   * @param {CanvasRenderingContext2D} ctx - Canvas描画コンテキスト
-   * @param {string} bgColor - 背景色
+   * @param ctx - Canvas描画コンテキスト
+   * @param bgColor - 背景色
    */
-  clearBackground(ctx, bgColor = '#000000') {
+  clearBackground(ctx: CanvasRenderingContext2D, bgColor: string = '#000000'): void {
     ctx.fillStyle = bgColor
     ctx.fillRect(0, 0, this.screenWidth, this.screenHeight)
   }
 
   /**
    * 画面全体を描画（サブクラスでオーバーライド）
-   * @param {CanvasRenderingContext2D} ctx - Canvas描画コンテキスト
+   * @param ctx - Canvas描画コンテキスト
    */
-  draw(ctx) {
+  draw(ctx: CanvasRenderingContext2D): void {
     this.clearBackground(ctx)
     this.drawGrid(ctx)
   }
@@ -72,8 +96,8 @@ export class Screen {
   /**
    * 画面を更新
    */
-  async update() {
-    await this.device.drawScreen('center', (ctx) => {
+  async update(): Promise<void> {
+    await this.device.drawScreen('center', (ctx: CanvasRenderingContext2D) => {
       this.draw(ctx)
     })
   }

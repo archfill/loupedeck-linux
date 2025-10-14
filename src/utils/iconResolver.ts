@@ -1,24 +1,24 @@
 import { existsSync } from 'fs'
-import { logger } from './logger.js'
+import { logger } from './logger.ts'
 
 /**
  * アイコン解決ユーティリティ
  * アプリ名から自動的にシステムアイコンのパスを探す
  */
 export class IconResolver {
-  static cache = new Map()
+  private static cache = new Map<string, string | null>()
 
   /**
    * アプリ名からアイコンパスを解決
-   * @param {string} appName - アプリケーション名（例: 'firefox', '1password'）
-   * @param {number} preferredSize - 優先サイズ（デフォルト: 64）
-   * @returns {string|null} アイコンパス、または見つからない場合はnull
+   * @param appName - アプリケーション名（例: 'firefox', '1password'）
+   * @param preferredSize - 優先サイズ（デフォルト: 64）
+   * @returns アイコンパス、または見つからない場合はnull
    */
-  static resolve(appName, preferredSize = 64) {
+  static resolve(appName: string, preferredSize: number = 64): string | null {
     // キャッシュをチェック
     const cacheKey = `${appName}-${preferredSize}`
     if (this.cache.has(cacheKey)) {
-      return this.cache.get(cacheKey)
+      return this.cache.get(cacheKey) || null
     }
 
     // 検索パスのリスト（優先順位順）
@@ -58,11 +58,11 @@ export class IconResolver {
 
   /**
    * 複数のアプリ名を試してアイコンを解決
-   * @param {string[]} appNames - アプリ名の候補リスト
-   * @param {number} preferredSize - 優先サイズ（デフォルト: 64）
-   * @returns {string|null} アイコンパス、または見つからない場合はnull
+   * @param appNames - アプリ名の候補リスト
+   * @param preferredSize - 優先サイズ（デフォルト: 64）
+   * @returns アイコンパス、または見つからない場合はnull
    */
-  static resolveMultiple(appNames, preferredSize = 64) {
+  static resolveMultiple(appNames: string[], preferredSize: number = 64): string | null {
     for (const appName of appNames) {
       const iconPath = this.resolve(appName, preferredSize)
       if (iconPath) {
@@ -75,16 +75,16 @@ export class IconResolver {
   /**
    * キャッシュをクリア
    */
-  static clearCache() {
+  static clearCache(): void {
     this.cache.clear()
     logger.debug('IconResolver: キャッシュをクリアしました')
   }
 
   /**
    * キャッシュの状態を取得（デバッグ用）
-   * @returns {Object} キャッシュの内容
+   * @returns キャッシュの内容
    */
-  static getCacheStatus() {
+  static getCacheStatus(): { size: number; entries: [string, string | null][] } {
     return {
       size: this.cache.size,
       entries: Array.from(this.cache.entries()),

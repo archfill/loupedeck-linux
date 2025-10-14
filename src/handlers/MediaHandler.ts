@@ -1,18 +1,23 @@
 import { logger } from '../utils/logger.js'
-import { KNOB_IDS, VIBRATION_PATTERNS } from '../config/constants.js'
+import { KNOB_IDS, VIBRATION_PATTERNS, type VibrationPattern } from '../config/constants.ts'
 
 /**
  * メディア制御イベントハンドラー
  * ノブの回転とクリックによるメディア操作を処理
  */
 export class MediaHandler {
+  private mediaControl: any // TODO: MediaControl型を定義
+  private mediaDisplay: any // TODO: MediaDisplay型を定義
+  private layout: any // TODO: GridLayout型を定義
+  private vibration: any | null // TODO: VibrationUtil型を定義
+
   /**
-   * @param {MediaControl} mediaControl - メディア制御インスタンス
-   * @param {MediaDisplay} mediaDisplay - メディア表示コンポーネント
-   * @param {GridLayout} layout - グリッドレイアウト
-   * @param {VibrationUtil} vibration - 振動ユーティリティ（オプショナル）
+   * @param mediaControl - メディア制御インスタンス
+   * @param mediaDisplay - メディア表示コンポーネント
+   * @param layout - グリッドレイアウト
+   * @param vibration - 振動ユーティリティ（オプショナル）
    */
-  constructor(mediaControl, mediaDisplay, layout, vibration = null) {
+  constructor(mediaControl: any, mediaDisplay: any, layout: any, vibration: any = null) {
     this.mediaControl = mediaControl
     this.mediaDisplay = mediaDisplay
     this.layout = layout
@@ -21,10 +26,10 @@ export class MediaHandler {
 
   /**
    * ノブ回転イベントを処理（トラック移動）
-   * @param {string} id - ノブID
-   * @param {number} delta - 回転量（-1 または +1）
+   * @param id - ノブID
+   * @param delta - 回転量（-1 または +1）
    */
-  async handleRotate(id, delta) {
+  async handleRotate(id: string, delta: number): Promise<void> {
     logger.info(`🔄 ノブ ${id} 回転: ${delta > 0 ? '+' : ''}${delta}`)
 
     // knobCL（中央左のノブ）をメディア操作に使用
@@ -46,9 +51,9 @@ export class MediaHandler {
 
   /**
    * ノブクリックイベントを処理（再生/一時停止切り替え）
-   * @param {string} id - ノブID
+   * @param id - ノブID
    */
-  async handleDown(id) {
+  async handleDown(id: string): Promise<void> {
     // knobCL（中央左のノブ）クリックで再生/一時停止切り替え
     if (id === KNOB_IDS.CENTER_LEFT) {
       logger.info('🔘 ノブ knobCL クリック - 再生/一時停止切り替え')
@@ -66,9 +71,11 @@ export class MediaHandler {
 
   /**
    * メディア表示を一時的に表示し、振動フィードバックと画面更新を実行
-   * @param {string} pattern - 振動パターン名
+   * @param pattern - 振動パターン名
    */
-  async showMediaWithFeedback(pattern = VIBRATION_PATTERNS.TAP) {
+  private async showMediaWithFeedback(
+    pattern: VibrationPattern = VIBRATION_PATTERNS.TAP
+  ): Promise<void> {
     // メディア表示を一時的に表示（2秒間）
     this.mediaDisplay.showTemporarily()
 

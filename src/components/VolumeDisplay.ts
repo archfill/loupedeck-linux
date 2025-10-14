@@ -1,19 +1,58 @@
-import { autoSizeText } from '../utils/textUtils.js'
-import { logger } from '../utils/logger.js'
-import { VOLUME_DISPLAY_TIMEOUT_MS } from '../config/constants.js'
+import { autoSizeText } from '../utils/textUtils.ts'
+import { logger } from '../utils/logger.ts'
+import { VOLUME_DISPLAY_TIMEOUT_MS } from '../config/constants.ts'
+import type { VolumeControl } from '../utils/volumeControl.ts'
+import type { VibrationUtil } from '../utils/vibration.ts'
+import type { CellCoord } from './Screen.ts'
+
+/**
+ * Canvas描画コンテキストの型
+ */
+type CanvasRenderingContext2D = any
+
+/**
+ * 音量表示のオプション
+ */
+interface VolumeDisplayOptions {
+  cellBgColor?: string
+  cellBorderColor?: string
+  barBgColor?: string
+  barFillColor?: string
+  barFillColorMuted?: string
+  textColor?: string
+  mutedTextColor?: string
+  labelColor?: string
+  displayTimeout?: number
+  vibration?: VibrationUtil | null
+}
 
 /**
  * 音量表示コンポーネント
  * 現在の音量をビジュアルバーとパーセンテージで表示
  */
 export class VolumeDisplay {
+  col: number
+  row: number
+  private volumeControl: VolumeControl
+  private options: Required<Omit<VolumeDisplayOptions, 'vibration'>> & {
+    vibration: VibrationUtil | null
+  }
+  private vibration: VibrationUtil | null
+  private visible: boolean
+  private hideTimer: NodeJS.Timeout | null
+
   /**
-   * @param {number} col - 表示する列番号
-   * @param {number} row - 表示する行番号
-   * @param {VolumeControl} volumeControl - 音量制御インスタンス
-   * @param {Object} options - オプション設定
+   * @param col - 表示する列番号
+   * @param row - 表示する行番号
+   * @param volumeControl - 音量制御インスタンス
+   * @param options - オプション設定
    */
-  constructor(col, row, volumeControl, options = {}) {
+  constructor(
+    col: number,
+    row: number,
+    volumeControl: VolumeControl,
+    options: VolumeDisplayOptions = {}
+  ) {
     this.col = col
     this.row = row
     this.volumeControl = volumeControl
@@ -28,7 +67,8 @@ export class VolumeDisplay {
       textColor: options.textColor || '#FFFFFF',
       mutedTextColor: options.mutedTextColor || '#888888',
       labelColor: options.labelColor || '#88AAFF',
-      displayTimeout: options.displayTimeout || VOLUME_DISPLAY_TIMEOUT_MS, // 表示時間（ミリ秒）
+      displayTimeout: options.displayTimeout || VOLUME_DISPLAY_TIMEOUT_MS,
+      vibration: options.vibration || null,
     }
 
     // 振動フィードバック
@@ -41,10 +81,10 @@ export class VolumeDisplay {
 
   /**
    * コンポーネントを描画
-   * @param {CanvasRenderingContext2D} ctx - Canvas描画コンテキスト
-   * @param {Object} cellCoord - セルの座標情報
+   * @param ctx - Canvas描画コンテキスト
+   * @param cellCoord - セルの座標情報
    */
-  draw(ctx, cellCoord) {
+  draw(ctx: CanvasRenderingContext2D, cellCoord: CellCoord): void {
     // 非表示の場合は何も描画しない
     if (!this.visible) {
       return
@@ -69,21 +109,20 @@ export class VolumeDisplay {
     const padding = 8
     const iconSize = 22
     const barHeight = 8
-    const topMargin = 8 // 上部マージン
+    const topMargin = 8
 
-    // 上から配置を計算
     // アイコンの位置（一番上）
     const iconY = y + topMargin + iconSize / 2
 
-    // バーの位置（アイコンの下、間隔を狭く）
+    // バーの位置（アイコンの下）
     const barY = iconY + iconSize / 2 + 4
     const barWidth = width - padding * 2
     const barX = x + padding
 
-    // パーセンテージの位置（バーの下、間隔を狭く）
+    // パーセンテージの位置（バーの下）
     const percentY = barY + barHeight + 10
 
-    // ミュートテキストの位置（パーセンテージの下、間隔を狭く）
+    // ミュートテキストの位置（パーセンテージの下）
     const muteY = percentY + 12
 
     // 音量アイコン（スピーカー絵文字）
@@ -92,7 +131,7 @@ export class VolumeDisplay {
     ctx.font = `${iconSize}px sans-serif`
 
     // ミュート状態に応じてアイコンを変更
-    let icon
+    let icon: string
     if (isMuted) {
       icon = '🔇' // ミュート
     } else if (volume >= 70) {
@@ -107,8 +146,7 @@ export class VolumeDisplay {
 
     ctx.fillText(icon, x + width / 2, iconY)
 
-    // 音量バーの描画（アイコンの下）
-    // バー背景
+    // 音量バーの描画
     ctx.fillStyle = this.options.barBgColor
     ctx.fillRect(barX, barY, barWidth, barHeight)
 
@@ -118,7 +156,6 @@ export class VolumeDisplay {
       ctx.fillStyle = this.options.barFillColor
       ctx.fillRect(barX, barY, fillWidth, barHeight)
     } else if (isMuted) {
-      // ミュート時は灰色のバー
       const fillWidth = (barWidth * volume) / 100
       ctx.fillStyle = this.options.barFillColorMuted
       ctx.fillRect(barX, barY, fillWidth, barHeight)
@@ -129,13 +166,13 @@ export class VolumeDisplay {
     ctx.lineWidth = 1
     ctx.strokeRect(barX, barY, barWidth, barHeight)
 
-    // 音量パーセンテージ（バーの下）
+    // 音量パーセンテージ
     const volumeText = `${volume}%`
     ctx.fillStyle = isMuted ? this.options.mutedTextColor : this.options.textColor
     autoSizeText(ctx, volumeText, width - padding * 2, 18, 12, 'bold', 'sans-serif')
     ctx.fillText(volumeText, x + width / 2, percentY)
 
-    // ミュートテキスト（一番下）
+    // ミュートテキスト
     if (isMuted) {
       ctx.fillStyle = this.options.mutedTextColor
       ctx.font = '10px sans-serif'
@@ -145,11 +182,11 @@ export class VolumeDisplay {
 
   /**
    * タッチイベントを処理（タップでミュート切り替え）
-   * @param {number} touchedCol - タッチされた列
-   * @param {number} touchedRow - タッチされた行
-   * @returns {Promise<boolean>} 処理されたか
+   * @param touchedCol - タッチされた列
+   * @param touchedRow - タッチされた行
+   * @returns 処理されたか
    */
-  async handleTouch(touchedCol, touchedRow) {
+  async handleTouch(touchedCol: number, touchedRow: number): Promise<boolean> {
     if (touchedCol === this.col && touchedRow === this.row) {
       logger.info('音量表示をタップ - ミュート切り替え')
 
@@ -176,26 +213,24 @@ export class VolumeDisplay {
 
   /**
    * 位置を取得
-   * @returns {Object} { col, row }
+   * @returns { col, row }
    */
-  getPosition() {
+  getPosition(): { col: number; row: number } {
     return { col: this.col, row: this.row }
   }
 
   /**
    * 音量を更新（外部から呼び出す）
-   * @param {number} volume - 新しい音量
+   * @param volume - 新しい音量
    */
-  updateVolume(volume) {
+  updateVolume(volume: number): void {
     logger.debug(`VolumeDisplay: 音量更新 ${volume}%`)
-    // draw()で最新の音量を取得するため、ここでは何もしない
   }
 
   /**
    * 音量表示を一時的に表示
-   * 指定時間後に自動的に非表示になる
    */
-  showTemporarily() {
+  showTemporarily(): void {
     logger.debug('VolumeDisplay: 一時表示開始')
 
     // 既存のタイマーをクリア
@@ -215,16 +250,16 @@ export class VolumeDisplay {
 
   /**
    * 表示状態を取得
-   * @returns {boolean} 表示中かどうか
+   * @returns 表示中かどうか
    */
-  isVisible() {
+  isVisible(): boolean {
     return this.visible
   }
 
   /**
    * 手動で非表示にする
    */
-  hide() {
+  hide(): void {
     if (this.hideTimer) {
       clearTimeout(this.hideTimer)
       this.hideTimer = null
@@ -236,7 +271,7 @@ export class VolumeDisplay {
   /**
    * クリーンアップ（タイマーをクリア）
    */
-  cleanup() {
+  cleanup(): void {
     if (this.hideTimer) {
       clearTimeout(this.hideTimer)
       this.hideTimer = null

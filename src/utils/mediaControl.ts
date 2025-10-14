@@ -1,8 +1,18 @@
 import { exec } from 'child_process'
 import { promisify } from 'util'
-import { logger } from './logger.js'
+import { logger } from './logger.ts'
 
 const execAsync = promisify(exec)
+
+/**
+ * メディアメタデータ
+ */
+export interface MediaMetadata {
+  title: string
+  artist: string
+  album: string
+  status: 'Playing' | 'Paused' | 'Stopped'
+}
 
 /**
  * メディアコントロールユーティリティ
@@ -12,7 +22,7 @@ export class MediaControl {
   /**
    * 初期化
    */
-  async initialize() {
+  async initialize(): Promise<void> {
     try {
       // playerctlが利用可能か確認
       await execAsync('which playerctl')
@@ -25,9 +35,9 @@ export class MediaControl {
 
   /**
    * 再生/一時停止を切り替え
-   * @returns {Promise<string>} 現在の状態（'Playing' または 'Paused'）
+   * @returns 現在の状態（'Playing' または 'Paused'）
    */
-  async togglePlayPause() {
+  async togglePlayPause(): Promise<'Playing' | 'Paused' | 'Stopped'> {
     try {
       await execAsync('playerctl play-pause')
       const status = await this.getStatus()
@@ -42,7 +52,7 @@ export class MediaControl {
   /**
    * 次のトラックへ
    */
-  async next() {
+  async next(): Promise<void> {
     try {
       await execAsync('playerctl next')
       logger.info('メディア: 次のトラック')
@@ -54,7 +64,7 @@ export class MediaControl {
   /**
    * 前のトラックへ
    */
-  async previous() {
+  async previous(): Promise<void> {
     try {
       await execAsync('playerctl previous')
       logger.info('メディア: 前のトラック')
@@ -65,12 +75,16 @@ export class MediaControl {
 
   /**
    * 現在の再生状態を取得
-   * @returns {Promise<string>} 'Playing', 'Paused', 'Stopped'
+   * @returns 'Playing', 'Paused', 'Stopped'
    */
-  async getStatus() {
+  async getStatus(): Promise<'Playing' | 'Paused' | 'Stopped'> {
     try {
       const { stdout } = await execAsync('playerctl status')
-      return stdout.trim()
+      const status = stdout.trim()
+      if (status === 'Playing' || status === 'Paused') {
+        return status
+      }
+      return 'Stopped'
     } catch {
       return 'Stopped'
     }
@@ -78,9 +92,9 @@ export class MediaControl {
 
   /**
    * 現在のメディア情報を取得
-   * @returns {Promise<Object>} { title, artist, album, status }
+   * @returns { title, artist, album, status }
    */
-  async getMetadata() {
+  async getMetadata(): Promise<MediaMetadata> {
     try {
       const [title, artist, album, status] = await Promise.all([
         execAsync('playerctl metadata title').then((r) => r.stdout.trim()),

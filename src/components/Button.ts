@@ -1,18 +1,60 @@
-import { autoSizeText } from '../utils/textUtils.js'
-import { logger } from '../utils/logger.js'
-import { loadImageFile, drawImage } from '../utils/imageLoader.js'
+import { autoSizeText } from '../utils/textUtils.ts'
+import { logger } from '../utils/logger.ts'
+import { loadImageFile, drawImage } from '../utils/imageLoader.ts'
+import type { Image } from 'canvas'
+import type { VibrationUtil } from '../utils/vibration.ts'
+import type { CellCoord } from './Screen.ts'
+
+/**
+ * Canvas描画コンテキストの型
+ */
+type CanvasRenderingContext2D = any
+
+/**
+ * ボタンコンポーネントのオプション
+ */
+export interface ButtonOptions {
+  label?: string
+  icon?: string | null
+  iconImage?: string | null
+  iconSize?: number
+  bgColor?: string
+  borderColor?: string
+  textColor?: string
+  hoverBgColor?: string
+  onClick?: () => void | Promise<void>
+  vibration?: VibrationUtil | null
+  vibrationPattern?: string
+}
 
 /**
  * ボタンコンポーネント
  * クリック可能なボタンを表示
  */
 export class Button {
+  col: number
+  row: number
+  label: string
+  private icon: string | null
+  private iconImage: string | null
+  private iconSize: number
+  private bgColor: string
+  private borderColor: string
+  private textColor: string
+  private hoverBgColor: string
+  private onClick: () => void | Promise<void>
+  private vibration: VibrationUtil | null
+  private vibrationPattern: string
+  private isHovered: boolean
+  private loadedImage: Image | null
+  private imageLoading: boolean
+
   /**
-   * @param {number} col - 列番号
-   * @param {number} row - 行番号
-   * @param {Object} options - オプション設定
+   * @param col - 列番号
+   * @param row - 行番号
+   * @param options - オプション設定
    */
-  constructor(col, row, options = {}) {
+  constructor(col: number, row: number, options: ButtonOptions = {}) {
     this.col = col
     this.row = row
 
@@ -32,7 +74,6 @@ export class Button {
     this.isHovered = false
     this.loadedImage = null // 読み込まれた画像オブジェクト
     this.imageLoading = false
-    this.imageLoadError = false
 
     // 画像アイコンの読み込み
     if (this.iconImage) {
@@ -43,7 +84,7 @@ export class Button {
   /**
    * アイコン画像を非同期で読み込む
    */
-  async loadIcon() {
+  async loadIcon(): Promise<void> {
     if (this.imageLoading || this.loadedImage) {
       return
     }
@@ -51,11 +92,10 @@ export class Button {
     this.imageLoading = true
 
     try {
-      this.loadedImage = await loadImageFile(this.iconImage)
+      this.loadedImage = await loadImageFile(this.iconImage!)
       logger.debug(`Button "${this.label}" のアイコンを読み込みました`)
-    } catch (error) {
+    } catch (error: any) {
       logger.error(`Button "${this.label}" のアイコン読み込みに失敗: ${error.message}`)
-      this.imageLoadError = true
     } finally {
       this.imageLoading = false
     }
@@ -63,10 +103,10 @@ export class Button {
 
   /**
    * ボタンを描画
-   * @param {CanvasRenderingContext2D} ctx - Canvas描画コンテキスト
-   * @param {Object} cellCoord - セルの座標情報
+   * @param ctx - Canvas描画コンテキスト
+   * @param cellCoord - セルの座標情報
    */
-  draw(ctx, cellCoord) {
+  draw(ctx: CanvasRenderingContext2D, cellCoord: CellCoord): void {
     const { x, y, width, height } = cellCoord
 
     // ボタンの背景
@@ -129,11 +169,11 @@ export class Button {
 
   /**
    * ボタンがクリックされたかチェック
-   * @param {number} touchedCol - タッチされた列
-   * @param {number} touchedRow - タッチされた行
-   * @returns {boolean} このボタンがクリックされたか
+   * @param touchedCol - タッチされた列
+   * @param touchedRow - タッチされた行
+   * @returns このボタンがクリックされたか
    */
-  async handleTouch(touchedCol, touchedRow) {
+  async handleTouch(touchedCol: number, touchedRow: number): Promise<boolean> {
     logger.debug(
       `Button.handleTouch: ${this.label} - touched(${touchedCol},${touchedRow}) vs button(${this.col},${this.row})`
     )
@@ -148,7 +188,7 @@ export class Button {
       }
 
       logger.debug('Calling onClick handler')
-      this.onClick()
+      await this.onClick()
       return true
     }
     return false
@@ -156,9 +196,9 @@ export class Button {
 
   /**
    * 位置を取得
-   * @returns {Object} { col, row }
+   * @returns { col, row }
    */
-  getPosition() {
+  getPosition(): { col: number; row: number } {
     return { col: this.col, row: this.row }
   }
 }

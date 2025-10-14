@@ -1,18 +1,18 @@
-import { LoupedeckDevice } from './src/device/LoupedeckDevice.js'
-import { GridLayout } from './src/components/GridLayout.js'
-import { Clock } from './src/components/Clock.js'
-import { Button } from './src/components/Button.js'
-import { VolumeDisplay } from './src/components/VolumeDisplay.js'
-import { MediaDisplay } from './src/components/MediaDisplay.js'
-import { VolumeControl } from './src/utils/volumeControl.js'
-import { MediaControl } from './src/utils/mediaControl.js'
-import { VolumeHandler } from './src/handlers/VolumeHandler.js'
-import { MediaHandler } from './src/handlers/MediaHandler.js'
-import { AppLauncher } from './src/utils/appLauncher.js'
-import { IconResolver } from './src/utils/iconResolver.js'
-import { logger } from './src/utils/logger.js'
-import { AUTO_UPDATE_INTERVAL_MS, BUTTON_LED_COLORS } from './src/config/constants.js'
-import { ApiServer } from './src/server/api.js'
+import { LoupedeckDevice } from './src/device/LoupedeckDevice.ts'
+import { GridLayout } from './src/components/GridLayout.ts'
+import { Clock } from './src/components/Clock.ts'
+import { Button } from './src/components/Button.ts'
+import { VolumeDisplay } from './src/components/VolumeDisplay.ts'
+import { MediaDisplay } from './src/components/MediaDisplay.ts'
+import { VolumeControl } from './src/utils/volumeControl.ts'
+import { MediaControl } from './src/utils/mediaControl.ts'
+import { VolumeHandler } from './src/handlers/VolumeHandler.ts'
+import { MediaHandler } from './src/handlers/MediaHandler.ts'
+import { AppLauncher } from './src/utils/appLauncher.ts'
+import { IconResolver } from './src/utils/iconResolver.ts'
+import { logger } from './src/utils/logger.ts'
+import { AUTO_UPDATE_INTERVAL_MS, BUTTON_LED_COLORS } from './src/config/constants.ts'
+import { ApiServer } from './src/server/api.ts'
 import {
   clockConfig,
   firefoxButtonConfig,
@@ -22,14 +22,14 @@ import {
   mediaDisplayConfig,
   workspaceSetupButtonConfig,
   onePasswordUnlockButtonConfig,
-} from './src/config/components.js'
+} from './src/config/components.ts'
 
 /**
  * メイン処理
  */
 async function main() {
-  let loupedeckDevice = null
-  let apiServer = null
+  let loupedeckDevice: LoupedeckDevice | null = null
+  let apiServer: ApiServer | null = null
 
   try {
     // APIサーバーを起動
@@ -249,7 +249,7 @@ async function main() {
         await apiServer.stop()
       }
     })
-  } catch (error) {
+  } catch (error: any) {
     logger.error(`✗ エラーが発生しました: ${error.message}`)
     logger.error('\nトラブルシューティング:')
     logger.error('1. デバイスが接続されているか確認してください')
@@ -260,7 +260,7 @@ async function main() {
     if (apiServer) {
       await apiServer.stop()
     }
-    if (loupedeckDevice && loupedeckDevice.device) {
+    if (loupedeckDevice && loupedeckDevice.getDevice()) {
       await loupedeckDevice.disconnect()
     }
 

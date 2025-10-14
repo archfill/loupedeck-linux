@@ -1,23 +1,28 @@
-import { loadImage } from 'canvas'
-import { logger } from './logger.js'
+import { loadImage, Image } from 'canvas'
+import { logger } from './logger.ts'
 import fs from 'fs'
 import path from 'path'
 
 /**
+ * Canvas描画コンテキストの型（canvasパッケージから取得）
+ */
+type CanvasRenderingContext2D = any
+
+/**
  * 画像キャッシュ
  */
-const imageCache = new Map()
+const imageCache = new Map<string, Image>()
 
 /**
  * 画像を読み込む
- * @param {string} imagePath - 画像ファイルのパス（絶対パスまたはプロジェクトルートからの相対パス）
- * @returns {Promise<Image>} 読み込まれた画像オブジェクト
+ * @param imagePath - 画像ファイルのパス（絶対パスまたはプロジェクトルートからの相対パス）
+ * @returns 読み込まれた画像オブジェクト
  */
-export async function loadImageFile(imagePath) {
+export async function loadImageFile(imagePath: string): Promise<Image> {
   // キャッシュをチェック
   if (imageCache.has(imagePath)) {
     logger.debug(`画像をキャッシュから取得: ${imagePath}`)
-    return imageCache.get(imagePath)
+    return imageCache.get(imagePath)!
   }
 
   try {
@@ -42,7 +47,7 @@ export async function loadImageFile(imagePath) {
     imageCache.set(imagePath, image)
 
     return image
-  } catch (error) {
+  } catch (error: any) {
     logger.error(`画像の読み込みに失敗しました: ${imagePath} - ${error.message}`)
     throw error
   }
@@ -50,9 +55,9 @@ export async function loadImageFile(imagePath) {
 
 /**
  * 画像キャッシュをクリア
- * @param {string} imagePath - クリアする画像パス（省略時は全てクリア）
+ * @param imagePath - クリアする画像パス（省略時は全てクリア）
  */
-export function clearImageCache(imagePath = null) {
+export function clearImageCache(imagePath?: string): void {
   if (imagePath) {
     imageCache.delete(imagePath)
     logger.debug(`画像キャッシュをクリア: ${imagePath}`)
@@ -64,15 +69,23 @@ export function clearImageCache(imagePath = null) {
 
 /**
  * 画像を指定サイズにリサイズして描画
- * @param {CanvasRenderingContext2D} ctx - Canvas描画コンテキスト
- * @param {Image} image - 描画する画像
- * @param {number} x - X座標
- * @param {number} y - Y座標
- * @param {number} width - 幅
- * @param {number} height - 高さ
- * @param {boolean} keepAspectRatio - アスペクト比を保持するか（デフォルト: true）
+ * @param ctx - Canvas描画コンテキスト
+ * @param image - 描画する画像
+ * @param x - X座標
+ * @param y - Y座標
+ * @param width - 幅
+ * @param height - 高さ
+ * @param keepAspectRatio - アスペクト比を保持するか（デフォルト: true）
  */
-export function drawImage(ctx, image, x, y, width, height, keepAspectRatio = true) {
+export function drawImage(
+  ctx: CanvasRenderingContext2D,
+  image: Image,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  keepAspectRatio: boolean = true
+): void {
   if (!image) {
     logger.warn('drawImage: 画像がnullです')
     return
@@ -94,7 +107,7 @@ export function drawImage(ctx, image, x, y, width, height, keepAspectRatio = tru
       // アスペクト比を無視してリサイズ
       ctx.drawImage(image, x, y, width, height)
     }
-  } catch (error) {
+  } catch (error: any) {
     logger.error(`画像の描画に失敗しました: ${error.message}`)
   }
 }

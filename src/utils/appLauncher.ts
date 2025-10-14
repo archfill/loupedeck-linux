@@ -1,7 +1,8 @@
 import { exec } from 'child_process'
 import { promisify } from 'util'
-import { logger } from './logger.js'
-import { VIBRATION_PATTERNS } from '../config/constants.js'
+import { logger } from './logger.ts'
+import { VIBRATION_PATTERNS } from '../config/constants.ts'
+import type { VibrationUtil } from './vibration.ts'
 
 const execAsync = promisify(exec)
 
@@ -9,19 +10,20 @@ const execAsync = promisify(exec)
  * アプリケーション起動ユーティリティ
  */
 export class AppLauncher {
+  private vibration: VibrationUtil | null
+
   /**
-   * @param {VibrationUtil} vibration - 振動ユーティリティ（オプショナル）
+   * @param vibration - 振動ユーティリティ（オプショナル）
    */
-  constructor(vibration = null) {
+  constructor(vibration: VibrationUtil | null = null) {
     this.vibration = vibration
   }
 
   /**
    * アプリケーションを起動
-   * @param {string} appName - 起動するアプリケーション名またはコマンド
-   * @returns {Promise<void>}
+   * @param appName - 起動するアプリケーション名またはコマンド
    */
-  async launch(appName) {
+  async launch(appName: string): Promise<void> {
     logger.info(`${appName} を起動中...`)
 
     try {
@@ -33,7 +35,7 @@ export class AppLauncher {
       if (this.vibration) {
         await this.vibration.vibratePattern(VIBRATION_PATTERNS.SUCCESS)
       }
-    } catch (error) {
+    } catch (error: any) {
       logger.error(`✗ ${appName} の起動に失敗しました: ${error.message}`)
 
       // 失敗時の振動フィードバック

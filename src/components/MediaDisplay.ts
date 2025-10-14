@@ -1,19 +1,56 @@
-import { autoSizeText } from '../utils/textUtils.js'
-import { logger } from '../utils/logger.js'
-import { VOLUME_DISPLAY_TIMEOUT_MS } from '../config/constants.js'
+import { autoSizeText } from '../utils/textUtils.ts'
+import { logger } from '../utils/logger.ts'
+import { VOLUME_DISPLAY_TIMEOUT_MS } from '../config/constants.ts'
+import type { MediaControl, MediaMetadata } from '../utils/mediaControl.ts'
+import type { VibrationUtil } from '../utils/vibration.ts'
+import type { CellCoord } from './Screen.ts'
+
+/**
+ * Canvas描画コンテキストの型
+ */
+type CanvasRenderingContext2D = any
+
+/**
+ * メディア表示のオプション
+ */
+interface MediaDisplayOptions {
+  cellBgColor?: string
+  cellBorderColor?: string
+  titleColor?: string
+  artistColor?: string
+  statusColor?: string
+  iconColor?: string
+  displayTimeout?: number
+  vibration?: VibrationUtil | null
+}
 
 /**
  * メディア表示コンポーネント
  * 現在再生中のメディア情報を表示
  */
 export class MediaDisplay {
+  col: number
+  row: number
+  private mediaControl: MediaControl
+  private options: Required<Omit<MediaDisplayOptions, 'vibration'>> & {
+    vibration: VibrationUtil | null
+  }
+  private visible: boolean
+  private hideTimer: NodeJS.Timeout | null
+  private cachedMetadata: MediaMetadata
+
   /**
-   * @param {number} col - 表示する列番号
-   * @param {number} row - 表示する行番号
-   * @param {MediaControl} mediaControl - メディア制御インスタンス
-   * @param {Object} options - オプション設定
+   * @param col - 表示する列番号
+   * @param row - 表示する行番号
+   * @param mediaControl - メディア制御インスタンス
+   * @param options - オプション設定
    */
-  constructor(col, row, mediaControl, options = {}) {
+  constructor(
+    col: number,
+    row: number,
+    mediaControl: MediaControl,
+    options: MediaDisplayOptions = {}
+  ) {
     this.col = col
     this.row = row
     this.mediaControl = mediaControl
@@ -27,10 +64,8 @@ export class MediaDisplay {
       statusColor: options.statusColor || '#AAAAAA',
       iconColor: options.iconColor || '#FF88AA',
       displayTimeout: options.displayTimeout || VOLUME_DISPLAY_TIMEOUT_MS,
+      vibration: options.vibration || null,
     }
-
-    // 振動フィードバック
-    this.vibration = options.vibration || null
 
     // 表示状態管理
     this.visible = false
@@ -47,10 +82,10 @@ export class MediaDisplay {
 
   /**
    * コンポーネントを描画
-   * @param {CanvasRenderingContext2D} ctx - Canvas描画コンテキスト
-   * @param {Object} cellCoord - セルの座標情報
+   * @param ctx - Canvas描画コンテキスト
+   * @param cellCoord - セルの座標情報
    */
-  draw(ctx, cellCoord) {
+  draw(ctx: CanvasRenderingContext2D, cellCoord: CellCoord): void {
     // 非表示の場合は何も描画しない
     if (!this.visible) {
       return
@@ -78,13 +113,13 @@ export class MediaDisplay {
     // アイコンの位置（一番上）
     const iconY = y + topMargin + iconSize / 2
 
-    // タイトルの位置（アイコンの下、間隔を狭く）
+    // タイトルの位置（アイコンの下）
     const titleY = iconY + iconSize / 2 + 8
 
-    // アーティストの位置（タイトルの下、間隔を狭く）
+    // アーティストの位置（タイトルの下）
     const artistY = titleY + 10
 
-    // ステータスの位置（アーティストの下、間隔を狭く）
+    // ステータスの位置（アーティストの下）
     const statusY = artistY + 10
 
     // アイコン（再生状態に応じて変更）
@@ -92,7 +127,7 @@ export class MediaDisplay {
     ctx.textBaseline = 'middle'
     ctx.font = `${iconSize}px sans-serif`
 
-    let icon
+    let icon: string
     if (metadata.status === 'Playing') {
       icon = '▶️' // 再生中
     } else if (metadata.status === 'Paused') {
@@ -103,14 +138,14 @@ export class MediaDisplay {
 
     ctx.fillText(icon, x + width / 2, iconY)
 
-    // タイトル（アイコンの下）
+    // タイトル
     ctx.fillStyle = this.options.titleColor
     const title =
       metadata.title.length > 12 ? metadata.title.substring(0, 12) + '...' : metadata.title
     autoSizeText(ctx, title, width - padding * 2, 12, 9, 'bold', 'sans-serif')
     ctx.fillText(title, x + width / 2, titleY)
 
-    // アーティスト（タイトルの下）
+    // アーティスト
     if (metadata.artist) {
       ctx.fillStyle = this.options.artistColor
       const artist =
@@ -119,7 +154,7 @@ export class MediaDisplay {
       ctx.fillText(artist, x + width / 2, artistY)
     }
 
-    // ステータステキスト（一番下）
+    // ステータステキスト
     ctx.fillStyle = this.options.statusColor
     ctx.font = '8px sans-serif'
     const statusText =
@@ -133,17 +168,16 @@ export class MediaDisplay {
 
   /**
    * 位置を取得
-   * @returns {Object} { col, row }
+   * @returns { col, row }
    */
-  getPosition() {
+  getPosition(): { col: number; row: number } {
     return { col: this.col, row: this.row }
   }
 
   /**
    * メディア表示を一時的に表示
-   * 指定時間後に自動的に非表示になる
    */
-  async showTemporarily() {
+  async showTemporarily(): Promise<void> {
     logger.debug('MediaDisplay: 一時表示開始')
 
     // メディア情報を取得してキャッシュ
@@ -166,16 +200,16 @@ export class MediaDisplay {
 
   /**
    * 表示状態を取得
-   * @returns {boolean} 表示中かどうか
+   * @returns 表示中かどうか
    */
-  isVisible() {
+  isVisible(): boolean {
     return this.visible
   }
 
   /**
    * 手動で非表示にする
    */
-  hide() {
+  hide(): void {
     if (this.hideTimer) {
       clearTimeout(this.hideTimer)
       this.hideTimer = null
@@ -187,7 +221,7 @@ export class MediaDisplay {
   /**
    * クリーンアップ（タイマーをクリア）
    */
-  cleanup() {
+  cleanup(): void {
     if (this.hideTimer) {
       clearTimeout(this.hideTimer)
       this.hideTimer = null

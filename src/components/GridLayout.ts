@@ -1,12 +1,31 @@
-import { Screen } from './Screen.js'
-import { logger } from '../utils/logger.js'
+import { Screen } from './Screen.ts'
+import { logger } from '../utils/logger.ts'
+
+/**
+ * Canvas描画コンテキストの型
+ */
+type CanvasRenderingContext2D = any
+
+/**
+ * グリッドコンポーネントのインターフェース
+ */
+interface GridComponent {
+  col?: number
+  row?: number
+  label?: string
+  draw: (ctx: CanvasRenderingContext2D, cellCoord?: any) => void
+  handleTouch?: (touchedCol: number, touchedRow: number) => Promise<boolean> | boolean
+}
 
 /**
  * グリッドレイアウトマネージャー
  * 複数のコンポーネントを管理して画面全体を描画
  */
 export class GridLayout extends Screen {
-  constructor(device) {
+  private components: GridComponent[]
+  private componentMap: Map<string, GridComponent>
+
+  constructor(device: any) {
     super(device)
     this.components = []
     this.componentMap = new Map() // col_row -> component のマップ
@@ -14,9 +33,9 @@ export class GridLayout extends Screen {
 
   /**
    * コンポーネントを追加
-   * @param {Object} component - 追加するコンポーネント（Clock, Buttonなど）
+   * @param component - 追加するコンポーネント（Clock, Buttonなど）
    */
-  addComponent(component) {
+  addComponent(component: GridComponent): void {
     this.components.push(component)
 
     // 位置情報を持つコンポーネントの場合、マップに登録
@@ -31,17 +50,17 @@ export class GridLayout extends Screen {
 
   /**
    * 複数のコンポーネントを追加
-   * @param {Array} components - コンポーネントの配列
+   * @param components - コンポーネントの配列
    */
-  addComponents(components) {
+  addComponents(components: GridComponent[]): void {
     components.forEach((component) => this.addComponent(component))
   }
 
   /**
    * すべてのコンポーネントを描画
-   * @param {CanvasRenderingContext2D} ctx - Canvas描画コンテキスト
+   * @param ctx - Canvas描画コンテキスト
    */
-  draw(ctx) {
+  draw(ctx: CanvasRenderingContext2D): void {
     // 背景をクリア
     this.clearBackground(ctx)
 
@@ -63,11 +82,11 @@ export class GridLayout extends Screen {
 
   /**
    * タッチイベントを処理
-   * @param {number} touchedCol - タッチされた列
-   * @param {number} touchedRow - タッチされた行
-   * @returns {Promise<boolean>} いずれかのコンポーネントが処理したか
+   * @param touchedCol - タッチされた列
+   * @param touchedRow - タッチされた行
+   * @returns いずれかのコンポーネントが処理したか
    */
-  async handleTouch(touchedCol, touchedRow) {
+  async handleTouch(touchedCol: number, touchedRow: number): Promise<boolean> {
     const key = `${touchedCol}_${touchedRow}`
     const component = this.componentMap.get(key)
 
@@ -86,10 +105,10 @@ export class GridLayout extends Screen {
 
   /**
    * 自動更新を開始
-   * @param {number} interval - 更新間隔（ミリ秒）
-   * @returns {number} インターバルID
+   * @param interval - 更新間隔（ミリ秒）
+   * @returns インターバルID
    */
-  startAutoUpdate(interval = 1000) {
+  startAutoUpdate(interval: number = 1000): NodeJS.Timeout {
     // 初回描画
     this.update()
 
@@ -97,7 +116,7 @@ export class GridLayout extends Screen {
     return setInterval(async () => {
       try {
         await this.update()
-      } catch (error) {
+      } catch (error: any) {
         logger.error(`描画エラー: ${error.message}`)
       }
     }, interval)
@@ -105,17 +124,17 @@ export class GridLayout extends Screen {
 
   /**
    * 自動更新を停止
-   * @param {number} intervalId - インターバルID
+   * @param intervalId - インターバルID
    */
-  stopAutoUpdate(intervalId) {
+  stopAutoUpdate(intervalId: NodeJS.Timeout): void {
     clearInterval(intervalId)
   }
 
   /**
    * コンポーネントの数を取得
-   * @returns {number} コンポーネント数
+   * @returns コンポーネント数
    */
-  getComponentCount() {
+  getComponentCount(): number {
     return this.components.length
   }
 }
