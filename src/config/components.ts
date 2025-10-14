@@ -212,3 +212,21 @@ export const onePasswordUnlockButtonConfig: ButtonConfig = {
   },
   command: '/home/archfill/git/loupedeck-linux/scripts/1password-unlock.sh',
 }
+
+/**
+ * wlogoutボタンの設定
+ */
+export const wlogoutButtonConfig: ButtonConfig = {
+  position: { col: 4, row: 0 },
+  appName: 'system-shutdown', // ログアウト・シャットダウンアイコン
+  options: {
+    label: 'Logout',
+    iconSize: 48,
+    bgColor: '#D32F2F',
+    borderColor: '#F44336',
+    textColor: '#FFFFFF',
+    hoverBgColor: '#E53935',
+    vibrationPattern: VIBRATION_PATTERNS.TAP,
+  },
+  command: 'wlogout',
+}

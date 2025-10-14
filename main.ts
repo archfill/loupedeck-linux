@@ -22,6 +22,7 @@ import {
   mediaDisplayConfig,
   workspaceSetupButtonConfig,
   onePasswordUnlockButtonConfig,
+  wlogoutButtonConfig,
 } from './src/config/components.ts'
 
 /**
@@ -140,6 +141,18 @@ async function main() {
       }
     )
 
+    // wlogoutボタン（列4, 行0）
+    const wlogoutButton = new Button(
+      wlogoutButtonConfig.position.col,
+      wlogoutButtonConfig.position.row,
+      {
+        ...wlogoutButtonConfig.options,
+        iconImage: IconResolver.resolve(wlogoutButtonConfig.appName),
+        vibration: vibration,
+        onClick: () => appLauncher.launch(wlogoutButtonConfig.command),
+      }
+    )
+
     // 音量表示（列0, 行0 = 時計と同じ位置、ノブ操作時のみ表示）
     const volumeDisplay = new VolumeDisplay(
       volumeDisplayConfig.position.col,
@@ -168,6 +181,7 @@ async function main() {
       firefoxButton,
       onePasswordButton,
       thunderbirdButton,
+      wlogoutButton,
       workspaceSetupButton,
       onePasswordUnlockButton,
       volumeDisplay,
@@ -184,6 +198,9 @@ async function main() {
     )
     logger.info(
       `  - Thunderbirdボタン: (列${thunderbirdButtonConfig.position.col}, 行${thunderbirdButtonConfig.position.row})`
+    )
+    logger.info(
+      `  - wlogoutボタン: (列${wlogoutButtonConfig.position.col}, 行${wlogoutButtonConfig.position.row})`
     )
     logger.info(
       `  - セットアップボタン: (列${workspaceSetupButtonConfig.position.col}, 行${workspaceSetupButtonConfig.position.row})`

@@ -11,6 +11,7 @@ import {
   mediaDisplayConfig,
   workspaceSetupButtonConfig,
   onePasswordUnlockButtonConfig,
+  wlogoutButtonConfig,
 } from '../config/components.ts'
 import {
   AUTO_UPDATE_INTERVAL_MS,
@@ -62,6 +63,7 @@ export class ApiServer {
           firefoxButton: firefoxButtonConfig,
           onePasswordButton: onePasswordButtonConfig,
           thunderbirdButton: thunderbirdButtonConfig,
+          wlogoutButton: wlogoutButtonConfig,
           volumeDisplay: volumeDisplayConfig,
           mediaDisplay: mediaDisplayConfig,
           workspaceSetupButton: workspaceSetupButtonConfig,
@@ -90,6 +92,7 @@ export class ApiServer {
         firefoxButton: firefoxButtonConfig,
         onePasswordButton: onePasswordButtonConfig,
         thunderbirdButton: thunderbirdButtonConfig,
+        wlogoutButton: wlogoutButtonConfig,
         volumeDisplay: volumeDisplayConfig,
         mediaDisplay: mediaDisplayConfig,
         workspaceSetupButton: workspaceSetupButtonConfig,
