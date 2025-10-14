@@ -9,11 +9,13 @@ import { MediaControl } from './src/utils/mediaControl.js'
 import { VolumeHandler } from './src/handlers/VolumeHandler.js'
 import { MediaHandler } from './src/handlers/MediaHandler.js'
 import { AppLauncher } from './src/utils/appLauncher.js'
+import { IconResolver } from './src/utils/iconResolver.js'
 import { logger } from './src/utils/logger.js'
 import { AUTO_UPDATE_INTERVAL_MS } from './src/config/constants.js'
 import {
   clockConfig,
   firefoxButtonConfig,
+  onePasswordButtonConfig,
   volumeDisplayConfig,
   mediaDisplayConfig,
 } from './src/config/components.js'
@@ -57,8 +59,21 @@ async function main() {
       firefoxButtonConfig.position.row,
       {
         ...firefoxButtonConfig.options,
+        iconImage: IconResolver.resolve(firefoxButtonConfig.appName),
         vibration: vibration,
         onClick: () => appLauncher.launch(firefoxButtonConfig.command),
+      }
+    )
+
+    // 1Passwordボタン（列2, 行0）
+    const onePasswordButton = new Button(
+      onePasswordButtonConfig.position.col,
+      onePasswordButtonConfig.position.row,
+      {
+        ...onePasswordButtonConfig.options,
+        iconImage: IconResolver.resolve(onePasswordButtonConfig.appName),
+        vibration: vibration,
+        onClick: () => appLauncher.launch(onePasswordButtonConfig.command),
       }
     )
 
@@ -85,7 +100,7 @@ async function main() {
     )
 
     // コンポーネントをレイアウトに追加（表示を最後に追加して上に重ねる）
-    layout.addComponents([clock, firefoxButton, volumeDisplay, mediaDisplay])
+    layout.addComponents([clock, firefoxButton, onePasswordButton, volumeDisplay, mediaDisplay])
 
     logger.info('配置完了:')
     logger.info(`  - 時計: (列${clockConfig.position.col}, 行${clockConfig.position.row})`)
@@ -93,10 +108,13 @@ async function main() {
       `  - Firefoxボタン: (列${firefoxButtonConfig.position.col}, 行${firefoxButtonConfig.position.row})`
     )
     logger.info(
+      `  - 1Passwordボタン: (列${onePasswordButtonConfig.position.col}, 行${onePasswordButtonConfig.position.row})`
+    )
+    logger.info(
       `  - 音量表示: (列${volumeDisplayConfig.position.col}, 行${volumeDisplayConfig.position.row}) ← 時計の位置に重ねて一時表示`
     )
     logger.info(
-      `  - メディア表示: (列${mediaDisplayConfig.position.col}, 行${mediaDisplayConfig.position.row}) ← 一時表示`
+      `  - メディア表示: (列${mediaDisplayConfig.position.col}, 行${mediaDisplayConfig.position.row}) ← 1Passwordの位置に重ねて一時表示`
     )
     logger.info('\n(Ctrl+C で終了)\n')
 

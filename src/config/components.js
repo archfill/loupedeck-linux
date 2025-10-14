@@ -24,9 +24,9 @@ export const clockConfig = {
  */
 export const firefoxButtonConfig = {
   position: { col: 1, row: 0 },
+  appName: 'firefox', // IconResolverで自動解決
   options: {
     label: 'Firefox',
-    iconImage: 'assets/icons/firefox.png',
     iconSize: 48,
     bgColor: '#FF6611',
     borderColor: '#FF8833',
@@ -35,6 +35,24 @@ export const firefoxButtonConfig = {
     vibrationPattern: VIBRATION_PATTERNS.TAP,
   },
   command: 'firefox',
+}
+
+/**
+ * 1Passwordボタンの設定
+ */
+export const onePasswordButtonConfig = {
+  position: { col: 2, row: 0 },
+  appName: '1password', // IconResolverで自動解決
+  options: {
+    label: '1Password',
+    iconSize: 48,
+    bgColor: '#0094F5',
+    borderColor: '#33AAFF',
+    textColor: '#FFFFFF',
+    hoverBgColor: '#1AA5FF',
+    vibrationPattern: VIBRATION_PATTERNS.TAP,
+  },
+  command: '1password',
 }
 
 /**
