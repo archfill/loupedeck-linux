@@ -5,34 +5,10 @@ import { Button } from './src/components/Button.js'
 import { VolumeDisplay } from './src/components/VolumeDisplay.js'
 import { VolumeControl } from './src/utils/volumeControl.js'
 import { VolumeHandler } from './src/handlers/VolumeHandler.js'
-import { exec } from 'child_process'
+import { AppLauncher } from './src/utils/appLauncher.js'
 import { logger } from './src/utils/logger.js'
 import { AUTO_UPDATE_INTERVAL_MS } from './src/config/constants.js'
 import { clockConfig, firefoxButtonConfig, volumeDisplayConfig } from './src/config/components.js'
-
-/**
- * アプリケーション起動関数
- * @param {string} appName - 起動するアプリケーション名
- * @param {VibrationUtil} vibration - 振動ユーティリティ
- */
-function launchApp(appName, vibration = null) {
-  logger.info(`${appName} を起動中...`)
-  exec(appName, async (error) => {
-    if (error) {
-      logger.error(`✗ ${appName} の起動に失敗しました: ${error.message}`)
-      // 失敗時の振動フィードバック
-      if (vibration) {
-        await vibration.vibratePattern('error')
-      }
-    } else {
-      logger.info(`✓ ${appName} を起動しました`)
-      // 成功時の振動フィードバック
-      if (vibration) {
-        await vibration.vibratePattern('success')
-      }
-    }
-  })
-}
 
 /**
  * メイン処理
@@ -49,6 +25,9 @@ async function main() {
 
     // 振動ユーティリティを取得
     const vibration = loupedeckDevice.getVibration()
+
+    // アプリケーション起動ユーティリティを初期化
+    const appLauncher = new AppLauncher(vibration)
 
     // 音量制御を初期化
     const volumeControl = new VolumeControl()
@@ -67,7 +46,7 @@ async function main() {
       {
         ...firefoxButtonConfig.options,
         vibration: vibration,
-        onClick: () => launchApp(firefoxButtonConfig.command, vibration),
+        onClick: () => appLauncher.launch(firefoxButtonConfig.command),
       }
     )
 
