@@ -107,7 +107,7 @@ export function LoupedeckPreview({ components, device }: LoupedeckPreviewProps) 
 
   return (
     <div className="flex items-center justify-center gap-8 p-8 bg-gray-900 rounded-2xl">
-      {/* Left side - Knobs and Buttons */}
+      {/* Left side - Knobs and Button */}
       <div className="flex flex-col gap-6">
         {/* Top left knob */}
         <div className="flex flex-col items-center">
@@ -125,22 +125,12 @@ export function LoupedeckPreview({ components, device }: LoupedeckPreviewProps) 
           <span className="text-xs text-gray-400 mt-2">MEDIA</span>
         </div>
 
-        {/* Bottom left knob */}
-        <div className="flex flex-col items-center">
-          <div className="w-16 h-16 rounded-full bg-gray-800 border-4 border-gray-700 flex items-center justify-center shadow-lg">
-            <div className="w-2 h-6 bg-gray-600 rounded-full"></div>
+        {/* Physical button - ID 0 (bottom left) */}
+        <div className="flex flex-col items-center mt-4">
+          <div className="w-10 h-10 rounded-full bg-white shadow-lg flex items-center justify-center">
+            <div className="w-8 h-8 rounded-full bg-gray-700"></div>
           </div>
-          <span className="text-xs text-gray-400 mt-2">KNOB</span>
-        </div>
-
-        {/* Physical buttons */}
-        <div className="flex gap-4 mt-4">
-          <div className="w-8 h-8 rounded-full bg-white shadow-lg flex items-center justify-center">
-            <div className="w-6 h-6 rounded-full bg-gray-700"></div>
-          </div>
-          <div className="w-8 h-8 rounded-full bg-red-500 shadow-lg flex items-center justify-center">
-            <div className="w-6 h-6 rounded-full bg-red-700"></div>
-          </div>
+          <span className="text-xs text-gray-400 mt-2">BTN 0</span>
         </div>
       </div>
 
@@ -159,40 +149,30 @@ export function LoupedeckPreview({ components, device }: LoupedeckPreviewProps) 
         </div>
       </div>
 
-      {/* Right side - Knobs and Buttons */}
-      <div className="flex flex-col gap-6">
-        {/* Top right knob */}
+      {/* Right side - Physical Buttons */}
+      <div className="flex flex-col gap-6 justify-center">
+        {/* Physical button - ID 1 */}
         <div className="flex flex-col items-center">
-          <div className="w-16 h-16 rounded-full bg-gray-800 border-4 border-gray-700 flex items-center justify-center shadow-lg">
-            <div className="w-2 h-6 bg-gray-600 rounded-full"></div>
+          <div className="w-10 h-10 rounded-full bg-red-500 shadow-lg flex items-center justify-center">
+            <div className="w-8 h-8 rounded-full bg-red-700"></div>
           </div>
-          <span className="text-xs text-gray-400 mt-2">KNOB</span>
+          <span className="text-xs text-gray-400 mt-2">BTN 1</span>
         </div>
 
-        {/* Center right knob */}
+        {/* Physical button - ID 2 */}
         <div className="flex flex-col items-center">
-          <div className="w-16 h-16 rounded-full bg-gray-800 border-4 border-gray-700 flex items-center justify-center shadow-lg">
-            <div className="w-2 h-6 bg-gray-600 rounded-full"></div>
+          <div className="w-10 h-10 rounded-full bg-green-500 shadow-lg flex items-center justify-center">
+            <div className="w-8 h-8 rounded-full bg-green-700"></div>
           </div>
-          <span className="text-xs text-gray-400 mt-2">KNOB</span>
+          <span className="text-xs text-gray-400 mt-2">BTN 2</span>
         </div>
 
-        {/* Bottom right knob */}
+        {/* Physical button - ID 3 */}
         <div className="flex flex-col items-center">
-          <div className="w-16 h-16 rounded-full bg-gray-800 border-4 border-gray-700 flex items-center justify-center shadow-lg">
-            <div className="w-2 h-6 bg-gray-600 rounded-full"></div>
+          <div className="w-10 h-10 rounded-full bg-blue-500 shadow-lg flex items-center justify-center">
+            <div className="w-8 h-8 rounded-full bg-blue-700"></div>
           </div>
-          <span className="text-xs text-gray-400 mt-2">KNOB</span>
-        </div>
-
-        {/* Physical buttons */}
-        <div className="flex gap-4 mt-4">
-          <div className="w-8 h-8 rounded-full bg-green-500 shadow-lg flex items-center justify-center">
-            <div className="w-6 h-6 rounded-full bg-green-700"></div>
-          </div>
-          <div className="w-8 h-8 rounded-full bg-blue-500 shadow-lg flex items-center justify-center">
-            <div className="w-6 h-6 rounded-full bg-blue-700"></div>
-          </div>
+          <span className="text-xs text-gray-400 mt-2">BTN 3</span>
         </div>
       </div>
     </div>

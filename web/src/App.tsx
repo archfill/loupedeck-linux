@@ -1,29 +1,8 @@
-import { useEffect, useState } from 'react'
 import { LoupedeckPreview } from './components/LoupedeckPreview'
-
-interface Config {
-  components?: any
-  constants?: any
-  device?: any
-}
+import { useConfig } from './hooks/useConfig'
 
 function App() {
-  const [config, setConfig] = useState<Config | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-
-  useEffect(() => {
-    fetch('http://localhost:3000/api/config')
-      .then((res) => res.json())
-      .then((data) => {
-        setConfig(data)
-        setLoading(false)
-      })
-      .catch((err) => {
-        setError(err.message)
-        setLoading(false)
-      })
-  }, [])
+  const { data: config, isLoading: loading, error } = useConfig()
 
   if (loading) {
     return (
@@ -41,7 +20,7 @@ function App() {
       <div className="min-h-screen bg-gray-950 text-white flex items-center justify-center">
         <div className="text-center text-red-400">
           <p className="text-xl mb-2">❌ Error</p>
-          <p>{error}</p>
+          <p>{error instanceof Error ? error.message : 'Unknown error'}</p>
           <p className="mt-4 text-sm text-gray-400">
             Make sure the API server is running on port 3000
           </p>
@@ -57,14 +36,6 @@ function App() {
           <h1 className="text-4xl font-bold mb-2">🎛️ Loupedeck Configuration</h1>
           <p className="text-gray-400">View your current Loupedeck Live S settings</p>
         </header>
-
-        {/* Device Preview */}
-        <section className="mb-8">
-          <h2 className="text-2xl font-semibold mb-4">Device Preview</h2>
-          <div className="bg-gray-900 rounded-lg p-6 border border-gray-800">
-            <LoupedeckPreview components={config?.components} device={config?.device} />
-          </div>
-        </section>
 
         {/* Device Info */}
         <section className="mb-8">
@@ -90,6 +61,14 @@ function App() {
                 <p className="font-semibold">{config?.device?.buttons?.length}</p>
               </div>
             </div>
+          </div>
+        </section>
+
+        {/* Device Preview */}
+        <section className="mb-8">
+          <h2 className="text-2xl font-semibold mb-4">Device Preview</h2>
+          <div className="bg-gray-900 rounded-lg p-6 border border-gray-800">
+            <LoupedeckPreview components={config?.components} device={config?.device} />
           </div>
         </section>
 

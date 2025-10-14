@@ -33,6 +33,9 @@ coverage/
 .env.*.local
 *.local
 
+# Generated files
+loupedeck.service
+
 # Cache directories
 .cache/
 
