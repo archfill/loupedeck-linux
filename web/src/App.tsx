@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { LoupedeckPreview } from './components/LoupedeckPreview'
 
 interface Config {
   components?: any
@@ -56,6 +57,14 @@ function App() {
           <h1 className="text-4xl font-bold mb-2">🎛️ Loupedeck Configuration</h1>
           <p className="text-gray-400">View your current Loupedeck Live S settings</p>
         </header>
+
+        {/* Device Preview */}
+        <section className="mb-8">
+          <h2 className="text-2xl font-semibold mb-4">Device Preview</h2>
+          <div className="bg-gray-900 rounded-lg p-6 border border-gray-800">
+            <LoupedeckPreview components={config?.components} device={config?.device} />
+          </div>
+        </section>
 
         {/* Device Info */}
         <section className="mb-8">
