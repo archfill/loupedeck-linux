@@ -237,8 +237,9 @@ ctx.fillText(text, x, y)
 Components can maintain internal state and update on each draw call or only when changed. Use `GridLayout.startAutoUpdate(interval)` for time-based updates (like clocks).
 
 ### Volume Control with Knobs
-Listen to knob rotation events for volume control:
+Listen to knob rotation events for volume control and click events for mute toggle:
 ```javascript
+// Knob rotation: adjust volume
 loupedeckDevice.on('rotate', async ({ id, delta }) => {
   // Note: Knob IDs are strings, not numbers!
   // Using knobTL (top-left knob) for volume control
@@ -250,6 +251,15 @@ loupedeckDevice.on('rotate', async ({ id, delta }) => {
     volumeDisplay.showTemporarily()
 
     await layout.update()  // Refresh display
+  }
+})
+
+// Knob click: toggle mute
+loupedeckDevice.on('down', async ({ id }) => {
+  if (id === 'knobTL') {
+    const isMuted = await volumeControl.toggleMute()
+    volumeDisplay.showTemporarily()
+    await layout.update()
   }
 })
 ```
@@ -264,9 +274,10 @@ loupedeckDevice.on('rotate', async ({ id, delta }) => {
 **VolumeDisplay Temporary Display Pattern:**
 - By default, VolumeDisplay is hidden (Clock is visible at col: 0, row: 0)
 - When knobTL is rotated, `showTemporarily()` shows the display for 2 seconds, overlaying the Clock
-- If knob is rotated again before timeout, the timer resets
+- When knobTL is clicked (pressed), it toggles mute and shows the display for 2 seconds
+- If knob is used again before timeout, the timer resets
 - After 2 seconds of inactivity, VolumeDisplay hides and Clock becomes visible again
-- Tapping position (0, 0) when VolumeDisplay is visible toggles mute and extends display time
+- Tapping position (0, 0) when VolumeDisplay is visible also toggles mute and extends display time
 - This mimics the official Loupedeck software behavior
 
 **Component Overlay Pattern:**

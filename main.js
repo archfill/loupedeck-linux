@@ -132,6 +132,36 @@ async function main() {
     })
     logger.info('ノブ回転イベントハンドラーの登録完了')
 
+    // ノブクリックイベントハンドラー（ミュート切り替え）
+    logger.info('ノブクリックイベントハンドラーを登録しています...')
+    loupedeckDevice.on('down', async ({ id }) => {
+      // knobTL（左上のノブ）クリックでミュート切り替え
+      if (id === 'knobTL') {
+        logger.info('🔘 ノブ knobTL クリック - ミュート切り替え')
+
+        // ミュート切り替え
+        const isMuted = await volumeControl.toggleMute()
+
+        // 音量表示を一時的に表示（2秒間）
+        volumeDisplay.showTemporarily()
+
+        // 振動フィードバック
+        if (vibration) {
+          if (isMuted) {
+            await vibration.vibratePattern('warning')
+          } else {
+            await vibration.vibratePattern('success')
+          }
+        }
+
+        logger.info(`🔇 ミュート状態: ${isMuted ? 'ON' : 'OFF'}`)
+
+        // 画面を即座に更新
+        await layout.update()
+      }
+    })
+    logger.info('ノブクリックイベントハンドラーの登録完了')
+
     // 終了処理のセットアップ
     loupedeckDevice.setupExitHandlers(async () => {
       logger.debug('自動更新を停止中...')
