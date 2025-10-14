@@ -56,6 +56,24 @@ export const onePasswordButtonConfig = {
 }
 
 /**
+ * Thunderbirdボタンの設定
+ */
+export const thunderbirdButtonConfig = {
+  position: { col: 3, row: 0 },
+  appName: 'thunderbird', // IconResolverで自動解決
+  options: {
+    label: 'Mail',
+    iconSize: 48,
+    bgColor: '#0A84FF',
+    borderColor: '#3399FF',
+    textColor: '#FFFFFF',
+    hoverBgColor: '#2B95FF',
+    vibrationPattern: VIBRATION_PATTERNS.TAP,
+  },
+  command: 'thunderbird',
+}
+
+/**
  * 音量表示の設定
  */
 export const volumeDisplayConfig = {
@@ -105,7 +123,7 @@ export const workspaceSetupButtonConfig = {
  */
 export const onePasswordUnlockButtonConfig = {
   position: { col: 2, row: 1 },
-  appName: 'dialog-password', // 鍵・パスワードアイコン
+  appName: 'security-high', // セキュリティ・鍵アイコン
   options: {
     label: 'Unlock',
     iconSize: 48,

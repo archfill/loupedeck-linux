@@ -16,6 +16,7 @@ import {
   clockConfig,
   firefoxButtonConfig,
   onePasswordButtonConfig,
+  thunderbirdButtonConfig,
   volumeDisplayConfig,
   mediaDisplayConfig,
   workspaceSetupButtonConfig,
@@ -34,6 +35,9 @@ async function main() {
     await loupedeckDevice.connect()
 
     logger.info('コンポーネントを配置しています...\n')
+
+    // デバイス情報を表示（物理ボタンの確認）
+    loupedeckDevice.showDeviceInfo()
 
     // 振動ユーティリティを取得
     const vibration = loupedeckDevice.getVibration()
@@ -79,7 +83,19 @@ async function main() {
       }
     )
 
-    // ワークスペースセットアップボタン（列1, 行1）
+    // Thunderbirdボタン（列3, 行0）
+    const thunderbirdButton = new Button(
+      thunderbirdButtonConfig.position.col,
+      thunderbirdButtonConfig.position.row,
+      {
+        ...thunderbirdButtonConfig.options,
+        iconImage: IconResolver.resolve(thunderbirdButtonConfig.appName),
+        vibration: vibration,
+        onClick: () => appLauncher.launch(thunderbirdButtonConfig.command),
+      }
+    )
+
+    // ワークスペースセットアップボタン（列0, 行1）
     const workspaceSetupButton = new Button(
       workspaceSetupButtonConfig.position.col,
       workspaceSetupButtonConfig.position.row,
@@ -130,6 +146,7 @@ async function main() {
       clock,
       firefoxButton,
       onePasswordButton,
+      thunderbirdButton,
       workspaceSetupButton,
       onePasswordUnlockButton,
       volumeDisplay,
@@ -143,6 +160,9 @@ async function main() {
     )
     logger.info(
       `  - 1Passwordボタン: (列${onePasswordButtonConfig.position.col}, 行${onePasswordButtonConfig.position.row})`
+    )
+    logger.info(
+      `  - Thunderbirdボタン: (列${thunderbirdButtonConfig.position.col}, 行${thunderbirdButtonConfig.position.row})`
     )
     logger.info(
       `  - セットアップボタン: (列${workspaceSetupButtonConfig.position.col}, 行${workspaceSetupButtonConfig.position.row})`
@@ -186,8 +206,15 @@ async function main() {
     // ノブクリックイベントハンドラー（ミュート切り替えと再生/一時停止）
     logger.info('ノブクリックイベントハンドラーを登録しています...')
     loupedeckDevice.on('down', async ({ id }) => {
-      await volumeHandler.handleDown(id)
-      await mediaHandler.handleDown(id)
+      logger.info(`⬇️  ボタン/ノブが押されました: ID=${id}`)
+
+      // ノブのみ処理（物理ボタンは無効化）
+      if (typeof id === 'string') {
+        await volumeHandler.handleDown(id)
+        await mediaHandler.handleDown(id)
+      } else {
+        logger.debug(`物理ボタン ID=${id} は無効化されています`)
+      }
     })
     logger.info('ノブクリックイベントハンドラーの登録完了')
 

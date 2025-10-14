@@ -120,14 +120,8 @@ export class LoupedeckDevice {
       })
     })
 
-    // 物理ボタンイベント用（追加サポート）
-    this.device.on('down', ({ id }) => {
-      logger.debug(`onTouch: 'down' event fired with id=${id}`)
-      const col = id % this.device.columns
-      const row = Math.floor(id / this.device.columns)
-      logger.debug(`onTouch: calculated col=${col}, row=${row}`)
-      callback({ id, col, row })
-    })
+    // 物理ボタンイベントはonTouch()では処理しない
+    // （物理ボタンはmain.jsで別途処理）
   }
 
   /**
