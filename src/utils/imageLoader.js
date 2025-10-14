@@ -1,4 +1,4 @@
-import { createCanvas, loadImage } from 'canvas'
+import { loadImage } from 'canvas'
 import { logger } from './logger.js'
 import fs from 'fs'
 import path from 'path'
