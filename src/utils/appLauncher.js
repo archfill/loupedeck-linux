@@ -25,7 +25,8 @@ export class AppLauncher {
     logger.info(`${appName} を起動中...`)
 
     try {
-      await execAsync(appName)
+      // setsidでプロセスをデタッチして、親プロセス終了時も継続するようにする
+      await execAsync(`setsid ${appName} >/dev/null 2>&1 &`)
       logger.info(`✓ ${appName} を起動しました`)
 
       // 成功時の振動フィードバック

@@ -86,7 +86,7 @@ export const mediaDisplayConfig = {
  * ワークスペースセットアップボタンの設定
  */
 export const workspaceSetupButtonConfig = {
-  position: { col: 1, row: 1 },
+  position: { col: 0, row: 1 },
   appName: 'preferences-system', // システム設定アイコン
   options: {
     label: 'Setup',
@@ -98,4 +98,22 @@ export const workspaceSetupButtonConfig = {
     vibrationPattern: VIBRATION_PATTERNS.TAP,
   },
   command: '/home/archfill/git/loupedeck-linux/scripts/workspace-setup.sh',
+}
+
+/**
+ * 1Passwordロック解除ボタンの設定
+ */
+export const onePasswordUnlockButtonConfig = {
+  position: { col: 2, row: 1 },
+  appName: 'dialog-password', // 鍵・パスワードアイコン
+  options: {
+    label: 'Unlock',
+    iconSize: 48,
+    bgColor: '#00AA88',
+    borderColor: '#22CCAA',
+    textColor: '#FFFFFF',
+    hoverBgColor: '#22BB99',
+    vibrationPattern: VIBRATION_PATTERNS.TAP,
+  },
+  command: '/home/archfill/git/loupedeck-linux/scripts/1password-unlock.sh',
 }

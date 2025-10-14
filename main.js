@@ -19,6 +19,7 @@ import {
   volumeDisplayConfig,
   mediaDisplayConfig,
   workspaceSetupButtonConfig,
+  onePasswordUnlockButtonConfig,
 } from './src/config/components.js'
 
 /**
@@ -90,6 +91,18 @@ async function main() {
       }
     )
 
+    // 1Passwordロック解除ボタン（列2, 行1）
+    const onePasswordUnlockButton = new Button(
+      onePasswordUnlockButtonConfig.position.col,
+      onePasswordUnlockButtonConfig.position.row,
+      {
+        ...onePasswordUnlockButtonConfig.options,
+        iconImage: IconResolver.resolve(onePasswordUnlockButtonConfig.appName),
+        vibration: vibration,
+        onClick: () => appLauncher.launch(onePasswordUnlockButtonConfig.command),
+      }
+    )
+
     // 音量表示（列0, 行0 = 時計と同じ位置、ノブ操作時のみ表示）
     const volumeDisplay = new VolumeDisplay(
       volumeDisplayConfig.position.col,
@@ -118,6 +131,7 @@ async function main() {
       firefoxButton,
       onePasswordButton,
       workspaceSetupButton,
+      onePasswordUnlockButton,
       volumeDisplay,
       mediaDisplay,
     ])
@@ -132,6 +146,9 @@ async function main() {
     )
     logger.info(
       `  - セットアップボタン: (列${workspaceSetupButtonConfig.position.col}, 行${workspaceSetupButtonConfig.position.row})`
+    )
+    logger.info(
+      `  - 1Passwordロック解除ボタン: (列${onePasswordUnlockButtonConfig.position.col}, 行${onePasswordUnlockButtonConfig.position.row})`
     )
     logger.info(
       `  - 音量表示: (列${volumeDisplayConfig.position.col}, 行${volumeDisplayConfig.position.row}) ← 時計の位置に重ねて一時表示`
