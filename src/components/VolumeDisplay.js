@@ -66,9 +66,24 @@ export class VolumeDisplay {
 
     // レイアウト設定
     const padding = 8
-    const iconSize = 24
-    const barHeight = 12
-    const barY = y + height / 2 + 6
+    const iconSize = 22
+    const barHeight = 8
+    const topMargin = 8 // 上部マージン
+
+    // 上から配置を計算
+    // アイコンの位置（一番上）
+    const iconY = y + topMargin + iconSize / 2
+
+    // バーの位置（アイコンの下、間隔を狭く）
+    const barY = iconY + iconSize / 2 + 4
+    const barWidth = width - padding * 2
+    const barX = x + padding
+
+    // パーセンテージの位置（バーの下、間隔を狭く）
+    const percentY = barY + barHeight + 10
+
+    // ミュートテキストの位置（パーセンテージの下、間隔を狭く）
+    const muteY = percentY + 12
 
     // 音量アイコン（スピーカー絵文字）
     ctx.textAlign = 'center'
@@ -89,18 +104,9 @@ export class VolumeDisplay {
       icon = '🔇' // 無音
     }
 
-    ctx.fillText(icon, x + width / 2, y + height / 2 - 16)
+    ctx.fillText(icon, x + width / 2, iconY)
 
-    // 音量パーセンテージ
-    const volumeText = `${volume}%`
-    ctx.fillStyle = isMuted ? this.options.mutedTextColor : this.options.textColor
-    autoSizeText(ctx, volumeText, width - padding * 2, 20, 12, 'bold', 'sans-serif')
-    ctx.fillText(volumeText, x + width / 2, y + height / 2 + 18)
-
-    // 音量バーの描画
-    const barWidth = width - padding * 2
-    const barX = x + padding
-
+    // 音量バーの描画（アイコンの下）
     // バー背景
     ctx.fillStyle = this.options.barBgColor
     ctx.fillRect(barX, barY, barWidth, barHeight)
@@ -122,11 +128,17 @@ export class VolumeDisplay {
     ctx.lineWidth = 1
     ctx.strokeRect(barX, barY, barWidth, barHeight)
 
-    // ミュートテキスト
+    // 音量パーセンテージ（バーの下）
+    const volumeText = `${volume}%`
+    ctx.fillStyle = isMuted ? this.options.mutedTextColor : this.options.textColor
+    autoSizeText(ctx, volumeText, width - padding * 2, 18, 12, 'bold', 'sans-serif')
+    ctx.fillText(volumeText, x + width / 2, percentY)
+
+    // ミュートテキスト（一番下）
     if (isMuted) {
       ctx.fillStyle = this.options.mutedTextColor
       ctx.font = '10px sans-serif'
-      ctx.fillText('MUTE', x + width / 2, y + height - 8)
+      ctx.fillText('MUTE', x + width / 2, muteY)
     }
   }
 
