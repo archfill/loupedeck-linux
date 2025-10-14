@@ -3,6 +3,7 @@
 ## 現状分析
 
 ### コード統計
+
 - **Total src lines**: 1,467行
 - **main.js**: 193行（設定、ロジック、イベントハンドラーが混在）
 
@@ -11,16 +12,19 @@
 ## 1. main.jsの肥大化
 
 **問題:**
+
 - コンポーネント設定がmain.js内に直接記述
 - イベントハンドラーがmain内に定義
 - 設定とビジネスロジックが混在
 
 **影響:**
+
 - 可読性の低下
 - テストが困難
 - 新しいコンポーネント追加時にmain.jsを編集する必要
 
 **提案:**
+
 ```
 src/
   config/
@@ -34,12 +38,14 @@ src/
 ## 2. マジックナンバーの存在
 
 **問題箇所:**
+
 - `delta * 5` - 音量調整ステップ
 - `1000` - 自動更新インターバル
 - `'knobTL'` - ノブIDのハードコード
 - `2000` - 音量表示のタイムアウト
 
 **提案:**
+
 ```javascript
 // src/config/constants.js
 export const VOLUME_STEP_PERCENT = 5
@@ -54,6 +60,7 @@ export const KNOB_IDS = {
 ## 3. 重複コード
 
 **問題箇所:**
+
 ```javascript
 // rotate イベント（110-131行）
 volumeDisplay.showTemporarily()
@@ -75,6 +82,7 @@ await layout.update()
 ```
 
 **提案:**
+
 ```javascript
 // src/handlers/VolumeHandler.js
 class VolumeHandler {
@@ -94,6 +102,7 @@ class VolumeHandler {
 main.js内でコンポーネントのスタイル設定を直接記述
 
 **提案:**
+
 ```javascript
 // src/config/components.js
 export const componentConfigs = {
@@ -105,7 +114,7 @@ export const componentConfigs = {
       timeColor: '#FFFFFF',
       dateColor: '#88AAFF',
       showSeconds: true,
-    }
+    },
   },
   firefoxButton: {
     position: { col: 1, row: 0 },
@@ -118,8 +127,8 @@ export const componentConfigs = {
       textColor: '#FFFFFF',
       hoverBgColor: '#FF7722',
       vibrationPattern: 'tap',
-      command: 'firefox'
-    }
+      command: 'firefox',
+    },
   },
   volumeDisplay: {
     position: { col: 0, row: 0 },
@@ -127,19 +136,21 @@ export const componentConfigs = {
       cellBgColor: '#1a1a2e',
       cellBorderColor: '#4a6a8a',
       barFillColor: '#4a9eff',
-    }
-  }
+    },
+  },
 }
 ```
 
 ## 5. launchApp関数の汎用性不足
 
 **問題:**
+
 - 関数名が具体性に欠ける
 - アプリケーション起動のみに特化
 - 再利用性が低い
 
 **提案:**
+
 ```javascript
 // src/utils/appLauncher.js
 export class AppLauncher {
@@ -166,6 +177,7 @@ export class AppLauncher {
 ## 6. エラーハンドリングの改善
 
 **問題:**
+
 - グローバルなtry-catchのみ
 - 個別の操作でのエラーハンドリングが不足
 
@@ -208,23 +220,27 @@ main.js               # シンプルなエントリーポイント
 ## リファクタリングの優先順位
 
 ### Phase 1: 定数の抽出（低リスク）
+
 - マジックナンバーを constants.js に移動
 - 影響範囲: 小
 - テスト: 既存機能の動作確認のみ
 
 ### Phase 2: ハンドラーの分離（中リスク）
+
 - VolumeHandler の作成
 - イベントハンドラーを main.js から分離
 - 影響範囲: 中
 - テスト: イベント処理の動作確認
 
 ### Phase 3: コンポーネント設定の分離（低リスク）
+
 - components.js の作成
 - main.js の簡素化
 - 影響範囲: 小
 - テスト: 表示の確認
 
 ### Phase 4: AppLauncher の実装（低リスク）
+
 - launchApp を AppLauncher クラスに変更
 - 影響範囲: 小
 - テスト: アプリ起動の確認
