@@ -68,7 +68,11 @@ function App() {
         <section className="mb-8">
           <h2 className="text-2xl font-semibold mb-4">Device Preview</h2>
           <div className="bg-gray-900 rounded-lg p-6 border border-gray-800">
-            <LoupedeckPreview components={config?.components} device={config?.device} />
+            <LoupedeckPreview
+              components={config?.components}
+              pages={config?.pages}
+              device={config?.device}
+            />
           </div>
         </section>
 

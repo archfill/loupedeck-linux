@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 interface Component {
   position: { col: number; row: number }
@@ -16,6 +16,7 @@ interface Component {
 
 interface LoupedeckPreviewProps {
   components?: Record<string, Component>
+  pages?: Record<string, Record<string, Component>>
   device?: {
     type?: string
     grid?: { columns: number; rows: number }
@@ -24,7 +25,8 @@ interface LoupedeckPreviewProps {
   }
 }
 
-export function LoupedeckPreview({ components, device }: LoupedeckPreviewProps) {
+export function LoupedeckPreview({ components, pages, device }: LoupedeckPreviewProps) {
+  const [currentPage, setCurrentPage] = useState(1)
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
   const columns = device?.grid?.columns || 5
@@ -32,6 +34,11 @@ export function LoupedeckPreview({ components, device }: LoupedeckPreviewProps) 
   const cellSize = 90
   const screenWidth = columns * cellSize
   const screenHeight = rows * cellSize
+
+  // ページに応じたコンポーネントを取得
+  const displayComponents = pages && pages[currentPage]
+    ? pages[currentPage]
+    : components
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -60,119 +67,192 @@ export function LoupedeckPreview({ components, device }: LoupedeckPreviewProps) 
       ctx.stroke()
     }
 
-    // コンポーネントを描画
-    if (components) {
-      Object.entries(components).forEach(([, component]) => {
-        const { col, row } = component.position
+    // ページ2の場合はワークスペースボタンを描画
+    if (currentPage === 2) {
+      // ワークスペース1-10を描画
+      for (let i = 1; i <= 10; i++) {
+        const col = i <= 5 ? i - 1 : i - 6
+        const row = i <= 5 ? 1 : 2
         const x = col * cellSize
         const y = row * cellSize
-        const options = component.options || {}
 
         // セルの背景
-        ctx.fillStyle = options.bgColor || '#2a4a6a'
+        ctx.fillStyle = '#1a3a5a'
         ctx.fillRect(x, y, cellSize, cellSize)
 
         // セルの枠線
-        ctx.strokeStyle = options.borderColor || '#4a7a9a'
+        ctx.strokeStyle = '#3a6a9a'
         ctx.lineWidth = 2
         ctx.strokeRect(x + 1, y + 1, cellSize - 2, cellSize - 2)
 
-        // アイコン（絵文字）
-        if (options.icon) {
-          ctx.font = `${options.iconSize || 32}px sans-serif`
-          ctx.textAlign = 'center'
-          ctx.textBaseline = 'middle'
-          ctx.fillText(options.icon, x + cellSize / 2, y + cellSize / 2 - 8)
-        }
+        // ワークスペース番号
+        ctx.fillStyle = '#FFFFFF'
+        ctx.font = 'bold 32px sans-serif'
+        ctx.textAlign = 'center'
+        ctx.textBaseline = 'middle'
+        ctx.fillText(String(i), x + cellSize / 2, y + cellSize / 2)
 
         // ラベル
-        if (options.label) {
-          ctx.fillStyle = options.textColor || '#FFFFFF'
-          ctx.font = 'bold 12px sans-serif'
-          ctx.textAlign = 'center'
-          ctx.textBaseline = 'bottom'
+        ctx.font = 'bold 10px sans-serif'
+        ctx.textBaseline = 'bottom'
+        ctx.fillText(`WS ${i}`, x + cellSize / 2, y + cellSize - 8)
+      }
+    } else {
+      // ページ1: 通常のコンポーネントを描画
+      if (displayComponents) {
+        Object.entries(displayComponents).forEach(([, component]) => {
+          // description や layout などのメタ情報は無視
+          if (!component.position) return
 
-          // テキストを短縮
-          let label = options.label
-          if (label.length > 10) {
-            label = label.substring(0, 10) + '...'
+          const { col, row } = component.position
+          const x = col * cellSize
+          const y = row * cellSize
+          const options = component.options || {}
+
+          // セルの背景
+          ctx.fillStyle = options.bgColor || '#2a4a6a'
+          ctx.fillRect(x, y, cellSize, cellSize)
+
+          // セルの枠線
+          ctx.strokeStyle = options.borderColor || '#4a7a9a'
+          ctx.lineWidth = 2
+          ctx.strokeRect(x + 1, y + 1, cellSize - 2, cellSize - 2)
+
+          // アイコン（絵文字）
+          if (options.icon) {
+            ctx.font = `${options.iconSize || 32}px sans-serif`
+            ctx.textAlign = 'center'
+            ctx.textBaseline = 'middle'
+            ctx.fillText(options.icon, x + cellSize / 2, y + cellSize / 2 - 8)
           }
 
-          const textY = options.icon ? y + cellSize - 8 : y + cellSize / 2
-          ctx.fillText(label, x + cellSize / 2, textY)
-        }
-      })
+          // ラベル
+          if (options.label) {
+            ctx.fillStyle = options.textColor || '#FFFFFF'
+            ctx.font = 'bold 12px sans-serif'
+            ctx.textAlign = 'center'
+            ctx.textBaseline = 'bottom'
+
+            // テキストを短縮
+            let label = options.label
+            if (label.length > 10) {
+              label = label.substring(0, 10) + '...'
+            }
+
+            const textY = options.icon ? y + cellSize - 8 : y + cellSize / 2
+            ctx.fillText(label, x + cellSize / 2, textY)
+          }
+        })
+      }
     }
-  }, [components, columns, rows, screenWidth, screenHeight, cellSize])
+  }, [displayComponents, currentPage, columns, rows, screenWidth, screenHeight, cellSize])
+
+  // ページ情報の定義
+  const pageInfo: Record<number, { title: string; description: string }> = {
+    1: { title: 'Applications', description: 'App launchers and media controls' },
+    2: { title: 'Workspaces', description: 'Hyprland workspace switching (1-10)' },
+  }
 
   return (
-    <div className="flex items-center justify-center gap-8 p-8 bg-gray-900 rounded-2xl">
-      {/* Left side - Knobs and Button */}
-      <div className="flex flex-col gap-6">
-        {/* Top left knob */}
-        <div className="flex flex-col items-center">
-          <div className="w-16 h-16 rounded-full bg-gray-800 border-4 border-gray-700 flex items-center justify-center shadow-lg">
-            <div className="w-2 h-6 bg-gray-600 rounded-full"></div>
+    <div className="space-y-4">
+      {/* Page selector dropdown */}
+      {pages && (
+        <div className="flex items-center justify-center gap-4">
+          <label htmlFor="page-select" className="text-gray-400 text-sm font-medium">
+            Page:
+          </label>
+          <select
+            id="page-select"
+            value={currentPage}
+            onChange={(e) => setCurrentPage(Number(e.target.value))}
+            className="bg-gray-800 text-white px-4 py-2 rounded-lg border border-gray-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer hover:bg-gray-750 transition-colors"
+          >
+            {Object.keys(pages).map((pageNum) => {
+              const num = Number(pageNum)
+              const info = pageInfo[num]
+              return (
+                <option key={pageNum} value={pageNum}>
+                  Page {pageNum}: {info?.title || `Page ${pageNum}`}
+                </option>
+              )
+            })}
+          </select>
+          {pageInfo[currentPage] && (
+            <span className="text-gray-500 text-sm italic">
+              {pageInfo[currentPage].description}
+            </span>
+          )}
+        </div>
+      )}
+
+      <div className="flex items-center justify-center gap-8 p-8 bg-gray-900 rounded-2xl">
+        {/* Left side - Knobs and Button */}
+        <div className="flex flex-col gap-6">
+          {/* Top left knob */}
+          <div className="flex flex-col items-center">
+            <div className="w-16 h-16 rounded-full bg-gray-800 border-4 border-gray-700 flex items-center justify-center shadow-lg">
+              <div className="w-2 h-6 bg-gray-600 rounded-full"></div>
+            </div>
+            <span className="text-xs text-gray-400 mt-2">VOL</span>
           </div>
-          <span className="text-xs text-gray-400 mt-2">VOL</span>
+
+          {/* Center left knob */}
+          <div className="flex flex-col items-center">
+            <div className="w-16 h-16 rounded-full bg-gray-800 border-4 border-gray-700 flex items-center justify-center shadow-lg">
+              <div className="w-2 h-6 bg-gray-600 rounded-full"></div>
+            </div>
+            <span className="text-xs text-gray-400 mt-2">PAGE</span>
+          </div>
+
+          {/* Physical button - ID 0 (bottom left) */}
+          <div className="flex flex-col items-center mt-4">
+            <div className="w-10 h-10 rounded-full bg-white shadow-lg flex items-center justify-center">
+              <div className="w-8 h-8 rounded-full bg-gray-700"></div>
+            </div>
+            <span className="text-xs text-gray-400 mt-2">BTN 0</span>
+          </div>
         </div>
 
-        {/* Center left knob */}
-        <div className="flex flex-col items-center">
-          <div className="w-16 h-16 rounded-full bg-gray-800 border-4 border-gray-700 flex items-center justify-center shadow-lg">
-            <div className="w-2 h-6 bg-gray-600 rounded-full"></div>
+        {/* Center screen */}
+        <div className="relative">
+          <div className="bg-black p-4 rounded-lg shadow-2xl border-4 border-gray-800">
+            <canvas
+              ref={canvasRef}
+              width={screenWidth}
+              height={screenHeight}
+              className="rounded"
+            />
           </div>
-          <span className="text-xs text-gray-400 mt-2">MEDIA</span>
+          <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-xs text-gray-500">
+            {screenWidth} × {screenHeight}px
+          </div>
         </div>
 
-        {/* Physical button - ID 0 (bottom left) */}
-        <div className="flex flex-col items-center mt-4">
-          <div className="w-10 h-10 rounded-full bg-white shadow-lg flex items-center justify-center">
-            <div className="w-8 h-8 rounded-full bg-gray-700"></div>
+        {/* Right side - Physical Buttons */}
+        <div className="flex flex-col gap-6 justify-center">
+          {/* Physical button - ID 1 */}
+          <div className="flex flex-col items-center">
+            <div className="w-10 h-10 rounded-full bg-red-500 shadow-lg flex items-center justify-center">
+              <div className="w-8 h-8 rounded-full bg-red-700"></div>
+            </div>
+            <span className="text-xs text-gray-400 mt-2">BTN 1</span>
           </div>
-          <span className="text-xs text-gray-400 mt-2">BTN 0</span>
-        </div>
-      </div>
 
-      {/* Center screen */}
-      <div className="relative">
-        <div className="bg-black p-4 rounded-lg shadow-2xl border-4 border-gray-800">
-          <canvas
-            ref={canvasRef}
-            width={screenWidth}
-            height={screenHeight}
-            className="rounded"
-          />
-        </div>
-        <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-xs text-gray-500">
-          {screenWidth} × {screenHeight}px
-        </div>
-      </div>
-
-      {/* Right side - Physical Buttons */}
-      <div className="flex flex-col gap-6 justify-center">
-        {/* Physical button - ID 1 */}
-        <div className="flex flex-col items-center">
-          <div className="w-10 h-10 rounded-full bg-red-500 shadow-lg flex items-center justify-center">
-            <div className="w-8 h-8 rounded-full bg-red-700"></div>
+          {/* Physical button - ID 2 */}
+          <div className="flex flex-col items-center">
+            <div className="w-10 h-10 rounded-full bg-green-500 shadow-lg flex items-center justify-center">
+              <div className="w-8 h-8 rounded-full bg-green-700"></div>
+            </div>
+            <span className="text-xs text-gray-400 mt-2">BTN 2</span>
           </div>
-          <span className="text-xs text-gray-400 mt-2">BTN 1</span>
-        </div>
 
-        {/* Physical button - ID 2 */}
-        <div className="flex flex-col items-center">
-          <div className="w-10 h-10 rounded-full bg-green-500 shadow-lg flex items-center justify-center">
-            <div className="w-8 h-8 rounded-full bg-green-700"></div>
+          {/* Physical button - ID 3 */}
+          <div className="flex flex-col items-center">
+            <div className="w-10 h-10 rounded-full bg-blue-500 shadow-lg flex items-center justify-center">
+              <div className="w-8 h-8 rounded-full bg-blue-700"></div>
+            </div>
+            <span className="text-xs text-gray-400 mt-2">BTN 3</span>
           </div>
-          <span className="text-xs text-gray-400 mt-2">BTN 2</span>
-        </div>
-
-        {/* Physical button - ID 3 */}
-        <div className="flex flex-col items-center">
-          <div className="w-10 h-10 rounded-full bg-blue-500 shadow-lg flex items-center justify-center">
-            <div className="w-8 h-8 rounded-full bg-blue-700"></div>
-          </div>
-          <span className="text-xs text-gray-400 mt-2">BTN 3</span>
         </div>
       </div>
     </div>

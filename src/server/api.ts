@@ -17,6 +17,9 @@ import {
   workspaceSetupButtonConfig,
   onePasswordUnlockButtonConfig,
   wlogoutButtonConfig,
+  mediaPreviousButtonConfig,
+  mediaPlayPauseButtonConfig,
+  mediaNextButtonConfig,
 } from '../config/components.ts'
 import {
   AUTO_UPDATE_INTERVAL_MS,
@@ -63,6 +66,31 @@ export class ApiServer {
     // 全設定取得
     this.app.get('/api/config', (_req: Request, res: Response) => {
       res.json({
+        pages: {
+          1: {
+            clock: clockConfig,
+            firefoxButton: firefoxButtonConfig,
+            onePasswordButton: onePasswordButtonConfig,
+            thunderbirdButton: thunderbirdButtonConfig,
+            wlogoutButton: wlogoutButtonConfig,
+            workspaceSetupButton: workspaceSetupButtonConfig,
+            onePasswordUnlockButton: onePasswordUnlockButtonConfig,
+            mediaPreviousButton: mediaPreviousButtonConfig,
+            mediaPlayPauseButton: mediaPlayPauseButtonConfig,
+            mediaNextButton: mediaNextButtonConfig,
+            volumeDisplay: volumeDisplayConfig,
+            mediaDisplay: mediaDisplayConfig,
+          },
+          2: {
+            // ページ2はワークスペースボタン（1-10）
+            // 動的に生成されるため、ここでは配置情報のみ
+            description: 'Workspace buttons 1-10',
+            layout: {
+              row1: 'Workspaces 1-5 (columns 0-4)',
+              row2: 'Workspaces 6-10 (columns 0-4)',
+            },
+          },
+        },
         components: {
           clock: clockConfig,
           firefoxButton: firefoxButtonConfig,
@@ -73,6 +101,9 @@ export class ApiServer {
           mediaDisplay: mediaDisplayConfig,
           workspaceSetupButton: workspaceSetupButtonConfig,
           onePasswordUnlockButton: onePasswordUnlockButtonConfig,
+          mediaPreviousButton: mediaPreviousButtonConfig,
+          mediaPlayPauseButton: mediaPlayPauseButtonConfig,
+          mediaNextButton: mediaNextButtonConfig,
         },
         constants: {
           autoUpdateInterval: AUTO_UPDATE_INTERVAL_MS,

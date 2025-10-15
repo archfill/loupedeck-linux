@@ -31,6 +31,7 @@ interface Constants {
 
 export interface Config {
   components?: Record<string, Component>
+  pages?: Record<string, Record<string, Component>>
   constants?: Constants
   device?: Device
 }
