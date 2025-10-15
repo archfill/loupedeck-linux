@@ -1,27 +1,18 @@
 [Unit]
-Description=Loupedeck Linux Controller
+Description=Loupedeck Linux Controller (User Session)
 Documentation=https://github.com/archfill/loupedeck-linux
-After=network.target sound.target
+After=graphical-session.target sound.target
 
 [Service]
 Type=simple
-User={{USER}}
-WorkingDirectory={{WORKING_DIR}}
+WorkingDirectory={{PROJECT_DIR}}
 Environment=NODE_ENV=production
 Environment=LOG_LEVEL=info
-ExecStart={{NPX_PATH}} tsx main.ts
+ExecStart={{PROJECT_DIR}}/scripts/start-loupedeck.sh
 Restart=on-failure
 RestartSec=10
 StandardOutput=journal
 StandardError=journal
 
-# Security settings
-# Uncomment these for additional security (may need adjustments)
-# PrivateTmp=yes
-# NoNewPrivileges=yes
-# ProtectSystem=strict
-# ProtectHome=read-only
-# ReadWritePaths={{WORKING_DIR}}
-
 [Install]
-WantedBy=multi-user.target
+WantedBy=default.target

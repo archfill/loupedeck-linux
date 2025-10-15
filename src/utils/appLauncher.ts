@@ -26,9 +26,29 @@ export class AppLauncher {
   async launch(appName: string): Promise<void> {
     logger.info(`${appName} を起動中...`)
 
+    // 環境変数の確認（デバッグ用）
+    const display = process.env.DISPLAY
+    const xauthority = process.env.XAUTHORITY
+    const waylandDisplay = process.env.WAYLAND_DISPLAY
+
+    if (!display && !waylandDisplay) {
+      logger.warn(
+        'DISPLAYまたはWAYLAND_DISPLAY環境変数が設定されていません。GUIアプリの起動に失敗する可能性があります。'
+      )
+      logger.debug('環境変数:', {
+        DISPLAY: display,
+        XAUTHORITY: xauthority,
+        WAYLAND_DISPLAY: waylandDisplay,
+        XDG_RUNTIME_DIR: process.env.XDG_RUNTIME_DIR,
+        DBUS_SESSION_BUS_ADDRESS: process.env.DBUS_SESSION_BUS_ADDRESS,
+      })
+    }
+
     try {
       // setsidでプロセスをデタッチして、親プロセス終了時も継続するようにする
-      await execAsync(`setsid ${appName} >/dev/null 2>&1 &`)
+      // 環境変数を明示的に渡す
+      const env = { ...process.env }
+      await execAsync(`setsid ${appName} >/dev/null 2>&1 &`, { env })
       logger.info(`✓ ${appName} を起動しました`)
 
       // 成功時の振動フィードバック

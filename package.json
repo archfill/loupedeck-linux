@@ -15,7 +15,6 @@
     "dev:info": "LOG_LEVEL=info tsx watch main.ts",
     "dev:no-led": "LOG_LEVEL=debug SKIP_LED=true tsx watch main.ts",
     "kill": "./scripts/kill-loupedeck.sh",
-    "service:setup": "./scripts/manage-systemd-service.sh setup",
     "service:install": "./scripts/manage-systemd-service.sh install",
     "service:uninstall": "./scripts/manage-systemd-service.sh uninstall",
     "service:enable": "./scripts/manage-systemd-service.sh enable",

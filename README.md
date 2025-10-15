@@ -175,6 +175,71 @@ npm run format
 npm run format:check
 ```
 
+## 本番環境での自動起動（systemdサービス）
+
+ログイン時にLoupedeckを自動的に起動させたい場合、systemdユーザーサービスとしてインストールできます。
+
+### サービスのインストール
+
+```bash
+# スクリプトを直接実行
+./scripts/manage-systemd-service.sh install
+
+# または npm スクリプト経由で実行
+npm run service:install
+```
+
+このコマンドは以下を実行します：
+- ユーザーsystemdディレクトリ（`~/.config/systemd/user/`）にサービスファイルをコピー
+- サービスを有効化（ログイン時に自動起動）
+- サービスを即座に開始
+
+**重要**: ユーザーサービスとして動作するため、以下の特徴があります：
+- ログイン時に自動起動
+- GUI環境変数（DISPLAY、WAYLAND_DISPLAY等）に自動的にアクセス可能
+- アプリケーション起動機能が正常に動作
+- sudoは不要
+
+### サービスの管理
+
+```bash
+# ステータス確認
+npm run service:status
+
+# サービス停止
+npm run service:stop
+
+# サービス再起動
+npm run service:restart
+
+# ログ確認（リアルタイム）
+npm run service:logs
+
+# サービス無効化（自動起動を停止）
+npm run service:disable
+
+# サービス有効化（自動起動を再開）
+npm run service:enable
+
+# サービス完全削除
+npm run service:uninstall
+```
+
+**Tips**: スクリプトを直接実行することもできます（例: `./scripts/manage-systemd-service.sh status`）
+
+### 手動での確認
+
+```bash
+# systemctl コマンドで直接確認
+systemctl --user status loupedeck
+
+# ログ確認
+journalctl --user -u loupedeck -f
+
+# サービス再起動
+systemctl --user restart loupedeck
+```
+
 ## 使い方
 
 ### デバイスレイアウト
