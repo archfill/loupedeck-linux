@@ -5,6 +5,7 @@ import { Button } from './src/components/Button.ts'
 import { VolumeDisplay } from './src/components/VolumeDisplay.ts'
 import { MediaDisplay } from './src/components/MediaDisplay.ts'
 import { WorkspaceButton } from './src/components/WorkspaceButton.ts'
+import { MediaPlayPauseButton } from './src/components/MediaPlayPauseButton.ts'
 import { VolumeControl } from './src/utils/volumeControl.ts'
 import { MediaControl } from './src/utils/mediaControl.ts'
 import { HyprlandControl } from './src/utils/hyprlandControl.ts'
@@ -25,6 +26,9 @@ import {
   workspaceSetupButtonConfig,
   onePasswordUnlockButtonConfig,
   wlogoutButtonConfig,
+  mediaPreviousButtonConfig,
+  mediaPlayPauseButtonConfig,
+  mediaNextButtonConfig,
 } from './src/config/components.ts'
 
 /**
@@ -164,6 +168,43 @@ async function main() {
       }
     )
 
+    // メディアコントロール: 前のトラックボタン（列1, 行2）
+    const mediaPreviousButton = new Button(
+      mediaPreviousButtonConfig.position.col,
+      mediaPreviousButtonConfig.position.row,
+      {
+        ...mediaPreviousButtonConfig.options,
+        // iconはconfigから取得、iconImageは設定しない
+        vibration: vibration,
+        onClick: () => appLauncher.launch(mediaPreviousButtonConfig.command),
+      }
+    )
+
+    // メディアコントロール: 再生/一時停止ボタン（列2, 行2）
+    const mediaPlayPauseButton = new MediaPlayPauseButton(
+      mediaPlayPauseButtonConfig.position.col,
+      mediaPlayPauseButtonConfig.position.row,
+      mediaControl,
+      {
+        ...mediaPlayPauseButtonConfig.options,
+        // iconはconfigから取得、iconImageは設定しない
+        vibration: vibration,
+        onClick: () => appLauncher.launch(mediaPlayPauseButtonConfig.command),
+      }
+    )
+
+    // メディアコントロール: 次のトラックボタン（列3, 行2）
+    const mediaNextButton = new Button(
+      mediaNextButtonConfig.position.col,
+      mediaNextButtonConfig.position.row,
+      {
+        ...mediaNextButtonConfig.options,
+        // iconはconfigから取得、iconImageは設定しない
+        vibration: vibration,
+        onClick: () => appLauncher.launch(mediaNextButtonConfig.command),
+      }
+    )
+
     // 音量表示（列0, 行0 = 時計と同じ位置、ノブ操作時のみ表示）
     const volumeDisplay = new VolumeDisplay(
       volumeDisplayConfig.position.col,
@@ -196,6 +237,9 @@ async function main() {
         wlogoutButton,
         workspaceSetupButton,
         onePasswordUnlockButton,
+        mediaPreviousButton,
+        mediaPlayPauseButton,
+        mediaNextButton,
         volumeDisplay,
         mediaDisplay,
       ],
@@ -252,6 +296,15 @@ async function main() {
     logger.info(
       `  - メディア表示: (列${mediaDisplayConfig.position.col}, 行${mediaDisplayConfig.position.row}) ← 一時表示`
     )
+    logger.info(
+      `  - 前のトラックボタン: (列${mediaPreviousButtonConfig.position.col}, 行${mediaPreviousButtonConfig.position.row})`
+    )
+    logger.info(
+      `  - 再生/一時停止ボタン: (列${mediaPlayPauseButtonConfig.position.col}, 行${mediaPlayPauseButtonConfig.position.row})`
+    )
+    logger.info(
+      `  - 次のトラックボタン: (列${mediaNextButtonConfig.position.col}, 行${mediaNextButtonConfig.position.row})`
+    )
     logger.info('\n【ページ2: ワークスペース切替】')
     logger.info('  - 中段（行1）: ワークスペース1-5')
     logger.info('  - 下段（行2）: ワークスペース6-10')
@@ -265,6 +318,12 @@ async function main() {
 
     // 自動更新を開始
     const intervalId = layout.startAutoUpdate(AUTO_UPDATE_INTERVAL_MS)
+
+    // メディア再生/一時停止ボタンのアイコン更新を開始（2秒ごと）
+    const mediaIconUpdateInterval = setInterval(async () => {
+      await mediaPlayPauseButton.updateIcon()
+      await layout.update()
+    }, 2000)
 
     // 音量ハンドラーを作成
     const volumeHandler = new VolumeHandler(volumeControl, volumeDisplay, layout, vibration)
@@ -333,6 +392,10 @@ async function main() {
       logger.debug('自動更新を停止中...')
       layout.stopAutoUpdate(intervalId)
       logger.debug('自動更新を停止しました')
+
+      // メディアアイコン更新を停止
+      clearInterval(mediaIconUpdateInterval)
+      logger.debug('メディアアイコン更新を停止しました')
 
       // VolumeDisplayのクリーンアップ
       volumeDisplay.cleanup()

@@ -33,6 +33,7 @@ export interface ClockConfig {
 /** ボタンコンポーネントのオプション */
 export interface ButtonOptions {
   label: string
+  icon?: string // 絵文字やNerdFontのアイコン
   iconSize: number
   bgColor: string
   borderColor: string
@@ -229,4 +230,61 @@ export const wlogoutButtonConfig: ButtonConfig = {
     vibrationPattern: VIBRATION_PATTERNS.TAP,
   },
   command: 'wlogout',
+}
+
+/**
+ * メディアコントロール: 前のトラックボタンの設定
+ */
+export const mediaPreviousButtonConfig: ButtonConfig = {
+  position: { col: 1, row: 2 },
+  appName: 'media-skip-backward', // メディアアイコン（フォールバック用）
+  options: {
+    label: 'Previous',
+    icon: '󰒮', // NerdFont: mdi-skip-previous (U+F04AE)
+    iconSize: 56,
+    bgColor: '#6A1B9A',
+    borderColor: '#8E24AA',
+    textColor: '#FFFFFF',
+    hoverBgColor: '#7B1FA2',
+    vibrationPattern: VIBRATION_PATTERNS.TAP,
+  },
+  command: 'playerctl previous',
+}
+
+/**
+ * メディアコントロール: 再生/一時停止ボタンの設定
+ */
+export const mediaPlayPauseButtonConfig: ButtonConfig = {
+  position: { col: 2, row: 2 },
+  appName: 'media-playback-start', // メディアアイコン（フォールバック用）
+  options: {
+    label: 'Play/Pause',
+    icon: '󰐊', // NerdFont: mdi-play (U+F040A)
+    iconSize: 56,
+    bgColor: '#C62828',
+    borderColor: '#E53935',
+    textColor: '#FFFFFF',
+    hoverBgColor: '#D32F2F',
+    vibrationPattern: VIBRATION_PATTERNS.TAP,
+  },
+  command: 'playerctl play-pause',
+}
+
+/**
+ * メディアコントロール: 次のトラックボタンの設定
+ */
+export const mediaNextButtonConfig: ButtonConfig = {
+  position: { col: 3, row: 2 },
+  appName: 'media-skip-forward', // メディアアイコン（フォールバック用）
+  options: {
+    label: 'Next',
+    icon: '󰒭', // NerdFont: mdi-skip-next (U+F04AD)
+    iconSize: 56,
+    bgColor: '#6A1B9A',
+    borderColor: '#8E24AA',
+    textColor: '#FFFFFF',
+    hoverBgColor: '#7B1FA2',
+    vibrationPattern: VIBRATION_PATTERNS.TAP,
+  },
+  command: 'playerctl next',
 }

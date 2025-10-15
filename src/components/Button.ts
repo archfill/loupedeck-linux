@@ -140,18 +140,18 @@ export class Button {
       autoSizeText(ctx, this.label, maxWidth, 14, 10, '', 'sans-serif')
       ctx.fillText(this.label, x + width / 2, y + height / 2 + this.iconSize / 2 + 8)
     } else if (this.icon) {
-      // 絵文字アイコンがある場合
+      // 絵文字/NerdFontアイコンがある場合
       ctx.fillStyle = this.textColor
       ctx.textAlign = 'center'
       ctx.textBaseline = 'middle'
 
-      // アイコンを上部に表示
-      ctx.font = '32px sans-serif'
-      ctx.fillText(this.icon, x + width / 2, y + height / 2 - 12)
+      // アイコンを上部に表示（大きめのフォント + NerdFont対応）
+      ctx.font = '48px "JetBrainsMono Nerd Font Mono", sans-serif'
+      ctx.fillText(this.icon, x + width / 2, y + height / 2 - 10)
 
       // ラベルを下部に表示
       autoSizeText(ctx, this.label, maxWidth, 14, 10, '', 'sans-serif')
-      ctx.fillText(this.label, x + width / 2, y + height / 2 + 20)
+      ctx.fillText(this.label, x + width / 2, y + height / 2 + 28)
     } else {
       // アイコンがない場合はラベルのみ中央に表示
       ctx.fillStyle = this.textColor
