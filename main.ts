@@ -54,8 +54,9 @@ async function main() {
       try {
         await loupedeckDevice.setButtonColors(BUTTON_LED_COLORS)
         logger.info('✓ LED色の設定完了\n')
-      } catch (error: any) {
-        logger.warn(`LED色の設定をスキップしました: ${error.message}\n`)
+      } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : String(error)
+        logger.warn(`LED色の設定をスキップしました: ${message}\n`)
       }
     } else {
       logger.info('LED色の設定をスキップしました（SKIP_LED=true）\n')
@@ -76,7 +77,11 @@ async function main() {
     await mediaControl.initialize()
 
     // GridLayoutを作成
-    const layout = new GridLayout(loupedeckDevice.getDevice())
+    const device = loupedeckDevice.getDevice()
+    if (!device) {
+      throw new Error('デバイスが接続されていません')
+    }
+    const layout = new GridLayout(device)
 
     // 時計コンポーネント（列0, 行0 = 左上）
     const clock = new Clock(clockConfig.position.col, clockConfig.position.row, clockConfig.options)
@@ -235,23 +240,25 @@ async function main() {
 
     // ノブ回転イベントハンドラー（音量調整とメディア操作）
     logger.info('ノブ回転イベントハンドラーを登録しています...')
-    loupedeckDevice.on('rotate', async ({ id, delta }) => {
-      await volumeHandler.handleRotate(id, delta)
-      await mediaHandler.handleRotate(id, delta)
+    loupedeckDevice.on('rotate', async (data: unknown) => {
+      const event = data as { id: string; delta: number }
+      await volumeHandler.handleRotate(event.id, event.delta)
+      await mediaHandler.handleRotate(event.id, event.delta)
     })
     logger.info('ノブ回転イベントハンドラーの登録完了')
 
     // ノブクリックイベントハンドラー（ミュート切り替えと再生/一時停止）
     logger.info('ノブクリックイベントハンドラーを登録しています...')
-    loupedeckDevice.on('down', async ({ id }) => {
-      logger.info(`⬇️  ボタン/ノブが押されました: ID=${id}`)
+    loupedeckDevice.on('down', async (data: unknown) => {
+      const event = data as { id: number | string }
+      logger.info(`⬇️  ボタン/ノブが押されました: ID=${event.id}`)
 
       // ノブのみ処理（物理ボタンは無効化）
-      if (typeof id === 'string') {
-        await volumeHandler.handleDown(id)
-        await mediaHandler.handleDown(id)
+      if (typeof event.id === 'string') {
+        await volumeHandler.handleDown(event.id)
+        await mediaHandler.handleDown(event.id)
       } else {
-        logger.debug(`物理ボタン ID=${id} は無効化されています`)
+        logger.debug(`物理ボタン ID=${event.id} は無効化されています`)
       }
     })
     logger.info('ノブクリックイベントハンドラーの登録完了')
@@ -275,8 +282,9 @@ async function main() {
         await apiServer.stop()
       }
     })
-  } catch (error: any) {
-    logger.error(`✗ エラーが発生しました: ${error.message}`)
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error)
+    logger.error(`✗ エラーが発生しました: ${message}`)
     logger.error('\nトラブルシューティング:')
     logger.error('1. デバイスが接続されているか確認してください')
     logger.error('2. udevルールが正しく適用されているか確認してください')

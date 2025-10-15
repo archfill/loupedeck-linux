@@ -17,8 +17,9 @@ const WEB_UI_URL = 'http://localhost:3000'
 
 // Icon paths
 const ICON_PATH = path.join(__dirname, 'assets', 'tray', 'icon.png')
-const ICON_ACTIVE = path.join(__dirname, 'assets', 'tray', 'icon-active.png')
-const ICON_INACTIVE = path.join(__dirname, 'assets', 'tray', 'icon-inactive.png')
+// Reserved for future use
+// const ICON_ACTIVE = path.join(__dirname, 'assets', 'tray', 'icon-active.png')
+// const ICON_INACTIVE = path.join(__dirname, 'assets', 'tray', 'icon-inactive.png')
 
 interface MenuItem {
   title: string
@@ -38,7 +39,7 @@ interface SysTrayConfig {
 }
 
 class LoupedeckTray {
-  private systray: any
+  private systray: SysTray
   private isServiceRunning = false
   private checkInterval: NodeJS.Timeout | null = null
 
@@ -49,7 +50,7 @@ class LoupedeckTray {
       copyDir: true,
     })
 
-    this.systray.onClick((action: any) => {
+    this.systray.onClick((action: { seq_id: number }) => {
       this.handleMenuClick(action.seq_id)
     })
 
@@ -291,5 +292,6 @@ process.on('SIGTERM', () => {
 
 // Start the tray application
 console.log('Starting Loupedeck tray application...')
-const tray = new LoupedeckTray()
+// Keep reference to prevent garbage collection
+new LoupedeckTray()
 console.log('Tray application started. Press Ctrl+C to exit.')
