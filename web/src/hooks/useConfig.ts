@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 
 interface Component {
-  position: { col: number; row: number }
+  position?: { col: number; row: number }
   appName?: string
   options?: {
     label?: string
@@ -12,6 +12,16 @@ interface Component {
     iconSize?: number
   }
   command?: string
+}
+
+interface PageMeta {
+  title: string
+  description: string
+}
+
+interface PageData {
+  _meta?: PageMeta
+  [key: string]: Component | PageMeta | undefined
 }
 
 interface Device {
@@ -31,7 +41,7 @@ interface Constants {
 
 export interface Config {
   components?: Record<string, Component>
-  pages?: Record<string, Record<string, Component>>
+  pages?: Record<string, PageData>
   constants?: Constants
   device?: Device
 }

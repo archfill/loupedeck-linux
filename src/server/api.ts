@@ -68,6 +68,10 @@ export class ApiServer {
       res.json({
         pages: {
           1: {
+            _meta: {
+              title: 'Applications',
+              description: 'App launchers and media controls',
+            },
             clock: clockConfig,
             firefoxButton: firefoxButtonConfig,
             onePasswordButton: onePasswordButtonConfig,
@@ -82,9 +86,12 @@ export class ApiServer {
             mediaDisplay: mediaDisplayConfig,
           },
           2: {
+            _meta: {
+              title: 'Workspaces',
+              description: 'Hyprland workspace switching (1-10)',
+            },
             // ページ2はワークスペースボタン（1-10）
             // 動的に生成されるため、ここでは配置情報のみ
-            description: 'Workspace buttons 1-10',
             layout: {
               row1: 'Workspaces 1-5 (columns 0-4)',
               row2: 'Workspaces 6-10 (columns 0-4)',

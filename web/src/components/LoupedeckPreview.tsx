@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 
 interface Component {
-  position: { col: number; row: number }
+  position?: { col: number; row: number }
   appName?: string
   options?: {
     label?: string
@@ -14,9 +14,19 @@ interface Component {
   command?: string
 }
 
+interface PageMeta {
+  title: string
+  description: string
+}
+
+interface PageData {
+  _meta?: PageMeta
+  [key: string]: Component | PageMeta | undefined
+}
+
 interface LoupedeckPreviewProps {
   components?: Record<string, Component>
-  pages?: Record<string, Record<string, Component>>
+  pages?: Record<string, PageData>
   device?: {
     type?: string
     grid?: { columns: number; rows: number }
@@ -39,6 +49,11 @@ export function LoupedeckPreview({ components, pages, device }: LoupedeckPreview
   const displayComponents = pages && pages[currentPage]
     ? pages[currentPage]
     : components
+
+  // 型ガード: Componentかどうかを判定
+  const isComponent = (value: Component | PageMeta | undefined): value is Component => {
+    return value !== undefined && 'position' in value && value.position !== undefined
+  }
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -101,10 +116,10 @@ export function LoupedeckPreview({ components, pages, device }: LoupedeckPreview
       // ページ1: 通常のコンポーネントを描画
       if (displayComponents) {
         Object.entries(displayComponents).forEach(([, component]) => {
-          // description や layout などのメタ情報は無視
-          if (!component.position) return
+          // 型ガードで Component 型のみを処理
+          if (!isComponent(component)) return
 
-          const { col, row } = component.position
+          const { col, row } = component.position!
           const x = col * cellSize
           const y = row * cellSize
           const options = component.options || {}
@@ -147,12 +162,6 @@ export function LoupedeckPreview({ components, pages, device }: LoupedeckPreview
     }
   }, [displayComponents, currentPage, columns, rows, screenWidth, screenHeight, cellSize])
 
-  // ページ情報の定義
-  const pageInfo: Record<number, { title: string; description: string }> = {
-    1: { title: 'Applications', description: 'App launchers and media controls' },
-    2: { title: 'Workspaces', description: 'Hyprland workspace switching (1-10)' },
-  }
-
   return (
     <div className="space-y-4">
       {/* Page selector dropdown */}
@@ -169,17 +178,17 @@ export function LoupedeckPreview({ components, pages, device }: LoupedeckPreview
           >
             {Object.keys(pages).map((pageNum) => {
               const num = Number(pageNum)
-              const info = pageInfo[num]
+              const pageMeta = pages[num]._meta
               return (
                 <option key={pageNum} value={pageNum}>
-                  Page {pageNum}: {info?.title || `Page ${pageNum}`}
+                  Page {pageNum}: {pageMeta?.title || `Page ${pageNum}`}
                 </option>
               )
             })}
           </select>
-          {pageInfo[currentPage] && (
+          {pages[currentPage]?._meta && (
             <span className="text-gray-500 text-sm italic">
-              {pageInfo[currentPage].description}
+              {pages[currentPage]._meta.description}
             </span>
           )}
         </div>
