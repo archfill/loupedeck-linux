@@ -1,35 +1,24 @@
 import { LoupedeckDevice } from './src/device/LoupedeckDevice.ts'
 import { GridLayout } from './src/components/GridLayout.ts'
-import { Clock } from './src/components/Clock.ts'
-import { Button } from './src/components/Button.ts'
-import { VolumeDisplay } from './src/components/VolumeDisplay.ts'
-import { MediaDisplay } from './src/components/MediaDisplay.ts'
 import { WorkspaceButton } from './src/components/WorkspaceButton.ts'
-import { MediaPlayPauseButton } from './src/components/MediaPlayPauseButton.ts'
 import { VolumeControl } from './src/utils/volumeControl.ts'
 import { MediaControl } from './src/utils/mediaControl.ts'
 import { HyprlandControl } from './src/utils/hyprlandControl.ts'
 import { VolumeHandler } from './src/handlers/VolumeHandler.ts'
 import { PageHandler } from './src/handlers/PageHandler.ts'
 import { AppLauncher } from './src/utils/appLauncher.ts'
-import { IconResolver } from './src/utils/iconResolver.ts'
 import { logger } from './src/utils/logger.ts'
 import { AUTO_UPDATE_INTERVAL_MS, BUTTON_LED_COLORS } from './src/config/constants.ts'
 import { ApiServer } from './src/server/api.ts'
+import { pagesConfig } from './src/config/pages.ts'
 import {
-  clockConfig,
-  firefoxButtonConfig,
-  onePasswordButtonConfig,
-  thunderbirdButtonConfig,
-  volumeDisplayConfig,
-  mediaDisplayConfig,
-  workspaceSetupButtonConfig,
-  onePasswordUnlockButtonConfig,
-  wlogoutButtonConfig,
-  mediaPreviousButtonConfig,
-  mediaPlayPauseButtonConfig,
-  mediaNextButtonConfig,
-} from './src/config/components.ts'
+  createComponent,
+  type GeneratedComponent,
+  type ComponentDependencies,
+} from './src/utils/componentFactory.ts'
+import type { VolumeDisplay } from './src/components/VolumeDisplay.ts'
+import type { MediaDisplay } from './src/components/MediaDisplay.ts'
+import type { MediaPlayPauseButton } from './src/components/MediaPlayPauseButton.ts'
 
 /**
  * メイン処理
@@ -93,158 +82,38 @@ async function main() {
     }
     const layout = new GridLayout(device)
 
-    // 時計コンポーネント（列0, 行0 = 左上）
-    const clock = new Clock(clockConfig.position.col, clockConfig.position.row, clockConfig.options)
+    // ページ1のコンポーネントを動的生成
+    logger.info('ページ1のコンポーネントを動的生成中...')
 
-    // Firefoxボタン（列1, 行0 = 時計の右）
-    const firefoxButton = new Button(
-      firefoxButtonConfig.position.col,
-      firefoxButtonConfig.position.row,
-      {
-        ...firefoxButtonConfig.options,
-        iconImage: IconResolver.resolve(firefoxButtonConfig.appName),
-        vibration: vibration,
-        onClick: () => appLauncher.launch(firefoxButtonConfig.command),
-      }
-    )
-
-    // 1Passwordボタン（列2, 行0）
-    const onePasswordButton = new Button(
-      onePasswordButtonConfig.position.col,
-      onePasswordButtonConfig.position.row,
-      {
-        ...onePasswordButtonConfig.options,
-        iconImage: IconResolver.resolve(onePasswordButtonConfig.appName),
-        vibration: vibration,
-        onClick: () => appLauncher.launch(onePasswordButtonConfig.command),
-      }
-    )
-
-    // Thunderbirdボタン（列3, 行0）
-    const thunderbirdButton = new Button(
-      thunderbirdButtonConfig.position.col,
-      thunderbirdButtonConfig.position.row,
-      {
-        ...thunderbirdButtonConfig.options,
-        iconImage: IconResolver.resolve(thunderbirdButtonConfig.appName),
-        vibration: vibration,
-        onClick: () => appLauncher.launch(thunderbirdButtonConfig.command),
-      }
-    )
-
-    // ワークスペースセットアップボタン（列0, 行1）
-    const workspaceSetupButton = new Button(
-      workspaceSetupButtonConfig.position.col,
-      workspaceSetupButtonConfig.position.row,
-      {
-        ...workspaceSetupButtonConfig.options,
-        iconImage: IconResolver.resolve(workspaceSetupButtonConfig.appName),
-        vibration: vibration,
-        onClick: () => appLauncher.launch(workspaceSetupButtonConfig.command),
-      }
-    )
-
-    // 1Passwordロック解除ボタン（列2, 行1）
-    const onePasswordUnlockButton = new Button(
-      onePasswordUnlockButtonConfig.position.col,
-      onePasswordUnlockButtonConfig.position.row,
-      {
-        ...onePasswordUnlockButtonConfig.options,
-        iconImage: IconResolver.resolve(onePasswordUnlockButtonConfig.appName),
-        vibration: vibration,
-        onClick: () => appLauncher.launch(onePasswordUnlockButtonConfig.command),
-      }
-    )
-
-    // wlogoutボタン（列4, 行0）
-    const wlogoutButton = new Button(
-      wlogoutButtonConfig.position.col,
-      wlogoutButtonConfig.position.row,
-      {
-        ...wlogoutButtonConfig.options,
-        iconImage: IconResolver.resolve(wlogoutButtonConfig.appName),
-        vibration: vibration,
-        onClick: () => appLauncher.launch(wlogoutButtonConfig.command),
-      }
-    )
-
-    // メディアコントロール: 前のトラックボタン（列1, 行2）
-    const mediaPreviousButton = new Button(
-      mediaPreviousButtonConfig.position.col,
-      mediaPreviousButtonConfig.position.row,
-      {
-        ...mediaPreviousButtonConfig.options,
-        // iconはconfigから取得、iconImageは設定しない
-        vibration: vibration,
-        onClick: () => appLauncher.launch(mediaPreviousButtonConfig.command),
-      }
-    )
-
-    // メディアコントロール: 再生/一時停止ボタン（列2, 行2）
-    const mediaPlayPauseButton = new MediaPlayPauseButton(
-      mediaPlayPauseButtonConfig.position.col,
-      mediaPlayPauseButtonConfig.position.row,
-      mediaControl,
-      {
-        ...mediaPlayPauseButtonConfig.options,
-        // iconはconfigから取得、iconImageは設定しない
-        vibration: vibration,
-        onClick: () => appLauncher.launch(mediaPlayPauseButtonConfig.command),
-      }
-    )
-
-    // メディアコントロール: 次のトラックボタン（列3, 行2）
-    const mediaNextButton = new Button(
-      mediaNextButtonConfig.position.col,
-      mediaNextButtonConfig.position.row,
-      {
-        ...mediaNextButtonConfig.options,
-        // iconはconfigから取得、iconImageは設定しない
-        vibration: vibration,
-        onClick: () => appLauncher.launch(mediaNextButtonConfig.command),
-      }
-    )
-
-    // 音量表示（列0, 行0 = 時計と同じ位置、ノブ操作時のみ表示）
-    const volumeDisplay = new VolumeDisplay(
-      volumeDisplayConfig.position.col,
-      volumeDisplayConfig.position.row,
+    const deps: ComponentDependencies = {
+      vibration,
+      appLauncher,
       volumeControl,
-      {
-        ...volumeDisplayConfig.options,
-        vibration: vibration,
-      }
-    )
-
-    // メディア表示（列2, 行0、ノブ操作時のみ表示）
-    const mediaDisplay = new MediaDisplay(
-      mediaDisplayConfig.position.col,
-      mediaDisplayConfig.position.row,
       mediaControl,
-      {
-        ...mediaDisplayConfig.options,
-        vibration: vibration,
-      }
-    )
+    }
 
-    // ページ1: アプリケーションボタン（表示を最後に追加して上に重ねる）
-    layout.addComponents(
-      [
-        clock,
-        firefoxButton,
-        onePasswordButton,
-        thunderbirdButton,
-        wlogoutButton,
-        workspaceSetupButton,
-        onePasswordUnlockButton,
-        mediaPreviousButton,
-        mediaPlayPauseButton,
-        mediaNextButton,
-        volumeDisplay,
-        mediaDisplay,
-      ],
-      1
-    )
+    const componentsMap = new Map<string, GeneratedComponent>()
+    const componentsList: GeneratedComponent[] = []
+
+    const page1 = pagesConfig[1]
+    if (!page1) {
+      throw new Error('ページ1の設定が見つかりません')
+    }
+
+    for (const [name, config] of Object.entries(page1.components)) {
+      try {
+        const component = createComponent(name, config, deps)
+        componentsMap.set(name, component)
+        componentsList.push(component)
+        logger.debug(`✓ コンポーネント生成: ${name}`)
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error)
+        logger.warn(`⚠️ コンポーネント生成失敗: ${name} - ${message}`)
+      }
+    }
+
+    // ページ1にコンポーネントを追加（表示を最後に追加して上に重ねる）
+    layout.addComponents(componentsList, 1)
 
     // ページ2: ワークスペース切替ボタン（中段1-5、下段6-10）
     const workspaceButtons: WorkspaceButton[] = []
@@ -271,40 +140,13 @@ async function main() {
 
     logger.info('配置完了:')
     logger.info('\n【ページ1: アプリケーション】')
-    logger.info(`  - 時計: (列${clockConfig.position.col}, 行${clockConfig.position.row})`)
-    logger.info(
-      `  - Firefoxボタン: (列${firefoxButtonConfig.position.col}, 行${firefoxButtonConfig.position.row})`
-    )
-    logger.info(
-      `  - 1Passwordボタン: (列${onePasswordButtonConfig.position.col}, 行${onePasswordButtonConfig.position.row})`
-    )
-    logger.info(
-      `  - Thunderbirdボタン: (列${thunderbirdButtonConfig.position.col}, 行${thunderbirdButtonConfig.position.row})`
-    )
-    logger.info(
-      `  - wlogoutボタン: (列${wlogoutButtonConfig.position.col}, 行${wlogoutButtonConfig.position.row})`
-    )
-    logger.info(
-      `  - セットアップボタン: (列${workspaceSetupButtonConfig.position.col}, 行${workspaceSetupButtonConfig.position.row})`
-    )
-    logger.info(
-      `  - 1Passwordロック解除ボタン: (列${onePasswordUnlockButtonConfig.position.col}, 行${onePasswordUnlockButtonConfig.position.row})`
-    )
-    logger.info(
-      `  - 音量表示: (列${volumeDisplayConfig.position.col}, 行${volumeDisplayConfig.position.row}) ← 時計の位置に重ねて一時表示`
-    )
-    logger.info(
-      `  - メディア表示: (列${mediaDisplayConfig.position.col}, 行${mediaDisplayConfig.position.row}) ← 一時表示`
-    )
-    logger.info(
-      `  - 前のトラックボタン: (列${mediaPreviousButtonConfig.position.col}, 行${mediaPreviousButtonConfig.position.row})`
-    )
-    logger.info(
-      `  - 再生/一時停止ボタン: (列${mediaPlayPauseButtonConfig.position.col}, 行${mediaPlayPauseButtonConfig.position.row})`
-    )
-    logger.info(
-      `  - 次のトラックボタン: (列${mediaNextButtonConfig.position.col}, 行${mediaNextButtonConfig.position.row})`
-    )
+    // 動的生成されたコンポーネントの情報を表示
+    for (const [name, config] of Object.entries(page1.components)) {
+      if ('position' in config) {
+        const label = 'options' in config && 'label' in config.options ? config.options.label : name
+        logger.info(`  - ${label}: (列${config.position.col}, 行${config.position.row})`)
+      }
+    }
     logger.info('\n【ページ2: ワークスペース切替】')
     logger.info('  - 中段（行1）: ワークスペース1-5')
     logger.info('  - 下段（行2）: ワークスペース6-10')
@@ -320,13 +162,25 @@ async function main() {
     const intervalId = layout.startAutoUpdate(AUTO_UPDATE_INTERVAL_MS)
 
     // メディア再生/一時停止ボタンのアイコン更新を開始（2秒ごと）
-    const mediaIconUpdateInterval = setInterval(async () => {
-      await mediaPlayPauseButton.updateIcon()
-      await layout.update()
-    }, 2000)
+    const mediaPlayPauseButton = componentsMap.get('mediaPlayPauseButton') as MediaPlayPauseButton | undefined
+    let mediaIconUpdateInterval: NodeJS.Timeout | undefined
+    if (mediaPlayPauseButton) {
+      mediaIconUpdateInterval = setInterval(async () => {
+        await mediaPlayPauseButton.updateIcon()
+        await layout.update()
+      }, 2000)
+    }
+
+    // 特殊なコンポーネントの参照を取得
+    const volumeDisplay = componentsMap.get('volumeDisplay') as VolumeDisplay | undefined
+    const mediaDisplay = componentsMap.get('mediaDisplay') as MediaDisplay | undefined
+
+    if (!volumeDisplay || !mediaDisplay) {
+      logger.warn('⚠️ volumeDisplay または mediaDisplay が見つかりません')
+    }
 
     // 音量ハンドラーを作成
-    const volumeHandler = new VolumeHandler(volumeControl, volumeDisplay, layout, vibration)
+    const volumeHandler = new VolumeHandler(volumeControl, volumeDisplay!, layout, vibration)
 
     // ページハンドラーを作成
     const pageHandler = new PageHandler(layout, workspaceButtons, vibration)
@@ -394,16 +248,22 @@ async function main() {
       logger.debug('自動更新を停止しました')
 
       // メディアアイコン更新を停止
-      clearInterval(mediaIconUpdateInterval)
-      logger.debug('メディアアイコン更新を停止しました')
+      if (mediaIconUpdateInterval) {
+        clearInterval(mediaIconUpdateInterval)
+        logger.debug('メディアアイコン更新を停止しました')
+      }
 
       // VolumeDisplayのクリーンアップ
-      volumeDisplay.cleanup()
-      logger.debug('VolumeDisplayをクリーンアップしました')
+      if (volumeDisplay) {
+        volumeDisplay.cleanup()
+        logger.debug('VolumeDisplayをクリーンアップしました')
+      }
 
       // MediaDisplayのクリーンアップ
-      mediaDisplay.cleanup()
-      logger.debug('MediaDisplayをクリーンアップしました')
+      if (mediaDisplay) {
+        mediaDisplay.cleanup()
+        logger.debug('MediaDisplayをクリーンアップしました')
+      }
 
       // APIサーバーを停止
       if (apiServer) {

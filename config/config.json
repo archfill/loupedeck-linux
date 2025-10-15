@@ -1,0 +1,197 @@
+{
+  "pages": {
+    "1": {
+      "meta": {
+        "title": "Applications",
+        "description": "App launchers and media controls"
+      },
+      "components": {
+        "clock": {
+          "type": "clock",
+          "position": { "col": 0, "row": 0 },
+          "options": {
+            "cellBgColor": "#1a1a3e",
+            "cellBorderColor": "#4466AA",
+            "timeColor": "#FFFFFF",
+            "dateColor": "#88AAFF",
+            "showSeconds": true
+          }
+        },
+        "firefoxButton": {
+          "type": "button",
+          "position": { "col": 1, "row": 0 },
+          "appName": "firefox",
+          "options": {
+            "label": "Firefox",
+            "iconSize": 48,
+            "bgColor": "#FF6611",
+            "borderColor": "#FF8833",
+            "textColor": "#FFFFFF",
+            "hoverBgColor": "#FF7722",
+            "vibrationPattern": "tap"
+          },
+          "command": "firefox"
+        },
+        "onePasswordButton": {
+          "type": "button",
+          "position": { "col": 2, "row": 0 },
+          "appName": "1password",
+          "options": {
+            "label": "1Password",
+            "iconSize": 48,
+            "bgColor": "#0094F5",
+            "borderColor": "#33AAFF",
+            "textColor": "#FFFFFF",
+            "hoverBgColor": "#1AA5FF",
+            "vibrationPattern": "tap"
+          },
+          "command": "1password"
+        },
+        "thunderbirdButton": {
+          "type": "button",
+          "position": { "col": 3, "row": 0 },
+          "appName": "thunderbird",
+          "options": {
+            "label": "Mail",
+            "iconSize": 48,
+            "bgColor": "#0A84FF",
+            "borderColor": "#3399FF",
+            "textColor": "#FFFFFF",
+            "hoverBgColor": "#2B95FF",
+            "vibrationPattern": "tap"
+          },
+          "command": "thunderbird"
+        },
+        "wlogoutButton": {
+          "type": "button",
+          "position": { "col": 4, "row": 0 },
+          "appName": "system-shutdown",
+          "options": {
+            "label": "Logout",
+            "iconSize": 48,
+            "bgColor": "#D32F2F",
+            "borderColor": "#F44336",
+            "textColor": "#FFFFFF",
+            "hoverBgColor": "#E53935",
+            "vibrationPattern": "tap"
+          },
+          "command": "wlogout"
+        },
+        "workspaceSetupButton": {
+          "type": "button",
+          "position": { "col": 0, "row": 1 },
+          "appName": "preferences-system",
+          "options": {
+            "label": "Setup",
+            "iconSize": 48,
+            "bgColor": "#00AA55",
+            "borderColor": "#22CC77",
+            "textColor": "#FFFFFF",
+            "hoverBgColor": "#22BB66",
+            "vibrationPattern": "tap"
+          },
+          "command": "/home/archfill/git/loupedeck-linux/scripts/workspace-setup.sh"
+        },
+        "onePasswordUnlockButton": {
+          "type": "button",
+          "position": { "col": 2, "row": 1 },
+          "appName": "security-high",
+          "options": {
+            "label": "Unlock",
+            "iconSize": 48,
+            "bgColor": "#00AA88",
+            "borderColor": "#22CCAA",
+            "textColor": "#FFFFFF",
+            "hoverBgColor": "#22BB99",
+            "vibrationPattern": "tap"
+          },
+          "command": "/home/archfill/git/loupedeck-linux/scripts/1password-unlock.sh"
+        },
+        "mediaPreviousButton": {
+          "type": "button",
+          "position": { "col": 1, "row": 2 },
+          "appName": "media-skip-backward",
+          "options": {
+            "label": "Previous",
+            "icon": "󰒮",
+            "iconSize": 56,
+            "bgColor": "#6A1B9A",
+            "borderColor": "#8E24AA",
+            "textColor": "#FFFFFF",
+            "hoverBgColor": "#7B1FA2",
+            "vibrationPattern": "tap"
+          },
+          "command": "playerctl previous"
+        },
+        "mediaPlayPauseButton": {
+          "type": "button",
+          "position": { "col": 2, "row": 2 },
+          "appName": "media-playback-start",
+          "options": {
+            "label": "Play/Pause",
+            "icon": "󰐊",
+            "iconSize": 56,
+            "bgColor": "#C62828",
+            "borderColor": "#E53935",
+            "textColor": "#FFFFFF",
+            "hoverBgColor": "#D32F2F",
+            "vibrationPattern": "tap"
+          },
+          "command": "playerctl play-pause"
+        },
+        "mediaNextButton": {
+          "type": "button",
+          "position": { "col": 3, "row": 2 },
+          "appName": "media-skip-forward",
+          "options": {
+            "label": "Next",
+            "icon": "󰒭",
+            "iconSize": 56,
+            "bgColor": "#6A1B9A",
+            "borderColor": "#8E24AA",
+            "textColor": "#FFFFFF",
+            "hoverBgColor": "#7B1FA2",
+            "vibrationPattern": "tap"
+          },
+          "command": "playerctl next"
+        },
+        "volumeDisplay": {
+          "type": "volumeDisplay",
+          "position": { "col": 0, "row": 0 },
+          "options": {
+            "cellBgColor": "#1a1a2e",
+            "cellBorderColor": "#4a6a8a",
+            "barFillColor": "#4a9eff"
+          }
+        },
+        "mediaDisplay": {
+          "type": "mediaDisplay",
+          "position": { "col": 0, "row": 1 },
+          "options": {
+            "cellBgColor": "#1a1a2e",
+            "cellBorderColor": "#8a4a6a",
+            "titleColor": "#FFFFFF",
+            "artistColor": "#FF88AA",
+            "statusColor": "#AAAAAA",
+            "iconColor": "#FF88AA"
+          }
+        }
+      }
+    },
+    "2": {
+      "meta": {
+        "title": "Workspaces",
+        "description": "Hyprland workspace switching (1-10)"
+      },
+      "components": {
+        "layout": {
+          "type": "layout",
+          "position": { "col": 0, "row": 0 },
+          "options": {
+            "label": "Workspace buttons 1-10 (dynamically generated)"
+          }
+        }
+      }
+    }
+  }
+}
