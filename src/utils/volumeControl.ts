@@ -40,7 +40,7 @@ export class VolumeControl {
     }
 
     try {
-      // PipeWireを確認
+      // PipeWireを優先（新しい標準オーディオサーバー）
       await execAsync('command -v wpctl')
       this.backend = AudioBackend.PIPEWIRE
       logger.info('オーディオバックエンド: PipeWire (wpctl)')

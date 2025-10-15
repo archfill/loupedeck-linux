@@ -10,6 +10,9 @@ Type=simple
 WorkingDirectory={{PROJECT_DIR}}
 Environment=NODE_ENV=production
 Environment=LOG_LEVEL=info
+# Audio system access (PipeWire/PulseAudio)
+Environment=XDG_RUNTIME_DIR=/run/user/%U
+Environment=DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/%U/bus
 ExecStart={{PROJECT_DIR}}/scripts/start-loupedeck.sh
 Restart=on-failure
 RestartSec=10
