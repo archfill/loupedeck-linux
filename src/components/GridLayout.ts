@@ -17,32 +17,48 @@ interface GridComponent {
 /**
  * グリッドレイアウトマネージャー
  * 複数のコンポーネントを管理して画面全体を描画
+ * ページ機能をサポート
  */
 export class GridLayout extends Screen {
-  private components: GridComponent[]
-  private componentMap: Map<string, GridComponent[]>
+  private pages: Map<number, GridComponent[]>
+  private pageMaps: Map<number, Map<string, GridComponent[]>>
+  private currentPage: number
 
   constructor(device: LoupedeckDevice) {
     super(device)
-    this.components = []
-    this.componentMap = new Map() // col_row -> components[] のマップ（複数対応）
+    this.pages = new Map() // pageNumber -> components[]
+    this.pageMaps = new Map() // pageNumber -> (col_row -> components[])
+    this.currentPage = 1
+
+    // デフォルトでページ1を初期化
+    this.pages.set(1, [])
+    this.pageMaps.set(1, new Map())
   }
 
   /**
    * コンポーネントを追加
    * @param component - 追加するコンポーネント（Clock, Buttonなど）
+   * @param page - ページ番号（デフォルト: 1）
    */
-  addComponent(component: GridComponent): void {
-    this.components.push(component)
+  addComponent(component: GridComponent, page: number = 1): void {
+    // ページが存在しない場合は初期化
+    if (!this.pages.has(page)) {
+      this.pages.set(page, [])
+      this.pageMaps.set(page, new Map())
+    }
+
+    const components = this.pages.get(page)!
+    components.push(component)
 
     // 位置情報を持つコンポーネントの場合、マップに登録（複数対応）
     if (component.col !== undefined && component.row !== undefined) {
       const key = `${component.col}_${component.row}`
-      const existing = this.componentMap.get(key) || []
+      const pageMap = this.pageMaps.get(page)!
+      const existing = pageMap.get(key) || []
       existing.push(component)
-      this.componentMap.set(key, existing)
+      pageMap.set(key, existing)
       logger.debug(
-        `Component registered: ${component.label || component.constructor.name} at (${component.col},${component.row}) with key=${key} (total: ${existing.length})`
+        `Component registered on page ${page}: ${component.label || component.constructor.name} at (${component.col},${component.row}) with key=${key} (total: ${existing.length})`
       )
     }
   }
@@ -50,13 +66,14 @@ export class GridLayout extends Screen {
   /**
    * 複数のコンポーネントを追加
    * @param components - コンポーネントの配列
+   * @param page - ページ番号（デフォルト: 1）
    */
-  addComponents(components: GridComponent[]): void {
-    components.forEach((component) => this.addComponent(component))
+  addComponents(components: GridComponent[], page: number = 1): void {
+    components.forEach((component) => this.addComponent(component, page))
   }
 
   /**
-   * すべてのコンポーネントを描画
+   * 現在のページのすべてのコンポーネントを描画
    * @param ctx - Canvas描画コンテキスト
    */
   draw(ctx: CanvasRenderingContext2D): void {
@@ -66,8 +83,11 @@ export class GridLayout extends Screen {
     // グリッドを描画
     this.drawGrid(ctx)
 
+    // 現在のページのコンポーネントを取得
+    const components = this.pages.get(this.currentPage) || []
+
     // 各コンポーネントを描画
-    this.components.forEach((component) => {
+    components.forEach((component) => {
       if (component.col !== undefined && component.row !== undefined) {
         // 単一セルコンポーネント（Button、Clockなど）
         const cellCoord = this.getCellCoordinates(component.col, component.row)
@@ -77,16 +97,19 @@ export class GridLayout extends Screen {
   }
 
   /**
-   * タッチイベントを処理
+   * タッチイベントを処理（現在のページのコンポーネントのみ）
    * @param touchedCol - タッチされた列
    * @param touchedRow - タッチされた行
    * @returns いずれかのコンポーネントが処理したか
    */
   async handleTouch(touchedCol: number, touchedRow: number): Promise<boolean> {
     const key = `${touchedCol}_${touchedRow}`
-    const components = this.componentMap.get(key)
+    const pageMap = this.pageMaps.get(this.currentPage)
+    const components = pageMap?.get(key)
 
-    logger.debug(`GridLayout.handleTouch: key=${key}, components found=${components?.length || 0}`)
+    logger.debug(
+      `GridLayout.handleTouch: page=${this.currentPage}, key=${key}, components found=${components?.length || 0}`
+    )
 
     if (components && components.length > 0) {
       // 後から追加されたコンポーネント（上に重なっているもの）から順に処理
@@ -148,10 +171,51 @@ export class GridLayout extends Screen {
   }
 
   /**
-   * コンポーネントの数を取得
+   * 現在のページのコンポーネントの数を取得
    * @returns コンポーネント数
    */
   getComponentCount(): number {
-    return this.components.length
+    const components = this.pages.get(this.currentPage) || []
+    return components.length
+  }
+
+  /**
+   * ページを切り替える
+   * @param pageNumber - 切り替え先のページ番号
+   */
+  async switchPage(pageNumber: number): Promise<void> {
+    if (pageNumber === this.currentPage) {
+      logger.debug(`Already on page ${pageNumber}`)
+      return
+    }
+
+    logger.info(`Switching from page ${this.currentPage} to page ${pageNumber}`)
+    this.currentPage = pageNumber
+
+    // ページが存在しない場合は初期化
+    if (!this.pages.has(pageNumber)) {
+      this.pages.set(pageNumber, [])
+      this.pageMaps.set(pageNumber, new Map())
+      logger.debug(`Initialized new page ${pageNumber}`)
+    }
+
+    // 画面を即座に更新
+    await this.update()
+  }
+
+  /**
+   * 現在のページ番号を取得
+   * @returns 現在のページ番号
+   */
+  getCurrentPage(): number {
+    return this.currentPage
+  }
+
+  /**
+   * すべてのページ番号を取得
+   * @returns ページ番号の配列
+   */
+  getAllPages(): number[] {
+    return Array.from(this.pages.keys()).sort((a, b) => a - b)
   }
 }

@@ -4,8 +4,10 @@ import { Clock } from './src/components/Clock.ts'
 import { Button } from './src/components/Button.ts'
 import { VolumeDisplay } from './src/components/VolumeDisplay.ts'
 import { MediaDisplay } from './src/components/MediaDisplay.ts'
+import { WorkspaceButton } from './src/components/WorkspaceButton.ts'
 import { VolumeControl } from './src/utils/volumeControl.ts'
 import { MediaControl } from './src/utils/mediaControl.ts'
+import { HyprlandControl } from './src/utils/hyprlandControl.ts'
 import { VolumeHandler } from './src/handlers/VolumeHandler.ts'
 import { MediaHandler } from './src/handlers/MediaHandler.ts'
 import { AppLauncher } from './src/utils/appLauncher.ts'
@@ -75,6 +77,10 @@ async function main() {
     // メディア制御を初期化
     const mediaControl = new MediaControl()
     await mediaControl.initialize()
+
+    // Hyprland制御を初期化
+    const hyprlandControl = new HyprlandControl()
+    await hyprlandControl.initialize()
 
     // GridLayoutを作成
     const device = loupedeckDevice.getDevice()
@@ -180,20 +186,47 @@ async function main() {
       }
     )
 
-    // コンポーネントをレイアウトに追加（表示を最後に追加して上に重ねる）
-    layout.addComponents([
-      clock,
-      firefoxButton,
-      onePasswordButton,
-      thunderbirdButton,
-      wlogoutButton,
-      workspaceSetupButton,
-      onePasswordUnlockButton,
-      volumeDisplay,
-      mediaDisplay,
-    ])
+    // ページ1: アプリケーションボタン（表示を最後に追加して上に重ねる）
+    layout.addComponents(
+      [
+        clock,
+        firefoxButton,
+        onePasswordButton,
+        thunderbirdButton,
+        wlogoutButton,
+        workspaceSetupButton,
+        onePasswordUnlockButton,
+        volumeDisplay,
+        mediaDisplay,
+      ],
+      1
+    )
+
+    // ページ2: ワークスペース切替ボタン（中段1-5、下段6-10）
+    const workspaceButtons: WorkspaceButton[] = []
+    for (let i = 1; i <= 10; i++) {
+      let col: number
+      let row: number
+
+      if (i <= 5) {
+        // ワークスペース1-5: 中段（行1）
+        col = i - 1
+        row = 1
+      } else {
+        // ワークスペース6-10: 下段（行2）
+        col = i - 6
+        row = 2
+      }
+
+      const wsButton = new WorkspaceButton(col, row, i, hyprlandControl, {
+        vibration: vibration,
+      })
+      workspaceButtons.push(wsButton)
+      layout.addComponent(wsButton, 2)
+    }
 
     logger.info('配置完了:')
+    logger.info('\n【ページ1: アプリケーション】')
     logger.info(`  - 時計: (列${clockConfig.position.col}, 行${clockConfig.position.row})`)
     logger.info(
       `  - Firefoxボタン: (列${firefoxButtonConfig.position.col}, 行${firefoxButtonConfig.position.row})`
@@ -219,6 +252,12 @@ async function main() {
     logger.info(
       `  - メディア表示: (列${mediaDisplayConfig.position.col}, 行${mediaDisplayConfig.position.row}) ← 一時表示`
     )
+    logger.info('\n【ページ2: ワークスペース切替】')
+    logger.info('  - 中段（行1）: ワークスペース1-5')
+    logger.info('  - 下段（行2）: ワークスペース6-10')
+    logger.info('\n【ページ切替】')
+    logger.info('  - 物理ボタン0（左下）: ページ1へ切り替え')
+    logger.info('  - 物理ボタン1（左下から2番目）: ページ2へ切り替え')
     logger.info('\n(Ctrl+C で終了)\n')
 
     // 自動更新を開始
@@ -248,20 +287,40 @@ async function main() {
     logger.info('ノブ回転イベントハンドラーの登録完了')
 
     // ノブクリックイベントハンドラー（ミュート切り替えと再生/一時停止）
-    logger.info('ノブクリックイベントハンドラーを登録しています...')
+    // 物理ボタン: ページ切替
+    logger.info('ノブクリック・物理ボタンイベントハンドラーを登録しています...')
     loupedeckDevice.on('down', async (data: unknown) => {
       const event = data as { id: number | string }
       logger.info(`⬇️  ボタン/ノブが押されました: ID=${event.id}`)
 
-      // ノブのみ処理（物理ボタンは無効化）
       if (typeof event.id === 'string') {
+        // ノブの場合
         await volumeHandler.handleDown(event.id)
         await mediaHandler.handleDown(event.id)
       } else {
-        logger.debug(`物理ボタン ID=${event.id} は無効化されています`)
+        // 物理ボタンの場合: ページ切替
+        logger.info(`物理ボタン ID=${event.id} でページ切替`)
+
+        // ボタン0 → ページ1、ボタン1 → ページ2
+        if (event.id === 0) {
+          await layout.switchPage(1)
+          await vibration?.vibratePattern('tap')
+          logger.info('ページ1に切り替えました（アプリケーション）')
+        } else if (event.id === 1) {
+          await layout.switchPage(2)
+          await vibration?.vibratePattern('tap')
+          logger.info('ページ2に切り替えました（ワークスペース切替）')
+          // ページ2に切り替えた時に、各ワークスペースボタンのアクティブ状態を更新
+          for (const wsButton of workspaceButtons) {
+            await wsButton.updateActiveState()
+          }
+          await layout.update()
+        } else {
+          logger.debug(`物理ボタン ID=${event.id} は未割り当てです`)
+        }
       }
     })
-    logger.info('ノブクリックイベントハンドラーの登録完了')
+    logger.info('ノブクリック・物理ボタンイベントハンドラーの登録完了')
 
     // 終了処理のセットアップ
     loupedeckDevice.setupExitHandlers(async () => {
