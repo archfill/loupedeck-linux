@@ -1,7 +1,12 @@
 import express, { type Application, type Request, type Response } from 'express'
 import cors from 'cors'
+import path from 'path'
+import { fileURLToPath } from 'url'
 import type { Server } from 'http'
 import { logger } from '../utils/logger.js'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 import {
   clockConfig,
   firefoxButtonConfig,
@@ -29,7 +34,7 @@ export class ApiServer {
   private app: Application
   private server: Server | null
 
-  constructor(port: number = 3000) {
+  constructor(port: number = 9876) {
     this.port = port
     this.app = express()
     this.server = null
@@ -121,9 +126,13 @@ export class ApiServer {
       })
     })
 
-    // 404ハンドラー
+    // 静的ファイル配信（Web UI） - APIルートの後に配置
+    const webDistPath = path.join(__dirname, '../../web/dist')
+    this.app.use(express.static(webDistPath))
+
+    // SPAのフォールバック - 静的ファイルが見つからない場合はindex.htmlを返す
     this.app.use((_req: Request, res: Response) => {
-      res.status(404).json({ error: 'Not Found' })
+      res.sendFile(path.join(webDistPath, 'index.html'))
     })
   }
 

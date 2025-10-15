@@ -22,7 +22,7 @@ function App() {
           <p className="text-xl mb-2">❌ Error</p>
           <p>{error instanceof Error ? error.message : 'Unknown error'}</p>
           <p className="mt-4 text-sm text-gray-400">
-            Make sure the API server is running on port 3000
+            Make sure the API server is running on port 9876
           </p>
         </div>
       </div>

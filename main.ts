@@ -34,7 +34,7 @@ async function main() {
 
   try {
     // APIサーバーを起動
-    apiServer = new ApiServer(3000)
+    apiServer = new ApiServer(9876)
     await apiServer.start()
 
     // デバイスに接続

@@ -62,7 +62,7 @@ export function LoupedeckPreview({ components, device }: LoupedeckPreviewProps) 
 
     // コンポーネントを描画
     if (components) {
-      Object.entries(components).forEach(([name, component]) => {
+      Object.entries(components).forEach(([_name, component]) => {
         const { col, row } = component.position
         const x = col * cellSize
         const y = row * cellSize

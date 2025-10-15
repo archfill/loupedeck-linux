@@ -1,15 +1,23 @@
 import js from '@eslint/js'
 import prettier from 'eslint-plugin-prettier'
 import prettierConfig from 'eslint-config-prettier'
+import tseslint from 'typescript-eslint'
 
 export default [
   {
-    ignores: ['node_modules/**', 'dist/**', 'build/**', '*.min.js'],
+    ignores: [
+      '**/node_modules/**',
+      '**/dist/**',
+      '**/build/**',
+      '**/*.min.js',
+      'web/**', // webワークスペースは独自のESLint設定を使用
+    ],
   },
   js.configs.recommended,
+  ...tseslint.configs.recommended,
   prettierConfig,
   {
-    files: ['**/*.js'],
+    files: ['**/*.{js,ts}'],
     languageOptions: {
       ecmaVersion: 2022,
       sourceType: 'module',
@@ -28,10 +36,11 @@ export default [
     },
     rules: {
       'prettier/prettier': 'error',
-      'no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
+      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
       'no-console': 'off',
       'prefer-const': 'warn',
       'no-var': 'error',
+      '@typescript-eslint/no-explicit-any': 'warn',
     },
   },
 ]
