@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
+import { DndContext, useDraggable, useDroppable, DragOverlay } from '@dnd-kit/core'
+import type { DragEndEvent } from '@dnd-kit/core'
 
 interface Component {
   position?: { col: number; row: number }
@@ -33,10 +35,90 @@ interface LoupedeckPreviewProps {
     knobs?: string[]
     buttons?: number[]
   }
+  isEditMode?: boolean
+  onPositionChange?: (componentName: string, pageNum: number, newCol: number, newRow: number) => void
 }
 
-export function LoupedeckPreview({ components, pages, device }: LoupedeckPreviewProps) {
+// ドラッグ可能なコンポーネント
+function DraggableComponent({
+  component,
+  name,
+  cellSize,
+}: {
+  component: Component
+  name: string
+  cellSize: number
+}) {
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+    id: name,
+    data: { component, name },
+  })
+
+  const style = transform
+    ? {
+        transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
+        opacity: isDragging ? 0.5 : 1,
+      }
+    : {}
+
+  const options = component.options || {}
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={{
+        ...style,
+        width: cellSize,
+        height: cellSize,
+        backgroundColor: options.bgColor || '#2a4a6a',
+        borderColor: options.borderColor || '#4a7a9a',
+        borderWidth: '2px',
+        borderStyle: 'solid',
+        cursor: 'move',
+      }}
+      className="flex flex-col items-center justify-center rounded"
+      {...listeners}
+      {...attributes}
+    >
+      {options.icon && <div style={{ fontSize: options.iconSize || 32 }}>{options.icon}</div>}
+      {options.label && (
+        <div style={{ color: options.textColor || '#FFFFFF', fontSize: '12px', fontWeight: 'bold' }}>
+          {options.label.length > 10 ? options.label.substring(0, 10) + '...' : options.label}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ドロップ可能なセル
+function DroppableCell({ col, row, cellSize }: { col: number; row: number; cellSize: number }) {
+  const { setNodeRef, isOver } = useDroppable({
+    id: `cell-${col}-${row}`,
+    data: { col, row },
+  })
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={{
+        width: cellSize,
+        height: cellSize,
+        border: '1px solid #333',
+        backgroundColor: isOver ? 'rgba(59, 130, 246, 0.3)' : 'transparent',
+      }}
+    />
+  )
+}
+
+export function LoupedeckPreview({
+  components,
+  pages,
+  device,
+  isEditMode = false,
+  onPositionChange,
+}: LoupedeckPreviewProps) {
   const [currentPage, setCurrentPage] = useState(1)
+  const [activeId, setActiveId] = useState<string | null>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
   const columns = device?.grid?.columns || 5
@@ -162,6 +244,20 @@ export function LoupedeckPreview({ components, pages, device }: LoupedeckPreview
     }
   }, [displayComponents, currentPage, columns, rows, screenWidth, screenHeight, cellSize])
 
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event
+    setActiveId(null)
+
+    if (!over || !onPositionChange) return
+
+    const draggedData = active.data.current as { name: string; component: Component }
+    const dropData = over.data.current as { col: number; row: number }
+
+    if (draggedData && dropData) {
+      onPositionChange(draggedData.name, currentPage, dropData.col, dropData.row)
+    }
+  }
+
   return (
     <div className="space-y-4">
       {/* Page selector dropdown */}
@@ -225,15 +321,66 @@ export function LoupedeckPreview({ components, pages, device }: LoupedeckPreview
         {/* Center screen */}
         <div className="relative">
           <div className="bg-black p-4 rounded-lg shadow-2xl border-4 border-gray-800">
-            <canvas
-              ref={canvasRef}
-              width={screenWidth}
-              height={screenHeight}
-              className="rounded"
-            />
+            {isEditMode && displayComponents ? (
+              /* 編集モード: ドラッグ&ドロップ可能なHTMLグリッド */
+              <DndContext onDragEnd={handleDragEnd} onDragStart={(e) => setActiveId(e.active.id as string)}>
+                <div
+                  className="relative"
+                  style={{
+                    width: screenWidth,
+                    height: screenHeight,
+                    backgroundColor: '#0a0a0a',
+                  }}
+                >
+                  {/* グリッドセル (ドロップ可能) */}
+                  <div className="absolute inset-0 grid" style={{ gridTemplateColumns: `repeat(${columns}, ${cellSize}px)` }}>
+                    {Array.from({ length: columns * rows }).map((_, index) => {
+                      const col = index % columns
+                      const row = Math.floor(index / columns)
+                      return <DroppableCell key={`${col}-${row}`} col={col} row={row} cellSize={cellSize} />
+                    })}
+                  </div>
+
+                  {/* コンポーネント (ドラッグ可能) */}
+                  {Object.entries(displayComponents)
+                    .filter(([_key, comp]) => isComponent(comp))
+                    .map(([name, component]) => {
+                      if (!isComponent(component)) return null
+                      const { col, row } = component.position!
+                      return (
+                        <div
+                          key={name}
+                          className="absolute"
+                          style={{
+                            left: col * cellSize,
+                            top: row * cellSize,
+                          }}
+                        >
+                          <DraggableComponent component={component} name={name} cellSize={cellSize} />
+                        </div>
+                      )
+                    })}
+                </div>
+
+                {/* ドラッグオーバーレイ */}
+                <DragOverlay>
+                  {activeId && displayComponents[activeId] && isComponent(displayComponents[activeId]) ? (
+                    <DraggableComponent
+                      component={displayComponents[activeId] as Component}
+                      name={activeId}
+                      cellSize={cellSize}
+                    />
+                  ) : null}
+                </DragOverlay>
+              </DndContext>
+            ) : (
+              /* 表示モード: Canvas */
+              <canvas ref={canvasRef} width={screenWidth} height={screenHeight} className="rounded" />
+            )}
           </div>
           <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-xs text-gray-500">
             {screenWidth} × {screenHeight}px
+            {isEditMode && <span className="ml-2 text-blue-400">（ドラッグで位置変更）</span>}
           </div>
         </div>
 

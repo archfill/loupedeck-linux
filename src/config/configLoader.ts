@@ -7,6 +7,7 @@
 import { z } from 'zod'
 import { readFileSync } from 'fs'
 import { resolve } from 'path'
+import { watch, type FSWatcher } from 'chokidar'
 import { logger } from '../utils/logger.js'
 
 // ========================================
@@ -156,6 +157,8 @@ export type Config = z.infer<typeof ConfigSchema>
 // ========================================
 
 let cachedConfig: Config | null = null
+let watcher: FSWatcher | null = null
+let reloadCallback: (() => void) | null = null
 
 /**
  * Load configuration from JSON file
@@ -227,4 +230,67 @@ export function convertToPageConfig(config: Config): Record<number, {
   })
 
   return result
+}
+
+/**
+ * Start watching config file for changes and reload automatically
+ *
+ * @param configPath - Path to config.json
+ * @param onReload - Callback function called when config is reloaded
+ */
+export function watchConfig(configPath?: string, onReload?: () => void): void {
+  const resolvedPath = configPath || resolve(process.cwd(), 'config/config.json')
+
+  if (watcher) {
+    logger.warn('Config watcher already running')
+    return
+  }
+
+  reloadCallback = onReload || null
+
+  watcher = watch(resolvedPath, {
+    persistent: true,
+    ignoreInitial: true,
+  })
+
+  watcher.on('change', (path) => {
+    logger.info(`📝 Config file changed: ${path}`)
+    logger.info('🔄 Reloading configuration...')
+
+    try {
+      // Clear cache
+      clearConfigCache()
+
+      // Reload config
+      loadConfig(resolvedPath)
+
+      logger.info('✓ Configuration reloaded successfully')
+
+      // Call reload callback if provided
+      if (reloadCallback) {
+        reloadCallback()
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      logger.error(`Failed to reload configuration: ${message}`)
+    }
+  })
+
+  watcher.on('error', (error) => {
+    logger.error(`Config watcher error: ${error}`)
+  })
+
+  logger.info(`👀 Watching config file for changes: ${resolvedPath}`)
+}
+
+/**
+ * Stop watching config file
+ */
+export async function stopWatchingConfig(): Promise<void> {
+  if (watcher) {
+    await watcher.close()
+    watcher = null
+    reloadCallback = null
+    logger.info('Config watcher stopped')
+  }
 }

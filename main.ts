@@ -11,6 +11,7 @@ import { logger } from './src/utils/logger.ts'
 import { AUTO_UPDATE_INTERVAL_MS, BUTTON_LED_COLORS } from './src/config/constants.ts'
 import { ApiServer } from './src/server/api.ts'
 import { pagesConfig } from './src/config/pages.ts'
+import { watchConfig, stopWatchingConfig } from './src/config/configLoader.ts'
 import {
   createComponent,
   type GeneratedComponent,
@@ -241,8 +242,17 @@ async function main() {
     })
     logger.info('ノブクリック・物理ボタンイベントハンドラーの登録完了')
 
+    // 設定ファイルの監視を開始
+    watchConfig(undefined, () => {
+      logger.warn('⚠️  設定ファイルが変更されました')
+      logger.warn('⚠️  変更を反映するにはアプリケーションを再起動してください')
+      logger.warn('⚠️  Ctrl+C で終了後、npm start で再起動してください')
+    })
+
     // 終了処理のセットアップ
     loupedeckDevice.setupExitHandlers(async () => {
+      // 設定ファイルの監視を停止
+      await stopWatchingConfig()
       logger.debug('自動更新を停止中...')
       layout.stopAutoUpdate(intervalId)
       logger.debug('自動更新を停止しました')

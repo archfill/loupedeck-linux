@@ -43,6 +43,97 @@ function App() {
     setSaveStatus('idle')
   }
 
+  const handlePositionChange = (componentName: string, pageNum: number, newCol: number, newRow: number) => {
+    if (!editedConfig) return
+
+    // Create a deep copy of the config
+    const newConfig = JSON.parse(JSON.stringify(editedConfig))
+
+    // Update the component position
+    if (newConfig.pages && newConfig.pages[pageNum]) {
+      const components = newConfig.pages[pageNum]
+      Object.keys(components).forEach((key) => {
+        if (key !== '_meta' && key === componentName) {
+          if (components[key].position) {
+            components[key].position.col = newCol
+            components[key].position.row = newRow
+          }
+        }
+      })
+    }
+
+    setEditedConfig(newConfig)
+  }
+
+  const handleDeleteComponent = (componentName: string, pageNum: number) => {
+    if (!editedConfig || !confirm(`${componentName} を削除しますか？`)) return
+
+    const newConfig = JSON.parse(JSON.stringify(editedConfig))
+
+    if (newConfig.pages && newConfig.pages[pageNum]) {
+      delete newConfig.pages[pageNum][componentName]
+    }
+
+    setEditedConfig(newConfig)
+  }
+
+  const handleAddComponent = (pageNum: number) => {
+    if (!editedConfig) return
+
+    const newConfig = JSON.parse(JSON.stringify(editedConfig))
+
+    // 空いているグリッド位置を見つける
+    const usedPositions = new Set<string>()
+    if (newConfig.pages && newConfig.pages[pageNum]) {
+      Object.entries(newConfig.pages[pageNum]).forEach(([key, comp]: [string, any]) => {
+        if (key !== '_meta' && comp?.position) {
+          usedPositions.add(`${comp.position.col},${comp.position.row}`)
+        }
+      })
+    }
+
+    // 空いている最初の位置を見つける
+    let foundPosition = null
+    for (let row = 0; row < 3; row++) {
+      for (let col = 0; col < 5; col++) {
+        if (!usedPositions.has(`${col},${row}`)) {
+          foundPosition = { col, row }
+          break
+        }
+      }
+      if (foundPosition) break
+    }
+
+    if (!foundPosition) {
+      alert('グリッドが満杯です。空きスペースがありません。')
+      return
+    }
+
+    // 新しいボタンを作成
+    const newButtonName = `newButton${Date.now()}`
+    const newButton = {
+      type: 'button',
+      position: foundPosition,
+      appName: 'application',
+      options: {
+        label: 'New Button',
+        iconSize: 48,
+        bgColor: '#4A5568',
+        borderColor: '#718096',
+        textColor: '#FFFFFF',
+        hoverBgColor: '#2D3748',
+        vibrationPattern: 'tap',
+      },
+      command: 'echo "New button clicked"',
+    }
+
+    if (newConfig.pages && newConfig.pages[pageNum]) {
+      newConfig.pages[pageNum][newButtonName] = newButton
+    }
+
+    setEditedConfig(newConfig)
+  }
+
   const handleSaveAll = async () => {
     setSaveStatus('saving')
     try {
@@ -187,68 +278,125 @@ function App() {
           <div className="bg-gray-900 rounded-lg p-6 border border-gray-800">
             <LoupedeckPreview
               components={config?.components}
-              pages={config?.pages}
+              pages={editedConfig?.pages || config?.pages}
               device={config?.device}
+              isEditMode={isEditMode}
+              onPositionChange={handlePositionChange}
             />
           </div>
         </section>
 
-        {/* Components Grid */}
-        <section className="mb-8">
-          <h2 className="text-2xl font-semibold mb-4">
-            Component Layout {isEditMode && <span className="text-sm text-gray-400 ml-2">(Click to edit)</span>}
-          </h2>
-          <div className="bg-gray-900 rounded-lg p-6 border border-gray-800">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {config?.components &&
-                Object.entries(config.components).map(([name, component]) => (
-                  <div
-                    key={name}
-                    onClick={() => isEditMode && setSelectedComponent({ name, component, pageNum: 1 })}
-                    className={`bg-gray-800 rounded-lg p-4 border border-gray-700 transition-all ${
-                      isEditMode
-                        ? 'hover:border-blue-500 hover:bg-gray-750 cursor-pointer hover:scale-105'
-                        : 'hover:border-gray-600'
-                    }`}
+        {/* Components Grid - All Pages */}
+        {config?.pages && Object.entries(config.pages).map(([pageNum, pageData]) => {
+          // 型ガード: PageDataかどうか確認
+          if (!pageData || typeof pageData !== 'object') return null
+
+          const pageMeta = pageData._meta
+          const components = Object.entries(pageData).filter(([key]) => key !== '_meta')
+
+          return (
+            <section key={pageNum} className="mb-8">
+              <div className="flex justify-between items-center mb-4">
+                <div>
+                  <h2 className="text-2xl font-semibold">
+                    Page {pageNum}: {pageMeta?.title || `Page ${pageNum}`}
+                    {isEditMode && <span className="text-sm text-gray-400 ml-2">(クリックして編集)</span>}
+                  </h2>
+                  <p className="text-gray-400 text-sm mt-1">{pageMeta?.description}</p>
+                </div>
+                {isEditMode && Number(pageNum) !== 2 && (
+                  <button
+                    onClick={() => handleAddComponent(Number(pageNum))}
+                    className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold transition-colors flex items-center gap-2"
                   >
-                    <div className="flex items-start justify-between mb-2">
-                      <h3 className="font-semibold text-lg">
-                        {component?.options?.label || name}
-                      </h3>
-                      {isEditMode && (
-                        <span className="text-blue-400 text-sm">✏️</span>
-                      )}
-                    </div>
-                    <div className="text-sm space-y-1">
-                      <p className="text-gray-400">
-                        Position:{' '}
-                        <span className="text-white">
-                          ({component?.position?.col}, {component?.position?.row})
-                        </span>
-                      </p>
-                      {component?.options?.bgColor && (
-                        <div className="flex items-center gap-2">
-                          <span className="text-gray-400">Color:</span>
-                          <div
-                            className="w-6 h-6 rounded border border-gray-600"
-                            style={{ backgroundColor: component.options.bgColor }}
-                          ></div>
-                          <span className="text-xs text-gray-500">
-                            {component.options.bgColor}
-                          </span>
+                    ➕ ボタン追加
+                  </button>
+                )}
+              </div>
+              <div className="bg-gray-900 rounded-lg p-6 border border-gray-800">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {components.map(([name, component]: [string, any]) => {
+                    // layoutコンポーネントはスキップ（動的生成）
+                    if (component?.type === 'layout') {
+                      return (
+                        <div key={name} className="bg-gray-800 rounded-lg p-4 border border-gray-700 opacity-50">
+                          <h3 className="font-semibold text-lg mb-2">{component?.options?.label || name}</h3>
+                          <p className="text-sm text-gray-500">動的生成（編集不可）</p>
                         </div>
-                      )}
-                      {component?.command && (
-                        <p className="text-gray-400">
-                          Command: <span className="text-white font-mono text-xs">{component.command}</span>
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                ))}
-            </div>
-          </div>
-        </section>
+                      )
+                    }
+
+                    return (
+                      <div
+                        key={name}
+                        className={`bg-gray-800 rounded-lg p-4 border border-gray-700 transition-all relative ${
+                          isEditMode
+                            ? 'hover:border-blue-500 hover:bg-gray-750'
+                            : 'hover:border-gray-600'
+                        }`}
+                      >
+                        <div className="flex items-start justify-between mb-2">
+                          <h3
+                            className={`font-semibold text-lg flex-1 ${isEditMode ? 'cursor-pointer' : ''}`}
+                            onClick={() => isEditMode && setSelectedComponent({ name, component, pageNum: Number(pageNum) })}
+                          >
+                            {component?.options?.label || name}
+                          </h3>
+                          {isEditMode && (
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => setSelectedComponent({ name, component, pageNum: Number(pageNum) })}
+                                className="text-blue-400 hover:text-blue-300 text-sm px-2 py-1 rounded hover:bg-blue-900/20"
+                                title="編集"
+                              >
+                                ✏️
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  handleDeleteComponent(name, Number(pageNum))
+                                }}
+                                className="text-red-400 hover:text-red-300 text-sm px-2 py-1 rounded hover:bg-red-900/20"
+                                title="削除"
+                              >
+                                🗑️
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                        <div className="text-sm space-y-1">
+                          <p className="text-gray-400">
+                            Position:{' '}
+                            <span className="text-white">
+                              ({component?.position?.col}, {component?.position?.row})
+                            </span>
+                          </p>
+                          {component?.options?.bgColor && (
+                            <div className="flex items-center gap-2">
+                              <span className="text-gray-400">Color:</span>
+                              <div
+                                className="w-6 h-6 rounded border border-gray-600"
+                                style={{ backgroundColor: component.options.bgColor }}
+                              ></div>
+                              <span className="text-xs text-gray-500">
+                                {component.options.bgColor}
+                              </span>
+                            </div>
+                          )}
+                          {component?.command && (
+                            <p className="text-gray-400">
+                              Command: <span className="text-white font-mono text-xs">{component.command}</span>
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            </section>
+          )
+        })}
 
         {/* Constants */}
         <section>

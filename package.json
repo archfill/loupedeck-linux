@@ -4,9 +4,6 @@
   "description": "Loupedeck Live S Linux controller application with web UI",
   "private": true,
   "main": "index.js",
-  "workspaces": [
-    "web"
-  ],
   "scripts": {
     "start": "LOG_LEVEL=info tsx main.ts",
     "start:debug": "LOG_LEVEL=debug tsx main.ts",
@@ -14,15 +11,15 @@
     "dev": "LOG_LEVEL=debug tsx watch main.ts",
     "dev:info": "LOG_LEVEL=info tsx watch main.ts",
     "dev:no-led": "LOG_LEVEL=debug SKIP_LED=true tsx watch main.ts",
-    "dev:all": "concurrently \"npm run dev\" \"npm run dev:web\" --names \"backend,web\" --prefix-colors \"cyan,magenta\"",
+    "dev:all": "concurrently \"pnpm run dev\" \"pnpm run dev:web\" --names \"backend,web\" --prefix-colors \"cyan,magenta\"",
     "kill": "./scripts/kill-loupedeck.sh",
-    "dev:web": "npm run dev --workspace=web",
-    "build:web": "npm run build --workspace=web",
-    "preview:web": "npm run preview --workspace=web",
+    "dev:web": "pnpm --filter web run dev",
+    "build:web": "pnpm --filter web run build",
+    "preview:web": "pnpm --filter web run preview",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "lint:all": "npm run lint --workspaces --include-workspace-root --if-present",
-    "lint:fix:all": "npm run lint:fix --workspaces --include-workspace-root --if-present",
+    "lint:all": "pnpm run -r lint",
+    "lint:fix:all": "pnpm run -r lint:fix",
     "format": "prettier --write \"**/*.{ts,js,json,md}\"",
     "format:check": "prettier --check \"**/*.{ts,js,json,md}\"",
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -40,7 +37,7 @@
     "service:restart": "./scripts/manage-systemd-service.sh restart",
     "service:status": "./scripts/manage-systemd-service.sh status",
     "service:logs": "./scripts/manage-systemd-service.sh logs",
-    "install:all": "npm install && npm install --workspaces"
+    "install:all": "pnpm install"
   },
   "keywords": [],
   "author": "",
@@ -48,6 +45,7 @@
   "type": "module",
   "dependencies": {
     "canvas": "^3.2.0",
+    "chokidar": "^4.0.3",
     "cors": "^2.8.5",
     "express": "^5.1.0",
     "loupedeck": "^7.0.3",
@@ -68,5 +66,17 @@
     "tsx": "^4.20.6",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.46.1"
+  },
+  "volta": {
+    "node": "22.20.0",
+    "npm": "11.4.2"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "canvas",
+      "esbuild",
+      "@tailwindcss/oxide",
+      "@serialport/bindings-cpp"
+    ]
   }
 }

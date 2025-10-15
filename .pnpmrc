@@ -1,0 +1,2 @@
+# Enable build scripts for native modules
+enable-pre-post-scripts=true
