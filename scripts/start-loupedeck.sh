@@ -12,12 +12,32 @@ PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 # Change to project directory
 cd "$PROJECT_DIR"
 
-# Import systemd user environment variables if not already set
+# Wait for GUI session environment variables to be available
+# This is important when starting as a systemd service at boot
 if [ -z "$DISPLAY" ] && [ -z "$WAYLAND_DISPLAY" ]; then
-    echo "Importing environment variables from systemd..."
+    echo "Waiting for GUI session environment variables..."
 
-    # Try to get environment from systemd
-    eval $(systemctl --user show-environment | grep -E "^(DISPLAY|WAYLAND_DISPLAY|XDG_RUNTIME_DIR|DBUS_SESSION_BUS_ADDRESS)=" | sed 's/^/export /')
+    MAX_WAIT=60  # Maximum wait time in seconds
+    WAIT_COUNT=0
+
+    while [ $WAIT_COUNT -lt $MAX_WAIT ]; do
+        # Try to get environment from systemd
+        eval $(systemctl --user show-environment | grep -E "^(DISPLAY|WAYLAND_DISPLAY|XDG_RUNTIME_DIR|DBUS_SESSION_BUS_ADDRESS)=" | sed 's/^/export /')
+
+        # Check if we got at least one display variable
+        if [ -n "$DISPLAY" ] || [ -n "$WAYLAND_DISPLAY" ]; then
+            echo "GUI session environment variables found after ${WAIT_COUNT}s"
+            break
+        fi
+
+        sleep 1
+        WAIT_COUNT=$((WAIT_COUNT + 1))
+    done
+
+    if [ $WAIT_COUNT -ge $MAX_WAIT ]; then
+        echo "Warning: Timed out waiting for GUI session environment variables"
+        echo "Attempting to continue with fallback detection..."
+    fi
 fi
 
 # Fallback: Try to detect X11 display if still not set

@@ -2,6 +2,8 @@
 Description=Loupedeck Linux Controller (User Session)
 Documentation=https://github.com/archfill/loupedeck-linux
 After=graphical-session.target sound.target
+# Ensure we start after the GUI session is ready
+Wants=graphical-session.target
 
 [Service]
 Type=simple
