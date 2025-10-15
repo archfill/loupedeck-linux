@@ -115,11 +115,11 @@ const PageMetaSchema = z.object({
   description: z.string(),
 })
 
-/** Page schema */
-const PageSchema = z.object({
-  meta: PageMetaSchema,
-  components: z.record(z.string(), ComponentSchema),
-})
+/** Page schema - フラット構造（_metaとコンポーネントが同じレベル） */
+const PageSchema = z.record(z.string(), z.union([
+  z.object({ title: z.string(), description: z.string() }), // _meta
+  ComponentSchema, // コンポーネント
+]))
 
 /** Root configuration schema */
 const ConfigSchema = z.object({
@@ -149,7 +149,7 @@ export type LayoutComponent = z.infer<typeof LayoutComponentSchema>
 
 export type Component = z.infer<typeof ComponentSchema>
 export type PageMeta = z.infer<typeof PageMetaSchema>
-export type Page = z.infer<typeof PageSchema>
+export type Page = Record<string, PageMeta | Component>
 export type Config = z.infer<typeof ConfigSchema>
 
 // ========================================
@@ -222,10 +222,20 @@ export function convertToPageConfig(config: Config): Record<number, {
 }> {
   const result: Record<number, { meta: PageMeta; components: Record<string, Component> }> = {}
 
-  Object.entries(config.pages).forEach(([pageNum, page]) => {
+  Object.entries(config.pages).forEach(([pageNum, pageData]) => {
+    // フラット構造から meta と components を分離
+    const meta = pageData._meta as PageMeta
+    const components: Record<string, Component> = {}
+
+    Object.entries(pageData).forEach(([key, value]) => {
+      if (key !== '_meta') {
+        components[key] = value as Component
+      }
+    })
+
     result[Number(pageNum)] = {
-      meta: page.meta,
-      components: page.components,
+      meta,
+      components,
     }
   })
 

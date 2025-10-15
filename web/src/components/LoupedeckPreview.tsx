@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { DndContext, useDraggable, useDroppable, DragOverlay } from '@dnd-kit/core'
+import { DndContext, useDraggable, useDroppable, DragOverlay, closestCenter } from '@dnd-kit/core'
 import type { DragEndEvent } from '@dnd-kit/core'
 
 interface Component {
@@ -37,9 +37,10 @@ interface LoupedeckPreviewProps {
   }
   isEditMode?: boolean
   onPositionChange?: (componentName: string, pageNum: number, newCol: number, newRow: number) => void
+  onSwapComponents?: (componentName1: string, componentName2: string, pageNum: number) => void
 }
 
-// ドラッグ可能なコンポーネント
+// ドラッグ&ドロップ可能なコンポーネント
 function DraggableComponent({
   component,
   name,
@@ -49,10 +50,21 @@ function DraggableComponent({
   name: string
   cellSize: number
 }) {
-  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+  const { attributes, listeners, setNodeRef: setDragRef, transform, isDragging } = useDraggable({
     id: name,
-    data: { component, name },
+    data: { type: 'component', component, name },
   })
+
+  const { setNodeRef: setDropRef, isOver } = useDroppable({
+    id: `component-${name}`,
+    data: { type: 'component', componentName: name },
+  })
+
+  // 両方のrefを結合
+  const setRefs = (element: HTMLDivElement | null) => {
+    setDragRef(element)
+    setDropRef(element)
+  }
 
   const style = transform
     ? {
@@ -65,16 +77,18 @@ function DraggableComponent({
 
   return (
     <div
-      ref={setNodeRef}
+      ref={setRefs}
       style={{
         ...style,
         width: cellSize,
         height: cellSize,
         backgroundColor: options.bgColor || '#2a4a6a',
-        borderColor: options.borderColor || '#4a7a9a',
-        borderWidth: '2px',
+        borderColor: isOver ? '#60a5fa' : (options.borderColor || '#4a7a9a'),
+        borderWidth: isOver ? '3px' : '2px',
         borderStyle: 'solid',
         cursor: 'move',
+        position: 'relative',
+        zIndex: 10,
       }}
       className="flex flex-col items-center justify-center rounded"
       {...listeners}
@@ -94,7 +108,7 @@ function DraggableComponent({
 function DroppableCell({ col, row, cellSize }: { col: number; row: number; cellSize: number }) {
   const { setNodeRef, isOver } = useDroppable({
     id: `cell-${col}-${row}`,
-    data: { col, row },
+    data: { type: 'cell', col, row },
   })
 
   return (
@@ -105,6 +119,7 @@ function DroppableCell({ col, row, cellSize }: { col: number; row: number; cellS
         height: cellSize,
         border: '1px solid #333',
         backgroundColor: isOver ? 'rgba(59, 130, 246, 0.3)' : 'transparent',
+        pointerEvents: 'auto',
       }}
     />
   )
@@ -116,6 +131,7 @@ export function LoupedeckPreview({
   device,
   isEditMode = false,
   onPositionChange,
+  onSwapComponents,
 }: LoupedeckPreviewProps) {
   const [currentPage, setCurrentPage] = useState(1)
   const [activeId, setActiveId] = useState<string | null>(null)
@@ -127,10 +143,16 @@ export function LoupedeckPreview({
   const screenWidth = columns * cellSize
   const screenHeight = rows * cellSize
 
-  // ページに応じたコンポーネントを取得
-  const displayComponents = pages && pages[currentPage]
-    ? pages[currentPage]
+  // ページに応じたコンポーネントを取得（文字列キーでアクセス）
+  const pageKey = String(currentPage)
+  const displayComponents = pages && pages[pageKey]
+    ? pages[pageKey]
     : components
+
+  // コンポーネントレベルでのデバッグログ
+  console.log('>>> LoupedeckPreview render:', { isEditMode, currentPage, pageKey })
+  console.log('>>> pages:', pages ? Object.keys(pages) : null)
+  console.log('>>> displayComponents:', displayComponents ? Object.keys(displayComponents) : null)
 
   // 型ガード: Componentかどうかを判定
   const isComponent = (value: Component | PageMeta | undefined): value is Component => {
@@ -138,11 +160,35 @@ export function LoupedeckPreview({
   }
 
   useEffect(() => {
+    // 編集モードの時はcanvasを描画しない
+    if (isEditMode) return
+
+    // デバッグ情報
+    console.log('=== Canvas Rendering Debug ===')
+    console.log('isEditMode:', isEditMode)
+    console.log('currentPage:', currentPage, typeof currentPage)
+    console.log('pages keys:', pages ? Object.keys(pages) : 'no pages')
+    console.log('pages[currentPage]:', pages ? pages[currentPage] : 'no pages')
+    console.log('displayComponents:', displayComponents)
+    if (displayComponents) {
+      const componentKeys = Object.keys(displayComponents).filter(k => k !== '_meta')
+      console.log('component keys:', componentKeys)
+      console.log('component count:', componentKeys.length)
+    }
+
     const canvas = canvasRef.current
-    if (!canvas) return
+    if (!canvas) {
+      console.log('Canvas element not found!')
+      return
+    }
 
     const ctx = canvas.getContext('2d')
-    if (!ctx) return
+    if (!ctx) {
+      console.log('Canvas context not found!')
+      return
+    }
+
+    console.log('Canvas rendering started...')
 
     // 背景をクリア
     ctx.fillStyle = '#0a0a0a'
@@ -242,18 +288,33 @@ export function LoupedeckPreview({
         })
       }
     }
-  }, [displayComponents, currentPage, columns, rows, screenWidth, screenHeight, cellSize])
+  }, [displayComponents, currentPage, columns, rows, screenWidth, screenHeight, cellSize, isEditMode])
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event
     setActiveId(null)
 
-    if (!over || !onPositionChange) return
+    if (!over) return
 
-    const draggedData = active.data.current as { name: string; component: Component }
-    const dropData = over.data.current as { col: number; row: number }
+    const draggedData = active.data.current as { type: string; name: string; component: Component }
+    const dropData = over.data.current as { type: string; col?: number; row?: number; componentName?: string }
 
-    if (draggedData && dropData) {
+    console.log('=== Drag End Debug ===')
+    console.log('Dragged:', draggedData)
+    console.log('Drop target:', dropData)
+
+    if (!draggedData || !dropData) return
+
+    // ケース1: コンポーネントを別のコンポーネントの上にドロップ → 入れ替え
+    if (dropData.type === 'component' && dropData.componentName && onSwapComponents) {
+      if (draggedData.name !== dropData.componentName) {
+        console.log('Swapping components:', draggedData.name, dropData.componentName)
+        onSwapComponents(draggedData.name, dropData.componentName, currentPage)
+      }
+    }
+    // ケース2: コンポーネントを空のセルにドロップ → 移動
+    else if (dropData.type === 'cell' && dropData.col !== undefined && dropData.row !== undefined && onPositionChange) {
+      console.log('Moving component to:', dropData.col, dropData.row)
       onPositionChange(draggedData.name, currentPage, dropData.col, dropData.row)
     }
   }
@@ -273,8 +334,7 @@ export function LoupedeckPreview({
             className="bg-gray-800 text-white px-4 py-2 rounded-lg border border-gray-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer hover:bg-gray-750 transition-colors"
           >
             {Object.keys(pages).map((pageNum) => {
-              const num = Number(pageNum)
-              const pageMeta = pages[num]._meta
+              const pageMeta = pages[pageNum]._meta
               return (
                 <option key={pageNum} value={pageNum}>
                   Page {pageNum}: {pageMeta?.title || `Page ${pageNum}`}
@@ -282,9 +342,9 @@ export function LoupedeckPreview({
               )
             })}
           </select>
-          {pages[currentPage]?._meta && (
+          {pages[pageKey]?._meta && (
             <span className="text-gray-500 text-sm italic">
-              {pages[currentPage]._meta.description}
+              {pages[pageKey]._meta.description}
             </span>
           )}
         </div>
@@ -323,7 +383,11 @@ export function LoupedeckPreview({
           <div className="bg-black p-4 rounded-lg shadow-2xl border-4 border-gray-800">
             {isEditMode && displayComponents ? (
               /* 編集モード: ドラッグ&ドロップ可能なHTMLグリッド */
-              <DndContext onDragEnd={handleDragEnd} onDragStart={(e) => setActiveId(e.active.id as string)}>
+              <DndContext
+                onDragEnd={handleDragEnd}
+                onDragStart={(e) => setActiveId(e.active.id as string)}
+                collisionDetection={closestCenter}
+              >
                 <div
                   className="relative"
                   style={{
@@ -332,14 +396,33 @@ export function LoupedeckPreview({
                     backgroundColor: '#0a0a0a',
                   }}
                 >
-                  {/* グリッドセル (ドロップ可能) */}
-                  <div className="absolute inset-0 grid" style={{ gridTemplateColumns: `repeat(${columns}, ${cellSize}px)` }}>
-                    {Array.from({ length: columns * rows }).map((_, index) => {
-                      const col = index % columns
-                      const row = Math.floor(index / columns)
-                      return <DroppableCell key={`${col}-${row}`} col={col} row={row} cellSize={cellSize} />
-                    })}
-                  </div>
+                  {/* グリッドセル (ドロップ可能) - 空のセルのみドロップ可能に */}
+                  {Array.from({ length: columns * rows }).map((_, index) => {
+                    const col = index % columns
+                    const row = Math.floor(index / columns)
+
+                    // このセルにコンポーネントが配置されているかチェック
+                    const isOccupied = Object.values(displayComponents).some(
+                      (comp) => isComponent(comp) && comp.position?.col === col && comp.position?.row === row
+                    )
+
+                    // コンポーネントが配置されているセルにはドロップセルを配置しない
+                    if (isOccupied) return null
+
+                    return (
+                      <div
+                        key={`${col}-${row}`}
+                        className="absolute pointer-events-auto"
+                        style={{
+                          left: col * cellSize,
+                          top: row * cellSize,
+                          zIndex: 1,
+                        }}
+                      >
+                        <DroppableCell col={col} row={row} cellSize={cellSize} />
+                      </div>
+                    )
+                  })}
 
                   {/* コンポーネント (ドラッグ可能) */}
                   {Object.entries(displayComponents)
@@ -354,6 +437,7 @@ export function LoupedeckPreview({
                           style={{
                             left: col * cellSize,
                             top: row * cellSize,
+                            zIndex: 10,
                           }}
                         >
                           <DraggableComponent component={component} name={name} cellSize={cellSize} />
@@ -375,7 +459,13 @@ export function LoupedeckPreview({
               </DndContext>
             ) : (
               /* 表示モード: Canvas */
-              <canvas ref={canvasRef} width={screenWidth} height={screenHeight} className="rounded" />
+              <canvas
+                key={`canvas-${currentPage}-${isEditMode}`}
+                ref={canvasRef}
+                width={screenWidth}
+                height={screenHeight}
+                className="rounded"
+              />
             )}
           </div>
           <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-xs text-gray-500">

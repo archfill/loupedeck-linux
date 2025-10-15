@@ -73,6 +73,18 @@ export class GridLayout extends Screen {
   }
 
   /**
+   * 指定されたページのすべてのコンポーネントをクリア
+   * @param page - ページ番号
+   */
+  clearPage(page: number): void {
+    if (this.pages.has(page)) {
+      this.pages.set(page, [])
+      this.pageMaps.set(page, new Map())
+      logger.debug(`Cleared page ${page}`)
+    }
+  }
+
+  /**
    * 現在のページのすべてのコンポーネントを描画
    * @param ctx - Canvas描画コンテキスト
    */

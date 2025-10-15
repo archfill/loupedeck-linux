@@ -5,6 +5,7 @@ import { fileURLToPath } from 'url'
 import { writeFileSync } from 'fs'
 import type { Server } from 'http'
 import { logger } from '../utils/logger.js'
+import { clearConfigCache } from '../config/configLoader.ts'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -121,6 +122,9 @@ export class ApiServer {
 
         // JSONファイルに書き込み
         writeFileSync(configPath, JSON.stringify(config, null, 2), 'utf-8')
+
+        // キャッシュをクリアして次回のGETで最新の設定を読み込めるようにする
+        clearConfigCache()
 
         logger.info('✓ Configuration saved to config.json')
         res.json({

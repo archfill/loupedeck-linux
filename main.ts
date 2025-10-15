@@ -10,8 +10,13 @@ import { AppLauncher } from './src/utils/appLauncher.ts'
 import { logger } from './src/utils/logger.ts'
 import { AUTO_UPDATE_INTERVAL_MS, BUTTON_LED_COLORS } from './src/config/constants.ts'
 import { ApiServer } from './src/server/api.ts'
-import { pagesConfig } from './src/config/pages.ts'
-import { watchConfig, stopWatchingConfig } from './src/config/configLoader.ts'
+import {
+  watchConfig,
+  stopWatchingConfig,
+  clearConfigCache,
+  loadConfig,
+  convertToPageConfig
+} from './src/config/configLoader.ts'
 import {
   createComponent,
   type GeneratedComponent,
@@ -20,6 +25,92 @@ import {
 import type { VolumeDisplay } from './src/components/VolumeDisplay.ts'
 import type { MediaDisplay } from './src/components/MediaDisplay.ts'
 import type { MediaPlayPauseButton } from './src/components/MediaPlayPauseButton.ts'
+
+/**
+ * コンポーネントを生成してレイアウトに追加する関数
+ */
+async function buildComponents(
+  layout: GridLayout,
+  deps: ComponentDependencies,
+  hyprlandControl: HyprlandControl,
+  vibration: any
+): Promise<{
+  componentsMap: Map<string, GeneratedComponent>
+  workspaceButtons: WorkspaceButton[]
+  volumeDisplay: VolumeDisplay | undefined
+  mediaDisplay: MediaDisplay | undefined
+}> {
+  // キャッシュをクリアして最新の設定を読み込む
+  clearConfigCache()
+  const config = loadConfig()
+  const pages = convertToPageConfig(config)
+
+  const componentsMap = new Map<string, GeneratedComponent>()
+  const componentsList: GeneratedComponent[] = []
+
+  const page1 = pages[1]
+  if (!page1) {
+    throw new Error('ページ1の設定が見つかりません')
+  }
+
+  // ページ1のコンポーネントを生成
+  logger.info('ページ1のコンポーネントを動的生成中...')
+  for (const [name, config] of Object.entries(page1.components)) {
+    try {
+      const component = createComponent(name, config, deps)
+      componentsMap.set(name, component)
+      componentsList.push(component)
+      logger.debug(`✓ コンポーネント生成: ${name}`)
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      logger.warn(`⚠️ コンポーネント生成失敗: ${name} - ${message}`)
+    }
+  }
+
+  // レイアウトをクリアして新しいコンポーネントを追加
+  layout.clearPage(1)
+  layout.addComponents(componentsList, 1)
+
+  // ページ2: ワークスペース切替ボタン
+  const workspaceButtons: WorkspaceButton[] = []
+  layout.clearPage(2)
+
+  for (let i = 1; i <= 10; i++) {
+    let col: number
+    let row: number
+
+    if (i <= 5) {
+      col = i - 1
+      row = 1
+    } else {
+      col = i - 6
+      row = 2
+    }
+
+    const wsButton = new WorkspaceButton(col, row, i, hyprlandControl, {
+      vibration: vibration,
+    })
+    workspaceButtons.push(wsButton)
+    layout.addComponent(wsButton, 2)
+  }
+
+  // 特殊なコンポーネントの参照を取得
+  const volumeDisplay = componentsMap.get('volumeDisplay') as VolumeDisplay | undefined
+  const mediaDisplay = componentsMap.get('mediaDisplay') as MediaDisplay | undefined
+
+  logger.info('配置完了:')
+  logger.info('\n【ページ1: アプリケーション】')
+  for (const [name, config] of Object.entries(page1.components)) {
+    if ('position' in config) {
+      const label = 'options' in config && 'label' in config.options ? config.options.label : name
+      logger.info(`  - ${label}: (列${config.position.col}, 行${config.position.row})`)
+    }
+  }
+
+  await layout.update()
+
+  return { componentsMap, workspaceButtons, volumeDisplay, mediaDisplay }
+}
 
 /**
  * メイン処理
@@ -83,9 +174,7 @@ async function main() {
     }
     const layout = new GridLayout(device)
 
-    // ページ1のコンポーネントを動的生成
-    logger.info('ページ1のコンポーネントを動的生成中...')
-
+    // 依存関係を準備
     const deps: ComponentDependencies = {
       vibration,
       appLauncher,
@@ -93,61 +182,18 @@ async function main() {
       mediaControl,
     }
 
-    const componentsMap = new Map<string, GeneratedComponent>()
-    const componentsList: GeneratedComponent[] = []
+    // コンポーネントを生成してレイアウトに追加
+    let { componentsMap, workspaceButtons, volumeDisplay, mediaDisplay } = await buildComponents(
+      layout,
+      deps,
+      hyprlandControl,
+      vibration
+    )
 
-    const page1 = pagesConfig[1]
-    if (!page1) {
-      throw new Error('ページ1の設定が見つかりません')
+    if (!volumeDisplay || !mediaDisplay) {
+      logger.warn('⚠️ volumeDisplay または mediaDisplay が見つかりません')
     }
 
-    for (const [name, config] of Object.entries(page1.components)) {
-      try {
-        const component = createComponent(name, config, deps)
-        componentsMap.set(name, component)
-        componentsList.push(component)
-        logger.debug(`✓ コンポーネント生成: ${name}`)
-      } catch (error) {
-        const message = error instanceof Error ? error.message : String(error)
-        logger.warn(`⚠️ コンポーネント生成失敗: ${name} - ${message}`)
-      }
-    }
-
-    // ページ1にコンポーネントを追加（表示を最後に追加して上に重ねる）
-    layout.addComponents(componentsList, 1)
-
-    // ページ2: ワークスペース切替ボタン（中段1-5、下段6-10）
-    const workspaceButtons: WorkspaceButton[] = []
-    for (let i = 1; i <= 10; i++) {
-      let col: number
-      let row: number
-
-      if (i <= 5) {
-        // ワークスペース1-5: 中段（行1）
-        col = i - 1
-        row = 1
-      } else {
-        // ワークスペース6-10: 下段（行2）
-        col = i - 6
-        row = 2
-      }
-
-      const wsButton = new WorkspaceButton(col, row, i, hyprlandControl, {
-        vibration: vibration,
-      })
-      workspaceButtons.push(wsButton)
-      layout.addComponent(wsButton, 2)
-    }
-
-    logger.info('配置完了:')
-    logger.info('\n【ページ1: アプリケーション】')
-    // 動的生成されたコンポーネントの情報を表示
-    for (const [name, config] of Object.entries(page1.components)) {
-      if ('position' in config) {
-        const label = 'options' in config && 'label' in config.options ? config.options.label : name
-        logger.info(`  - ${label}: (列${config.position.col}, 行${config.position.row})`)
-      }
-    }
     logger.info('\n【ページ2: ワークスペース切替】')
     logger.info('  - 中段（行1）: ワークスペース1-5')
     logger.info('  - 下段（行2）: ワークスペース6-10')
@@ -163,28 +209,20 @@ async function main() {
     const intervalId = layout.startAutoUpdate(AUTO_UPDATE_INTERVAL_MS)
 
     // メディア再生/一時停止ボタンのアイコン更新を開始（2秒ごと）
-    const mediaPlayPauseButton = componentsMap.get('mediaPlayPauseButton') as MediaPlayPauseButton | undefined
     let mediaIconUpdateInterval: NodeJS.Timeout | undefined
-    if (mediaPlayPauseButton) {
-      mediaIconUpdateInterval = setInterval(async () => {
-        await mediaPlayPauseButton.updateIcon()
-        await layout.update()
-      }, 2000)
+    const updateMediaIcon = () => {
+      const mediaPlayPauseButton = componentsMap.get('mediaPlayPauseButton') as MediaPlayPauseButton | undefined
+      if (mediaPlayPauseButton) {
+        mediaPlayPauseButton.updateIcon().then(() => layout.update())
+      }
     }
-
-    // 特殊なコンポーネントの参照を取得
-    const volumeDisplay = componentsMap.get('volumeDisplay') as VolumeDisplay | undefined
-    const mediaDisplay = componentsMap.get('mediaDisplay') as MediaDisplay | undefined
-
-    if (!volumeDisplay || !mediaDisplay) {
-      logger.warn('⚠️ volumeDisplay または mediaDisplay が見つかりません')
-    }
+    mediaIconUpdateInterval = setInterval(updateMediaIcon, 2000)
 
     // 音量ハンドラーを作成
-    const volumeHandler = new VolumeHandler(volumeControl, volumeDisplay!, layout, vibration)
+    let volumeHandler = new VolumeHandler(volumeControl, volumeDisplay!, layout, vibration)
 
     // ページハンドラーを作成
-    const pageHandler = new PageHandler(layout, workspaceButtons, vibration)
+    let pageHandler = new PageHandler(layout, workspaceButtons, vibration)
 
     // メディアハンドラーを作成（現在は未使用）
     // const mediaHandler = new MediaHandler(mediaControl, mediaDisplay, layout, vibration)
@@ -242,11 +280,38 @@ async function main() {
     })
     logger.info('ノブクリック・物理ボタンイベントハンドラーの登録完了')
 
-    // 設定ファイルの監視を開始
-    watchConfig(undefined, () => {
-      logger.warn('⚠️  設定ファイルが変更されました')
-      logger.warn('⚠️  変更を反映するにはアプリケーションを再起動してください')
-      logger.warn('⚠️  Ctrl+C で終了後、npm start で再起動してください')
+    // 設定ファイルの監視を開始（ホットリロード）
+    watchConfig(undefined, async () => {
+      logger.info('📝 設定ファイルが変更されました')
+      logger.info('🔄 自動的に設定を再読み込みします...')
+
+      try {
+        // 古いコンポーネントのクリーンアップ
+        if (volumeDisplay) volumeDisplay.cleanup()
+        if (mediaDisplay) mediaDisplay.cleanup()
+        if (mediaIconUpdateInterval) {
+          clearInterval(mediaIconUpdateInterval)
+        }
+
+        // コンポーネントを再生成
+        const result = await buildComponents(layout, deps, hyprlandControl, vibration)
+        componentsMap = result.componentsMap
+        workspaceButtons = result.workspaceButtons
+        volumeDisplay = result.volumeDisplay
+        mediaDisplay = result.mediaDisplay
+
+        // ハンドラーを再作成
+        volumeHandler = new VolumeHandler(volumeControl, volumeDisplay!, layout, vibration)
+        pageHandler = new PageHandler(layout, workspaceButtons, vibration)
+
+        // メディアアイコン更新を再開
+        mediaIconUpdateInterval = setInterval(updateMediaIcon, 2000)
+
+        logger.info('✓ 設定の再読み込みが完了しました')
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error)
+        logger.error(`✗ 設定の再読み込みに失敗しました: ${message}`)
+      }
     })
 
     // 終了処理のセットアップ

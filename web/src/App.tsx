@@ -65,6 +65,35 @@ function App() {
     setEditedConfig(newConfig)
   }
 
+  const handleSwapComponents = (componentName1: string, componentName2: string, pageNum: number) => {
+    if (!editedConfig) return
+
+    console.log('Swapping in App.tsx:', componentName1, componentName2, pageNum)
+
+    // Create a deep copy of the config
+    const newConfig = JSON.parse(JSON.stringify(editedConfig))
+
+    // Get the positions of both components
+    const page = newConfig.pages?.[pageNum]
+    if (!page) return
+
+    const comp1 = page[componentName1]
+    const comp2 = page[componentName2]
+
+    if (!comp1 || !comp2 || !comp1.position || !comp2.position) return
+
+    // Swap positions
+    const tempPosition = { ...comp1.position }
+    comp1.position.col = comp2.position.col
+    comp1.position.row = comp2.position.row
+    comp2.position.col = tempPosition.col
+    comp2.position.row = tempPosition.row
+
+    console.log('Swapped positions:', componentName1, comp1.position, componentName2, comp2.position)
+
+    setEditedConfig(newConfig)
+  }
+
   const handleDeleteComponent = (componentName: string, pageNum: number) => {
     if (!editedConfig || !confirm(`${componentName} を削除しますか？`)) return
 
@@ -229,19 +258,26 @@ function App() {
           </div>
         </header>
 
-        {/* Save Status Message */}
+        {/* Save Status Toast - Fixed position, no layout shift */}
         {saveMessage && (
           <div
-            className={`mb-6 p-4 rounded-lg border ${
+            className={`fixed bottom-6 right-6 max-w-md p-4 rounded-lg border shadow-2xl z-50 animate-in fade-in slide-in-from-bottom-5 duration-300 ${
               saveStatus === 'success'
-                ? 'bg-green-900/20 border-green-700 text-green-400'
-                : 'bg-red-900/20 border-red-700 text-red-400'
+                ? 'bg-green-900/95 border-green-700 text-green-400'
+                : 'bg-red-900/95 border-red-700 text-red-400'
             }`}
           >
-            <p className="font-semibold">
-              {saveStatus === 'success' ? '✓ Success' : '✗ Error'}
-            </p>
-            <p className="text-sm mt-1">{saveMessage}</p>
+            <div className="flex items-start gap-3">
+              <span className="text-2xl">
+                {saveStatus === 'success' ? '✓' : '✗'}
+              </span>
+              <div className="flex-1">
+                <p className="font-semibold">
+                  {saveStatus === 'success' ? 'Success' : 'Error'}
+                </p>
+                <p className="text-sm mt-1">{saveMessage}</p>
+              </div>
+            </div>
           </div>
         )}
 
@@ -282,6 +318,7 @@ function App() {
               device={config?.device}
               isEditMode={isEditMode}
               onPositionChange={handlePositionChange}
+              onSwapComponents={handleSwapComponents}
             />
           </div>
         </section>
