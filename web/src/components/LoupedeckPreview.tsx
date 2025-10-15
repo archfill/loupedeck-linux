@@ -19,8 +19,8 @@ interface LoupedeckPreviewProps {
   device?: {
     type?: string
     grid?: { columns: number; rows: number }
-    knobs?: any[]
-    buttons?: any[]
+    knobs?: string[]
+    buttons?: number[]
   }
 }
 
@@ -62,7 +62,7 @@ export function LoupedeckPreview({ components, device }: LoupedeckPreviewProps) 
 
     // コンポーネントを描画
     if (components) {
-      Object.entries(components).forEach(([_name, component]) => {
+      Object.entries(components).forEach(([, component]) => {
         const { col, row } = component.position
         const x = col * cellSize
         const y = row * cellSize

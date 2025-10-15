@@ -17,13 +17,21 @@ interface Component {
 interface Device {
   type?: string
   grid?: { columns: number; rows: number }
-  knobs?: any[]
-  buttons?: any[]
+  knobs?: string[]
+  buttons?: number[]
+}
+
+interface Constants {
+  autoUpdateInterval?: number
+  buttonLedColors?: Record<number, string>
+  knobIds?: Record<string, string>
+  volumeStep?: number
+  volumeDisplayTimeout?: number
 }
 
 interface Config {
   components?: Record<string, Component>
-  constants?: any
+  constants?: Constants
   device?: Device
 }
 

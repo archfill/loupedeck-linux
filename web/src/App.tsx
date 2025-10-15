@@ -78,7 +78,7 @@ function App() {
           <div className="bg-gray-900 rounded-lg p-6 border border-gray-800">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {config?.components &&
-                Object.entries(config.components).map(([name, component]: [string, any]) => (
+                Object.entries(config.components).map(([name, component]) => (
                   <div
                     key={name}
                     className="bg-gray-800 rounded-lg p-4 border border-gray-700 hover:border-gray-600 transition-colors"
@@ -123,7 +123,7 @@ function App() {
           <div className="bg-gray-900 rounded-lg p-6 border border-gray-800">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {config?.constants &&
-                Object.entries(config.constants).map(([key, value]: [string, any]) => (
+                Object.entries(config.constants).map(([key, value]) => (
                   <div key={key} className="flex justify-between items-center py-2 border-b border-gray-800 last:border-0">
                     <span className="text-gray-400">{key}</span>
                     <span className="font-mono text-sm">
