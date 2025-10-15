@@ -207,6 +207,29 @@ export class MediaDisplay {
   }
 
   /**
+   * タッチイベントを処理
+   * @param col - タッチされた列
+   * @param row - タッチされた行
+   * @returns イベントを処理したかどうか（非表示の場合はfalseを返して下のレイヤーに渡す）
+   */
+  async handleTouch(col: number, row: number): Promise<boolean> {
+    // 非表示の場合は処理しない（下のレイヤーに渡す）
+    if (!this.visible) {
+      return false
+    }
+
+    // 自分の位置でない場合は処理しない
+    if (col !== this.col || row !== this.row) {
+      return false
+    }
+
+    // 表示中の場合、タップで非表示にする
+    logger.info('メディア表示をタップ - 手動非表示')
+    this.hide()
+    return true
+  }
+
+  /**
    * 手動で非表示にする
    */
   hide(): void {

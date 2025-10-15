@@ -187,28 +187,36 @@ export class VolumeDisplay {
    * @returns 処理されたか
    */
   async handleTouch(touchedCol: number, touchedRow: number): Promise<boolean> {
-    if (touchedCol === this.col && touchedRow === this.row) {
-      logger.info('音量表示をタップ - ミュート切り替え')
-
-      // 表示を延長
-      this.showTemporarily()
-
-      // ミュート切り替え
-      const isMuted = await this.volumeControl.toggleMute()
-
-      // 振動フィードバック
-      if (this.vibration) {
-        if (isMuted) {
-          await this.vibration.vibratePattern('warning')
-        } else {
-          await this.vibration.vibratePattern('success')
-        }
-      }
-
-      logger.info(`ミュート状態: ${isMuted ? 'ON' : 'OFF'}`)
-      return true
+    // 自分の位置でない場合は処理しない
+    if (touchedCol !== this.col || touchedRow !== this.row) {
+      return false
     }
-    return false
+
+    // 非表示の場合は処理しない（下のレイヤーに渡す）
+    if (!this.visible) {
+      return false
+    }
+
+    // 表示中の場合、ミュート切り替え
+    logger.info('音量表示をタップ - ミュート切り替え')
+
+    // 表示を延長
+    this.showTemporarily()
+
+    // ミュート切り替え
+    const isMuted = await this.volumeControl.toggleMute()
+
+    // 振動フィードバック
+    if (this.vibration) {
+      if (isMuted) {
+        await this.vibration.vibratePattern('warning')
+      } else {
+        await this.vibration.vibratePattern('success')
+      }
+    }
+
+    logger.info(`ミュート状態: ${isMuted ? 'ON' : 'OFF'}`)
+    return true
   }
 
   /**

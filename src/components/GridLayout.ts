@@ -23,12 +23,12 @@ interface GridComponent {
  */
 export class GridLayout extends Screen {
   private components: GridComponent[]
-  private componentMap: Map<string, GridComponent>
+  private componentMap: Map<string, GridComponent[]>
 
   constructor(device: any) {
     super(device)
     this.components = []
-    this.componentMap = new Map() // col_row -> component のマップ
+    this.componentMap = new Map() // col_row -> components[] のマップ（複数対応）
   }
 
   /**
@@ -38,12 +38,14 @@ export class GridLayout extends Screen {
   addComponent(component: GridComponent): void {
     this.components.push(component)
 
-    // 位置情報を持つコンポーネントの場合、マップに登録
+    // 位置情報を持つコンポーネントの場合、マップに登録（複数対応）
     if (component.col !== undefined && component.row !== undefined) {
       const key = `${component.col}_${component.row}`
-      this.componentMap.set(key, component)
+      const existing = this.componentMap.get(key) || []
+      existing.push(component)
+      this.componentMap.set(key, existing)
       logger.debug(
-        `Component registered: ${component.label || component.constructor.name} at (${component.col},${component.row}) with key=${key}`
+        `Component registered: ${component.label || component.constructor.name} at (${component.col},${component.row}) with key=${key} (total: ${existing.length})`
       )
     }
   }
@@ -88,18 +90,32 @@ export class GridLayout extends Screen {
    */
   async handleTouch(touchedCol: number, touchedRow: number): Promise<boolean> {
     const key = `${touchedCol}_${touchedRow}`
-    const component = this.componentMap.get(key)
+    const components = this.componentMap.get(key)
 
-    logger.debug(`GridLayout.handleTouch: key=${key}, component found=${!!component}`)
+    logger.debug(`GridLayout.handleTouch: key=${key}, components found=${components?.length || 0}`)
 
-    if (component && typeof component.handleTouch === 'function') {
-      logger.debug(
-        `Calling component.handleTouch for ${component.label || component.constructor.name}`
-      )
-      return await component.handleTouch(touchedCol, touchedRow)
+    if (components && components.length > 0) {
+      // 後から追加されたコンポーネント（上に重なっているもの）から順に処理
+      for (let i = components.length - 1; i >= 0; i--) {
+        const component = components[i]
+
+        if (typeof component.handleTouch === 'function') {
+          logger.debug(
+            `Calling component.handleTouch for ${component.label || component.constructor.name} (layer ${i})`
+          )
+          const handled = await component.handleTouch(touchedCol, touchedRow)
+
+          // コンポーネントがイベントを処理した場合は終了
+          if (handled) {
+            return true
+          }
+
+          logger.debug(`Component ${component.label || component.constructor.name} did not handle touch, trying next layer`)
+        }
+      }
     }
 
-    logger.debug('No component found for this position')
+    logger.debug('No component handled this touch event')
     return false
   }
 
