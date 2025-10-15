@@ -9,7 +9,7 @@ import { VolumeControl } from './src/utils/volumeControl.ts'
 import { MediaControl } from './src/utils/mediaControl.ts'
 import { HyprlandControl } from './src/utils/hyprlandControl.ts'
 import { VolumeHandler } from './src/handlers/VolumeHandler.ts'
-import { MediaHandler } from './src/handlers/MediaHandler.ts'
+import { PageHandler } from './src/handlers/PageHandler.ts'
 import { AppLauncher } from './src/utils/appLauncher.ts'
 import { IconResolver } from './src/utils/iconResolver.ts'
 import { logger } from './src/utils/logger.ts'
@@ -255,6 +255,9 @@ async function main() {
     logger.info('\n【ページ2: ワークスペース切替】')
     logger.info('  - 中段（行1）: ワークスペース1-5')
     logger.info('  - 下段（行2）: ワークスペース6-10')
+    logger.info('\n【ノブ操作】')
+    logger.info('  - 上段ノブ（knobTL）: 回転で音量調整、クリックでミュート切替')
+    logger.info('  - 中段ノブ（knobCL）: 回転でページ切替、クリックでページ1に戻る')
     logger.info('\n【ページ切替】')
     logger.info('  - 物理ボタン0（左下）: ページ1へ切り替え')
     logger.info('  - 物理ボタン1（左下から2番目）: ページ2へ切り替え')
@@ -266,8 +269,11 @@ async function main() {
     // 音量ハンドラーを作成
     const volumeHandler = new VolumeHandler(volumeControl, volumeDisplay, layout, vibration)
 
-    // メディアハンドラーを作成
-    const mediaHandler = new MediaHandler(mediaControl, mediaDisplay, layout, vibration)
+    // ページハンドラーを作成
+    const pageHandler = new PageHandler(layout, workspaceButtons, vibration)
+
+    // メディアハンドラーを作成（現在は未使用）
+    // const mediaHandler = new MediaHandler(mediaControl, mediaDisplay, layout, vibration)
 
     // タッチイベントハンドラー
     logger.info('タッチイベントハンドラーを登録しています...')
@@ -277,16 +283,16 @@ async function main() {
     })
     logger.info('タッチイベントハンドラーの登録完了')
 
-    // ノブ回転イベントハンドラー（音量調整とメディア操作）
+    // ノブ回転イベントハンドラー（音量調整とページ切替）
     logger.info('ノブ回転イベントハンドラーを登録しています...')
     loupedeckDevice.on('rotate', async (data: unknown) => {
       const event = data as { id: string; delta: number }
       await volumeHandler.handleRotate(event.id, event.delta)
-      await mediaHandler.handleRotate(event.id, event.delta)
+      await pageHandler.handleRotate(event.id, event.delta)
     })
     logger.info('ノブ回転イベントハンドラーの登録完了')
 
-    // ノブクリックイベントハンドラー（ミュート切り替えと再生/一時停止）
+    // ノブクリックイベントハンドラー（ミュート切り替えとページ1に戻る）
     // 物理ボタン: ページ切替
     logger.info('ノブクリック・物理ボタンイベントハンドラーを登録しています...')
     loupedeckDevice.on('down', async (data: unknown) => {
@@ -296,7 +302,7 @@ async function main() {
       if (typeof event.id === 'string') {
         // ノブの場合
         await volumeHandler.handleDown(event.id)
-        await mediaHandler.handleDown(event.id)
+        await pageHandler.handleDown(event.id)
       } else {
         // 物理ボタンの場合: ページ切替
         logger.info(`物理ボタン ID=${event.id} でページ切替`)
