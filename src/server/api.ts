@@ -2,25 +2,13 @@ import express, { type Application, type Request, type Response } from 'express'
 import cors from 'cors'
 import path from 'path'
 import { fileURLToPath } from 'url'
+import { writeFileSync } from 'fs'
 import type { Server } from 'http'
 import { logger } from '../utils/logger.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
-import {
-  clockConfig,
-  firefoxButtonConfig,
-  onePasswordButtonConfig,
-  thunderbirdButtonConfig,
-  volumeDisplayConfig,
-  mediaDisplayConfig,
-  workspaceSetupButtonConfig,
-  onePasswordUnlockButtonConfig,
-  wlogoutButtonConfig,
-  mediaPreviousButtonConfig,
-  mediaPlayPauseButtonConfig,
-  mediaNextButtonConfig,
-} from '../config/components.ts'
+import { pagesConfig } from '../config/pages.ts'
 import {
   AUTO_UPDATE_INTERVAL_MS,
   BUTTON_LED_COLORS,
@@ -65,53 +53,19 @@ export class ApiServer {
 
     // 全設定取得
     this.app.get('/api/config', (_req: Request, res: Response) => {
+      // pagesConfigを_meta付きの形式に変換
+      const pages: Record<number, any> = {}
+      Object.entries(pagesConfig).forEach(([pageNum, pageConfig]) => {
+        pages[Number(pageNum)] = {
+          _meta: pageConfig.meta,
+          ...pageConfig.components,
+        }
+      })
+
       res.json({
-        pages: {
-          1: {
-            _meta: {
-              title: 'Applications',
-              description: 'App launchers and media controls',
-            },
-            clock: clockConfig,
-            firefoxButton: firefoxButtonConfig,
-            onePasswordButton: onePasswordButtonConfig,
-            thunderbirdButton: thunderbirdButtonConfig,
-            wlogoutButton: wlogoutButtonConfig,
-            workspaceSetupButton: workspaceSetupButtonConfig,
-            onePasswordUnlockButton: onePasswordUnlockButtonConfig,
-            mediaPreviousButton: mediaPreviousButtonConfig,
-            mediaPlayPauseButton: mediaPlayPauseButtonConfig,
-            mediaNextButton: mediaNextButtonConfig,
-            volumeDisplay: volumeDisplayConfig,
-            mediaDisplay: mediaDisplayConfig,
-          },
-          2: {
-            _meta: {
-              title: 'Workspaces',
-              description: 'Hyprland workspace switching (1-10)',
-            },
-            // ページ2はワークスペースボタン（1-10）
-            // 動的に生成されるため、ここでは配置情報のみ
-            layout: {
-              row1: 'Workspaces 1-5 (columns 0-4)',
-              row2: 'Workspaces 6-10 (columns 0-4)',
-            },
-          },
-        },
-        components: {
-          clock: clockConfig,
-          firefoxButton: firefoxButtonConfig,
-          onePasswordButton: onePasswordButtonConfig,
-          thunderbirdButton: thunderbirdButtonConfig,
-          wlogoutButton: wlogoutButtonConfig,
-          volumeDisplay: volumeDisplayConfig,
-          mediaDisplay: mediaDisplayConfig,
-          workspaceSetupButton: workspaceSetupButtonConfig,
-          onePasswordUnlockButton: onePasswordUnlockButtonConfig,
-          mediaPreviousButton: mediaPreviousButtonConfig,
-          mediaPlayPauseButton: mediaPlayPauseButtonConfig,
-          mediaNextButton: mediaNextButtonConfig,
-        },
+        pages,
+        // 後方互換性のため、全コンポーネントのフラットリストも提供
+        components: pagesConfig[1]?.components || {},
         constants: {
           autoUpdateInterval: AUTO_UPDATE_INTERVAL_MS,
           buttonLedColors: BUTTON_LED_COLORS,
@@ -130,17 +84,7 @@ export class ApiServer {
 
     // コンポーネント設定取得
     this.app.get('/api/config/components', (_req: Request, res: Response) => {
-      res.json({
-        clock: clockConfig,
-        firefoxButton: firefoxButtonConfig,
-        onePasswordButton: onePasswordButtonConfig,
-        thunderbirdButton: thunderbirdButtonConfig,
-        wlogoutButton: wlogoutButtonConfig,
-        volumeDisplay: volumeDisplayConfig,
-        mediaDisplay: mediaDisplayConfig,
-        workspaceSetupButton: workspaceSetupButtonConfig,
-        onePasswordUnlockButton: onePasswordUnlockButtonConfig,
-      })
+      res.json(pagesConfig[1]?.components || {})
     })
 
     // 定数設定取得
@@ -162,6 +106,35 @@ export class ApiServer {
         knobs: ['knobTL', 'knobCL'] as const,
         buttons: [0, 1, 2, 3] as const,
       })
+    })
+
+    // 設定の保存 (POST)
+    this.app.post('/api/config', (req: Request, res: Response) => {
+      try {
+        const updatedPages = req.body
+
+        // 既存のconfig.jsonを読み込んで更新
+        const configPath = path.resolve(process.cwd(), 'config/config.json')
+        const config = {
+          pages: updatedPages,
+        }
+
+        // JSONファイルに書き込み
+        writeFileSync(configPath, JSON.stringify(config, null, 2), 'utf-8')
+
+        logger.info('✓ Configuration saved to config.json')
+        res.json({
+          success: true,
+          message: 'Configuration saved successfully. Please restart the backend to apply changes.',
+        })
+      } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : String(error)
+        logger.error(`Failed to save configuration: ${message}`)
+        res.status(500).json({
+          success: false,
+          message: `Failed to save configuration: ${message}`,
+        })
+      }
     })
 
     // 静的ファイル配信（Web UI） - APIルートの後に配置
