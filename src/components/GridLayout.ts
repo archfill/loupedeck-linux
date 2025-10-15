@@ -1,10 +1,7 @@
-import { Screen } from './Screen.ts'
+import { Screen, type CellCoord } from './Screen.ts'
 import { logger } from '../utils/logger.ts'
-
-/**
- * Canvas描画コンテキストの型
- */
-type CanvasRenderingContext2D = any
+import type { LoupedeckDevice } from 'loupedeck'
+import type { CanvasRenderingContext2D } from 'canvas'
 
 /**
  * グリッドコンポーネントのインターフェース
@@ -13,7 +10,7 @@ interface GridComponent {
   col?: number
   row?: number
   label?: string
-  draw: (ctx: CanvasRenderingContext2D, cellCoord?: any) => void
+  draw: (ctx: CanvasRenderingContext2D, cellCoord: CellCoord) => void
   handleTouch?: (touchedCol: number, touchedRow: number) => Promise<boolean> | boolean
 }
 
@@ -25,7 +22,7 @@ export class GridLayout extends Screen {
   private components: GridComponent[]
   private componentMap: Map<string, GridComponent[]>
 
-  constructor(device: any) {
+  constructor(device: LoupedeckDevice) {
     super(device)
     this.components = []
     this.componentMap = new Map() // col_row -> components[] のマップ（複数対応）
@@ -75,9 +72,6 @@ export class GridLayout extends Screen {
         // 単一セルコンポーネント（Button、Clockなど）
         const cellCoord = this.getCellCoordinates(component.col, component.row)
         component.draw(ctx, cellCoord)
-      } else {
-        // 全画面コンポーネント
-        component.draw(ctx)
       }
     })
   }
@@ -99,6 +93,10 @@ export class GridLayout extends Screen {
       for (let i = components.length - 1; i >= 0; i--) {
         const component = components[i]
 
+        if (!component) {
+          continue
+        }
+
         if (typeof component.handleTouch === 'function') {
           logger.debug(
             `Calling component.handleTouch for ${component.label || component.constructor.name} (layer ${i})`
@@ -110,7 +108,9 @@ export class GridLayout extends Screen {
             return true
           }
 
-          logger.debug(`Component ${component.label || component.constructor.name} did not handle touch, trying next layer`)
+          logger.debug(
+            `Component ${component.label || component.constructor.name} did not handle touch, trying next layer`
+          )
         }
       }
     }
@@ -132,8 +132,9 @@ export class GridLayout extends Screen {
     return setInterval(async () => {
       try {
         await this.update()
-      } catch (error: any) {
-        logger.error(`描画エラー: ${error.message}`)
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error)
+        logger.error(`描画エラー: ${message}`)
       }
     }, interval)
   }

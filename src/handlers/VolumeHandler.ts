@@ -5,16 +5,20 @@ import {
   VIBRATION_PATTERNS,
   type VibrationPattern,
 } from '../config/constants.ts'
+import type { VolumeControl } from '../utils/volumeControl.ts'
+import type { VolumeDisplay } from '../components/VolumeDisplay.ts'
+import type { GridLayout } from '../components/GridLayout.ts'
+import type { VibrationUtil } from '../utils/vibration.ts'
 
 /**
  * 音量制御イベントハンドラー
  * ノブの回転とクリックによる音量調整とミュート切り替えを処理
  */
 export class VolumeHandler {
-  private volumeControl: any // TODO: VolumeControl型を定義
-  private volumeDisplay: any // TODO: VolumeDisplay型を定義
-  private layout: any // TODO: GridLayout型を定義
-  private vibration: any | null // TODO: VibrationUtil型を定義
+  private volumeControl: VolumeControl
+  private volumeDisplay: VolumeDisplay
+  private layout: GridLayout
+  private vibration: VibrationUtil | null
 
   /**
    * @param volumeControl - 音量制御インスタンス
@@ -22,7 +26,12 @@ export class VolumeHandler {
    * @param layout - グリッドレイアウト
    * @param vibration - 振動ユーティリティ（オプショナル）
    */
-  constructor(volumeControl: any, volumeDisplay: any, layout: any, vibration: any = null) {
+  constructor(
+    volumeControl: VolumeControl,
+    volumeDisplay: VolumeDisplay,
+    layout: GridLayout,
+    vibration: VibrationUtil | null = null
+  ) {
     this.volumeControl = volumeControl
     this.volumeDisplay = volumeDisplay
     this.layout = layout

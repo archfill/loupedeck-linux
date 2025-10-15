@@ -35,7 +35,8 @@ export class AppLauncher {
       logger.warn(
         'DISPLAYまたはWAYLAND_DISPLAY環境変数が設定されていません。GUIアプリの起動に失敗する可能性があります。'
       )
-      logger.debug('環境変数:', {
+      logger.debug('環境変数:')
+      logger.debug({
         DISPLAY: display,
         XAUTHORITY: xauthority,
         WAYLAND_DISPLAY: waylandDisplay,
@@ -55,8 +56,9 @@ export class AppLauncher {
       if (this.vibration) {
         await this.vibration.vibratePattern(VIBRATION_PATTERNS.SUCCESS)
       }
-    } catch (error: any) {
-      logger.error(`✗ ${appName} の起動に失敗しました: ${error.message}`)
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      logger.error(`✗ ${appName} の起動に失敗しました: ${message}`)
 
       // 失敗時の振動フィードバック
       if (this.vibration) {

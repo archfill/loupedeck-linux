@@ -1,15 +1,19 @@
 import { logger } from '../utils/logger.js'
 import { KNOB_IDS, VIBRATION_PATTERNS, type VibrationPattern } from '../config/constants.ts'
+import type { MediaControl } from '../utils/mediaControl.ts'
+import type { MediaDisplay } from '../components/MediaDisplay.ts'
+import type { GridLayout } from '../components/GridLayout.ts'
+import type { VibrationUtil } from '../utils/vibration.ts'
 
 /**
  * メディア制御イベントハンドラー
  * ノブの回転とクリックによるメディア操作を処理
  */
 export class MediaHandler {
-  private mediaControl: any // TODO: MediaControl型を定義
-  private mediaDisplay: any // TODO: MediaDisplay型を定義
-  private layout: any // TODO: GridLayout型を定義
-  private vibration: any | null // TODO: VibrationUtil型を定義
+  private mediaControl: MediaControl
+  private mediaDisplay: MediaDisplay
+  private layout: GridLayout
+  private vibration: VibrationUtil | null
 
   /**
    * @param mediaControl - メディア制御インスタンス
@@ -17,7 +21,12 @@ export class MediaHandler {
    * @param layout - グリッドレイアウト
    * @param vibration - 振動ユーティリティ（オプショナル）
    */
-  constructor(mediaControl: any, mediaDisplay: any, layout: any, vibration: any = null) {
+  constructor(
+    mediaControl: MediaControl,
+    mediaDisplay: MediaDisplay,
+    layout: GridLayout,
+    vibration: VibrationUtil | null = null
+  ) {
     this.mediaControl = mediaControl
     this.mediaDisplay = mediaDisplay
     this.layout = layout

@@ -1,8 +1,7 @@
-import { discover } from 'loupedeck'
+import { discover, type LoupedeckDevice as LoupedeckDeviceType } from 'loupedeck'
 import { logger } from '../utils/logger.ts'
 import { VibrationUtil } from '../utils/vibration.ts'
 
-// TODO: loupedeckライブラリの型定義を追加または作成
 interface TouchEvent {
   x: number
   y: number
@@ -22,7 +21,7 @@ interface TouchCallback {
  * デバイスの接続、イベント処理、終了処理を管理
  */
 export class LoupedeckDevice {
-  private device: any | null // TODO: Loupedeck型を定義
+  private device: LoupedeckDeviceType | null
   private vibration: VibrationUtil | null
 
   constructor() {
@@ -34,7 +33,7 @@ export class LoupedeckDevice {
    * デバイスに接続
    * @returns デバイスオブジェクト
    */
-  async connect(): Promise<any> {
+  async connect(): Promise<LoupedeckDeviceType> {
     logger.info('Loupedeck デバイスを検索中...')
 
     try {
@@ -62,8 +61,9 @@ export class LoupedeckDevice {
       await this.vibration.vibratePattern('connect')
 
       return this.device
-    } catch (error: any) {
-      logger.error(`✗ デバイスの接続に失敗しました: ${error.message}`)
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error)
+      logger.error(`✗ デバイスの接続に失敗しました: ${message}`)
       throw error
     }
   }
@@ -72,6 +72,10 @@ export class LoupedeckDevice {
    * デフォルトのイベントハンドラーを設定
    */
   private setupDefaultEventHandlers(): void {
+    if (!this.device) {
+      return
+    }
+
     this.device.on('connect', () => {
       logger.info('✓ デバイスが接続されました')
     })
@@ -82,11 +86,14 @@ export class LoupedeckDevice {
     })
 
     // すべてのイベントをデバッグログに出力
-    const events = ['down', 'up', 'touchstart', 'touchmove', 'touchend', 'rotate']
+    const events = ['down', 'up', 'touchstart', 'touchmove', 'touchend', 'rotate'] as const
     events.forEach((eventName) => {
-      this.device.on(eventName, (data: any) => {
-        logger.debug(`Device event: ${eventName}`, data)
-      })
+      if (this.device) {
+        this.device.on(eventName, (data: unknown) => {
+          logger.debug(`Device event: ${eventName}`)
+          logger.debug(data)
+        })
+      }
     })
   }
 
@@ -95,10 +102,17 @@ export class LoupedeckDevice {
    * @param callback - タッチイベントのコールバック関数
    */
   onTouch(callback: TouchCallback): void {
+    if (!this.device) {
+      logger.warn('onTouch: device is null')
+      return
+    }
+
     logger.debug('onTouch handler registered for touchstart events')
 
     // 画面タッチイベント用（Loupedeck Live Sの画面）
-    this.device.on('touchstart', ({ changedTouches }: TouchData) => {
+    this.device.on('touchstart', (data: unknown) => {
+      const touchData = data as TouchData
+      const { changedTouches } = touchData
       logger.debug(`onTouch: 'touchstart' event fired with ${changedTouches?.length || 0} touches`)
 
       if (!changedTouches || changedTouches.length === 0) {
@@ -106,9 +120,17 @@ export class LoupedeckDevice {
         return
       }
 
+      if (!this.device) {
+        return
+      }
+
       changedTouches.forEach((touch) => {
         const { x, y, target } = touch
         logger.debug(`Touch at x=${x}, y=${y}, target=${target?.key}`)
+
+        if (!this.device) {
+          return
+        }
 
         // 画面レイアウトの計算
         const keySize = this.device.keySize || 90
@@ -146,7 +168,11 @@ export class LoupedeckDevice {
    * @param eventName - イベント名
    * @param callback - コールバック関数
    */
-  on(eventName: string, callback: (data: any) => void | Promise<void>): void {
+  on(eventName: string, callback: (data: unknown) => void | Promise<void>): void {
+    if (!this.device) {
+      logger.warn(`on: device is null, cannot register event handler for ${eventName}`)
+      return
+    }
     this.device.on(eventName, callback)
   }
 
@@ -184,8 +210,9 @@ export class LoupedeckDevice {
       this.device = null
       this.vibration = null
       logger.info('✓ デバイスの切断が完了しました')
-    } catch (error: any) {
-      logger.error(`デバイスの切断中にエラーが発生しました: ${error.message}`)
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error)
+      logger.error(`デバイスの切断中にエラーが発生しました: ${message}`)
       // エラーが発生してもデバイスをnullにする
       this.device = null
       this.vibration = null
@@ -233,8 +260,9 @@ export class LoupedeckDevice {
 
         // プロセスを即座に終了
         process.exit(0)
-      } catch (error: any) {
-        logger.error(`終了処理中にエラーが発生しました: ${error.message}`)
+      } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : String(error)
+        logger.error(`終了処理中にエラーが発生しました: ${message}`)
         process.exit(1)
       }
     }
@@ -252,7 +280,7 @@ export class LoupedeckDevice {
    * デバイスオブジェクトを取得
    * @returns デバイスオブジェクト
    */
-  getDevice(): any {
+  getDevice(): LoupedeckDeviceType | null {
     return this.device
   }
 
@@ -281,14 +309,13 @@ export class LoupedeckDevice {
       // タイムアウト付きでLED色を設定（2秒）
       await Promise.race([
         this.device.setButtonColor({ id: buttonId, color }),
-        new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('タイムアウト')), 2000)
-        ),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('タイムアウト')), 2000)),
       ])
 
       logger.debug(`ボタン ${buttonId} の色を設定完了: ${color}`)
-    } catch (error: any) {
-      logger.warn(`ボタン ${buttonId} の色設定に失敗（スキップ）: ${error.message}`)
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error)
+      logger.warn(`ボタン ${buttonId} の色設定に失敗（スキップ）: ${message}`)
     }
   }
 
@@ -308,6 +335,11 @@ export class LoupedeckDevice {
    * デバイス情報を表示
    */
   showDeviceInfo(): void {
+    if (!this.device) {
+      logger.warn('showDeviceInfo: device is null')
+      return
+    }
+
     logger.info('\nデバイス情報:')
     logger.info(`  タイプ: ${this.device.type}`)
     logger.info(`  ボタン数: ${this.device.buttons.length}`)

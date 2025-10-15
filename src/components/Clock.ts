@@ -1,9 +1,5 @@
 import { autoSizeText, formatDate, formatTime } from '../utils/textUtils.ts'
-
-/**
- * Canvas描画コンテキストの型
- */
-type CanvasRenderingContext2D = any
+import type { CanvasRenderingContext2D } from 'canvas'
 
 /**
  * セル座標

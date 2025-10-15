@@ -95,8 +95,9 @@ export class VolumeControl {
         return await this._getVolumePulseAudio()
       }
       return this.currentVolume
-    } catch (error: any) {
-      logger.error(`音量取得エラー: ${error.message}`)
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error)
+      logger.error(`音量取得エラー: ${message}`)
       return this.currentVolume
     }
   }
@@ -157,8 +158,9 @@ export class VolumeControl {
       this.currentVolume = clampedVolume
       logger.debug(`音量設定: ${clampedVolume}%`)
       return true
-    } catch (error: any) {
-      logger.error(`音量設定エラー: ${error.message}`)
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error)
+      logger.error(`音量設定エラー: ${message}`)
       return false
     }
   }
@@ -226,8 +228,9 @@ export class VolumeControl {
       this.isMuted = !this.isMuted
       logger.info(`ミュート: ${this.isMuted ? 'ON' : 'OFF'}`)
       return this.isMuted
-    } catch (error: any) {
-      logger.error(`ミュート切り替えエラー: ${error.message}`)
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error)
+      logger.error(`ミュート切り替えエラー: ${message}`)
       return this.isMuted
     }
   }

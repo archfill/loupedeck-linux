@@ -1,4 +1,5 @@
 import { logger } from './logger.ts'
+import type { LoupedeckDevice } from 'loupedeck'
 
 /**
  * 振動パターン定義
@@ -37,10 +38,10 @@ export type VibrationPatternName = keyof typeof VibrationPatterns
  * 振動ユーティリティクラス
  */
 export class VibrationUtil {
-  private device: any // TODO: Loupedeck型を定義
+  private device: LoupedeckDevice
   private enabled: boolean
 
-  constructor(device: any) {
+  constructor(device: LoupedeckDevice) {
     this.device = device
     this.enabled = true
   }
@@ -55,10 +56,11 @@ export class VibrationUtil {
     }
 
     try {
-      await this.device.vibrate(pattern)
+      await this.device.vibrate([...pattern])
       logger.debug(`振動実行: [${pattern.join(', ')}]`)
-    } catch (error: any) {
-      logger.warn(`振動の実行に失敗しました: ${error.message}`)
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error)
+      logger.warn(`振動の実行に失敗しました: ${message}`)
     }
   }
 

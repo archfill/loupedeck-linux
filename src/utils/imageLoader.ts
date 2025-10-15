@@ -1,12 +1,7 @@
-import { loadImage, Image } from 'canvas'
+import { loadImage, Image, CanvasRenderingContext2D } from 'canvas'
 import { logger } from './logger.ts'
 import fs from 'fs'
 import path from 'path'
-
-/**
- * Canvas描画コンテキストの型（canvasパッケージから取得）
- */
-type CanvasRenderingContext2D = any
 
 /**
  * 画像キャッシュ
@@ -47,8 +42,9 @@ export async function loadImageFile(imagePath: string): Promise<Image> {
     imageCache.set(imagePath, image)
 
     return image
-  } catch (error: any) {
-    logger.error(`画像の読み込みに失敗しました: ${imagePath} - ${error.message}`)
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error)
+    logger.error(`画像の読み込みに失敗しました: ${imagePath} - ${message}`)
     throw error
   }
 }
@@ -107,8 +103,9 @@ export function drawImage(
       // アスペクト比を無視してリサイズ
       ctx.drawImage(image, x, y, width, height)
     }
-  } catch (error: any) {
-    logger.error(`画像の描画に失敗しました: ${error.message}`)
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error)
+    logger.error(`画像の描画に失敗しました: ${message}`)
   }
 }
 

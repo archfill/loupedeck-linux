@@ -4,11 +4,7 @@ import { VOLUME_DISPLAY_TIMEOUT_MS } from '../config/constants.ts'
 import type { MediaControl, MediaMetadata } from '../utils/mediaControl.ts'
 import type { VibrationUtil } from '../utils/vibration.ts'
 import type { CellCoord } from './Screen.ts'
-
-/**
- * Canvas描画コンテキストの型
- */
-type CanvasRenderingContext2D = any
+import type { CanvasRenderingContext2D } from 'canvas'
 
 /**
  * メディア表示のオプション

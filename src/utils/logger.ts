@@ -25,10 +25,10 @@ export const logger = pino({
  * ロガーのラッパー関数（既存のconsole.logからの移行を容易にする）
  */
 export const log = {
-  debug: (...args: any[]) => logger.debug(args.join(' ')),
-  info: (...args: any[]) => logger.info(args.join(' ')),
-  warn: (...args: any[]) => logger.warn(args.join(' ')),
-  error: (...args: any[]) => logger.error(args.join(' ')),
+  debug: (...args: unknown[]) => logger.debug(args.map(String).join(' ')),
+  info: (...args: unknown[]) => logger.info(args.map(String).join(' ')),
+  warn: (...args: unknown[]) => logger.warn(args.map(String).join(' ')),
+  error: (...args: unknown[]) => logger.error(args.map(String).join(' ')),
 }
 
 export default logger

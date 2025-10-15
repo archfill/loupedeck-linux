@@ -1,7 +1,4 @@
-/**
- * Canvas描画コンテキストの型（canvasパッケージから取得）
- */
-type CanvasRenderingContext2D = any
+import type { CanvasRenderingContext2D } from 'canvas'
 
 /**
  * テキストのフォントサイズを自動調整する

@@ -1,7 +1,5 @@
-/**
- * Canvas描画コンテキストの型
- */
-type CanvasRenderingContext2D = any
+import type { LoupedeckDevice } from 'loupedeck'
+import type { CanvasRenderingContext2D } from 'canvas'
 
 /**
  * セル座標
@@ -18,7 +16,7 @@ export interface CellCoord {
  * グリッド描画と画面全体の管理を担当
  */
 export class Screen {
-  protected device: any // TODO: Loupedeck型を定義
+  protected device: LoupedeckDevice
   protected screenWidth: number
   protected screenHeight: number
   protected keySize: number
@@ -30,7 +28,7 @@ export class Screen {
   /**
    * @param device - Loupedeckデバイスオブジェクト
    */
-  constructor(device: any) {
+  constructor(device: LoupedeckDevice) {
     this.device = device
     this.screenWidth = device.displays.center.width
     this.screenHeight = device.displays.center.height

@@ -1,14 +1,9 @@
 import { autoSizeText } from '../utils/textUtils.ts'
 import { logger } from '../utils/logger.ts'
 import { loadImageFile, drawImage } from '../utils/imageLoader.ts'
-import type { Image } from 'canvas'
+import type { Image, CanvasRenderingContext2D } from 'canvas'
 import type { VibrationUtil } from '../utils/vibration.ts'
 import type { CellCoord } from './Screen.ts'
-
-/**
- * Canvas描画コンテキストの型
- */
-type CanvasRenderingContext2D = any
 
 /**
  * ボタンコンポーネントのオプション
@@ -94,8 +89,9 @@ export class Button {
     try {
       this.loadedImage = await loadImageFile(this.iconImage!)
       logger.debug(`Button "${this.label}" のアイコンを読み込みました`)
-    } catch (error: any) {
-      logger.error(`Button "${this.label}" のアイコン読み込みに失敗: ${error.message}`)
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      logger.error(`Button "${this.label}" のアイコン読み込みに失敗: ${message}`)
     } finally {
       this.imageLoading = false
     }
