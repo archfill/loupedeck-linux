@@ -13,8 +13,7 @@
     "dev:info": "LOG_LEVEL=info tsx watch main.ts",
     "dev:no-led": "LOG_LEVEL=debug SKIP_LED=true tsx watch main.ts",
     "lint": "eslint .",
-    "lint:fix": "eslint . --fix",
-    "tray": "tsx tray.ts"
+    "lint:fix": "eslint . --fix"
   },
   "dependencies": {
     "canvas": "^3.2.0",
@@ -24,7 +23,6 @@
     "loupedeck": "^7.0.3",
     "pino": "^10.0.0",
     "pino-pretty": "^13.1.2",
-    "systray": "^1.0.5",
     "zod": "^4.1.12"
   },
   "devDependencies": {
