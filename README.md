@@ -1,45 +1,33 @@
 # Loupedeck Linux
 
-Linux用のLoupedeck Live Sコントローラーアプリケーションです。デバイス制御、アプリケーション起動、音量/メディア制御を提供し、Web UIで設定を確認できます。
+Linux用のLoupedeckコントローラーアプリケーションです。デバイス制御、アプリケーション起動、音量/メディア制御を提供し、Web UIで設定を確認できます。
 
 ## 特徴
 
-- 🎛️ Loupedeck Live Sデバイス制御
-- 🖥️ 5×3タッチスクリーングリッドレイアウト
-- 🔘 物理ボタンのLEDカラーコントロール
-- 🎚️ ノブによる音量・メディア制御
-- 📱 アプリケーションランチャー（Firefox、1Password、Thunderbird等）
-- 🌐 Web UIで設定表示（React + Vite + TailwindCSS v4）
-- 🔐 1Password統合（gnome-keyring使用）
-- 💻 Hyprlandワークスペース自動セットアップ
+- Loupedeck Live S / Live / CT デバイス制御
+- 5×3タッチスクリーングリッドレイアウト
+- 物理ボタンのLEDカラーコントロール
+- ノブによる音量・メディア制御
+- アプリケーションランチャー
+- Web UIで設定表示（React + Vite + TailwindCSS v4）
+- 設定のホットリロード対応
 
 ## プロジェクト構成
 
-このプロジェクトはnpm workspacesを使用したモノレポ構成です：
+pnpm workspacesを使用したモノレポ構成です：
 
 ```
 loupedeck-linux/
-├── main.js                 # メインエントリーポイント
-├── src/                    # バックエンドソースコード（JavaScript + TypeScript）
-│   ├── components/        # UI コンポーネント（Clock, Button等）
-│   ├── config/            # 設定ファイル（components.ts, constants.ts） ✨ TypeScript
-│   ├── device/            # デバイス制御（LoupedeckDevice）
-│   ├── handlers/          # イベントハンドラー（Volume, Media）
-│   ├── server/            # Express API サーバー
-│   └── utils/             # ユーティリティ（logger, appLauncher等）
-├── scripts/               # Bashスクリプト
-│   ├── 1password-setup.sh         # 1Passwordセットアップ
-│   ├── 1password-unlock.sh        # 1Passwordロック解除
-│   └── workspace-setup.sh         # ワークスペースセットアップ
-├── web/                   # フロントエンド（Vite + React + TypeScript）
-│   ├── src/
-│   │   ├── App.tsx       # メインReactコンポーネント
-│   │   ├── index.css     # TailwindCSS v4インポート
-│   │   └── lib/          # shadcn/uiユーティリティ
-│   ├── vite.config.ts    # Vite設定
-│   └── package.json      # Web dependencies
-├── package.json           # ルートpackage.json（workspaces設定）
-└── README.md             # このファイル
+├── apps/
+│   ├── backend/           # バックエンド (@loupedeck-linux/backend)
+│   │   ├── main.ts       # エントリーポイント
+│   │   ├── src/          # ソースコード
+│   │   └── config/       # ランタイム設定
+│   └── web/              # フロントエンド (React + Vite)
+├── docs/                  # 詳細ドキュメント
+├── scripts/               # 管理スクリプト
+├── package.json          # ルート設定
+└── pnpm-workspace.yaml   # ワークスペース定義
 ```
 
 ## 必須要件
@@ -48,16 +36,18 @@ loupedeck-linux/
 
 - Linux（Arch Linux推奨）
 - Node.js 20以上
-- Loupedeck Live Sデバイス
+- pnpm
+- Loupedeck Live S / Live / CT デバイス
 
 ### システムパッケージ
 
 ```bash
 # Arch Linux
-sudo pacman -S nodejs npm libusb
+sudo pacman -S nodejs pnpm libusb
 
 # Ubuntu/Debian
 sudo apt install nodejs npm libusb-1.0-0-dev
+npm install -g pnpm
 ```
 
 ### udevルール設定
@@ -65,179 +55,76 @@ sudo apt install nodejs npm libusb-1.0-0-dev
 Loupedeckデバイスへのアクセス権限を設定：
 
 ```bash
-# /etc/udev/rules.d/50-loupedeck.rulesを作成
 sudo tee /etc/udev/rules.d/50-loupedeck.rules > /dev/null <<EOF
 SUBSYSTEM=="usb", ATTR{idVendor}=="2ec2", ATTR{idProduct}=="0004", MODE="0666"
 EOF
 
-# udevルールを再読み込み
 sudo udevadm control --reload-rules
 sudo udevadm trigger
 ```
 
 ### オプション依存パッケージ
 
-音量/メディア制御、アプリケーション起動に必要：
-
 ```bash
 # Arch Linux
-sudo pacman -S pamixer playerctl wtype libsecret firefox thunderbird
+sudo pacman -S pamixer playerctl wtype
 
 # Ubuntu/Debian
-sudo apt install pamixer playerctl wtype libsecret-tools firefox thunderbird
+sudo apt install pamixer playerctl wtype
 ```
 
 ## セットアップ
 
-### 1. リポジトリをクローン
-
 ```bash
+# リポジトリをクローン
 git clone <repository-url>
 cd loupedeck-linux
-```
 
-### 2. 依存関係をインストール
+# 依存関係をインストール
+pnpm install
 
-```bash
-# すべてのワークスペースの依存関係をインストール
-npm run install:all
-
-# または手動で
-npm install
-cd web && npm install && cd ..
-```
-
-### 3. スクリプトに実行権限を付与
-
-```bash
+# スクリプトに実行権限を付与
 chmod +x scripts/*.sh
 ```
 
-### 4. 1Passwordセットアップ（オプション）
-
-1Passwordを使用する場合：
-
-```bash
-./scripts/1password-setup.sh
-```
-
-このスクリプトはマスターパスワードをGNOME Keyringに安全に保存します。
-
 ## 開発
 
-### バックエンドのみ起動
-
 ```bash
-npm run dev
-# または
-npm run dev:info  # INFOレベルログ
+# バックエンドのみ起動
+pnpm run dev
+
+# Web UIのみ起動
+pnpm run dev:web
+
+# バックエンド + Web UIを同時起動
+pnpm run dev:all
 ```
-
-### Web UIのみ起動
-
-```bash
-npm run dev:web
-```
-
-Webブラウザで http://localhost:5173 を開きます。
-
-### バックエンド + Web UIを同時起動
-
-```bash
-npm run dev:all
-```
-
-これにより以下が同時に起動します：
-- バックエンド（Loupedeckデバイス制御 + APIサーバー）on port 3000
-- Web UI（Vite開発サーバー）on port 5173
 
 ### その他のコマンド
 
 ```bash
-# プロダクションモードで起動
-npm start
-
-# Web UIをビルド
-npm run build:web
-
-# Web UIプレビュー
-npm run preview:web
-
-# TypeScript型チェック
-npx tsc --noEmit
-
-# リンター
-npm run lint
-npm run lint:fix
-
-# フォーマッター
-npm run format
-npm run format:check
+pnpm start              # プロダクションモードで起動
+pnpm run build:web      # Web UIをビルド
+pnpm run lint           # リンター実行
+pnpm run format         # フォーマッター実行
 ```
 
-## 本番環境での自動起動（systemdサービス）
+## 本番環境での自動起動
 
-ログイン時にLoupedeckを自動的に起動させたい場合、systemdユーザーサービスとしてインストールできます。
-
-### サービスのインストール
+### systemdサービスのインストール
 
 ```bash
-# スクリプトを直接実行
-./scripts/manage-systemd-service.sh install
-
-# または npm スクリプト経由で実行
-npm run service:install
+pnpm run service:install
 ```
-
-このコマンドは以下を実行します：
-- ユーザーsystemdディレクトリ（`~/.config/systemd/user/`）にサービスファイルをコピー
-- サービスを有効化（ログイン時に自動起動）
-- サービスを即座に開始
-
-**重要**: ユーザーサービスとして動作するため、以下の特徴があります：
-- ログイン時に自動起動
-- GUI環境変数（DISPLAY、WAYLAND_DISPLAY等）に自動的にアクセス可能
-- アプリケーション起動機能が正常に動作
-- sudoは不要
 
 ### サービスの管理
 
 ```bash
-# ステータス確認
-npm run service:status
-
-# サービス停止
-npm run service:stop
-
-# サービス再起動
-npm run service:restart
-
-# ログ確認（リアルタイム）
-npm run service:logs
-
-# サービス無効化（自動起動を停止）
-npm run service:disable
-
-# サービス有効化（自動起動を再開）
-npm run service:enable
-
-# サービス完全削除
-npm run service:uninstall
-```
-
-**Tips**: スクリプトを直接実行することもできます（例: `./scripts/manage-systemd-service.sh status`）
-
-### 手動での確認
-
-```bash
-# systemctl コマンドで直接確認
-systemctl --user status loupedeck
-
-# ログ確認
-journalctl --user -u loupedeck -f
-
-# サービス再起動
-systemctl --user restart loupedeck
+pnpm run service:status    # ステータス確認
+pnpm run service:stop      # 停止
+pnpm run service:restart   # 再起動
+pnpm run service:logs      # ログ確認
+pnpm run service:uninstall # 削除
 ```
 
 ## 使い方
@@ -253,153 +140,63 @@ systemctl --user restart loupedeck
 行2: [ ]        [ ]        [ ]         [ ]           [ ]
 ```
 
-- **時計** (0,0): 現在時刻を表示
-- **Firefox** (1,0): Firefoxを起動
-- **1Password** (2,0): 1Passwordを起動
-- **Thunderbird** (3,0): Thunderbirdを起動
-- **Setup** (0,1): ワークスペースセットアップスクリプトを実行
-- **Unlock** (2,1): 1Passwordロック解除スクリプトを実行
-
 #### ノブ
 
-- **knobTL**（左上）: 音量調整
-  - 回転: 音量アップ/ダウン
-  - クリック: ミュート切り替え
-  - 音量表示が時計の位置にオーバーレイ表示
-
-- **knobCL**（左中央）: メディア制御
-  - 回転: 次/前のトラック
-  - クリック: 再生/一時停止
-  - メディア情報がボタン位置にオーバーレイ表示
-
-#### 物理ボタン（LED付き）
-
-- **ボタン0**（左下）: 白色LED - 機能無効
-- **ボタン1**（右上）: 赤色LED - 機能無効
-- **ボタン2**（右中央）: 緑色LED - 機能無効
-- **ボタン3**（右下）: 青色LED - 機能無効
+| ノブ | 回転 | クリック |
+|-----|------|---------|
+| knobTL（左上） | 音量調整 | ミュート切替 |
+| knobCL（左中央） | 次/前トラック | 再生/一時停止 |
 
 ### Web UI
 
-バックエンドを起動後、ブラウザで http://localhost:3000/api/config にアクセスすると設定をJSON形式で確認できます。
-
-開発環境では http://localhost:5173 でReact UIを表示：
-- デバイス情報
-- コンポーネントレイアウト
-- システム定数
+- 開発: http://localhost:5173
+- API: http://localhost:9876/api/config
 
 ## 設定
 
-### コンポーネント設定
-
-`src/config/components.ts` でボタンの位置、ラベル、色、アイコン、コマンドを設定できます。
-
-**TypeScript型定義により、設定ミスを防止**：
-- `ButtonConfig`型で必須フィールドを強制
-- 位置（col, row）は`Position`型で型安全
-- 振動パターンは`VibrationPattern`型でリテラル値のみ許可
-
-例：
-```typescript
-export const firefoxButtonConfig: ButtonConfig = {
-  position: { col: 1, row: 0 },
-  appName: 'firefox',
-  command: 'firefox',
-  options: {
-    label: 'Firefox',
-    iconSize: 48,
-    bgColor: '#FF7139',
-    vibrationPattern: VIBRATION_PATTERNS.TAP,
-    // ... その他のオプション
-  },
-}
-```
-
-### システム定数
-
-`src/config/constants.ts` で以下を設定：
-- 自動更新間隔
-- 音量ステップ
-- 表示タイムアウト
-- 物理ボタンのLED色
-- ノブID
+ランタイム設定は `apps/backend/config/config.json` で管理されます。
+設定変更はホットリロードで即座に反映されます。
 
 ## API エンドポイント
 
-バックエンドAPIサーバー（port 3000）が提供するエンドポイント：
+| エンドポイント | 説明 |
+|--------------|------|
+| `GET /api/health` | ヘルスチェック |
+| `GET /api/config` | 全設定 |
+| `GET /api/config/components` | コンポーネント設定 |
+| `GET /api/config/constants` | システム定数 |
+| `GET /api/device` | デバイス情報 |
 
-- `GET /api/health` - ヘルスチェック
-- `GET /api/config` - 全設定（components, constants, device）
-- `GET /api/config/components` - コンポーネント設定のみ
-- `GET /api/config/constants` - システム定数のみ
-- `GET /api/device` - デバイス情報のみ
+## ドキュメント
+
+詳細なドキュメントは `docs/` ディレクトリを参照：
+
+- [architecture.md](docs/architecture.md) - アーキテクチャ詳細
+- [component-guide.md](docs/component-guide.md) - コンポーネント作成ガイド
+- [api-reference.md](docs/api-reference.md) - API リファレンス
+- [patterns.md](docs/patterns.md) - 共通パターン
+- [setup.md](docs/setup.md) - デバイスセットアップ詳細
 
 ## トラブルシューティング
 
-### Ctrl+Cで停止後、再起動できない
-
-`npm run dev` を Ctrl+C で停止した後、再度起動できない場合：
-
-```bash
-# プロセスを強制終了
-npm run kill
-
-# または手動で
-./scripts/kill-loupedeck.sh
-
-# デバイスを抜き差しして再接続
-# その後、再起動
-npm run dev
-```
-
-**原因**: `tsx watch` モードでの終了処理が完了する前にプロセスが終了してしまった場合、デバイス接続が残ることがあります。
-
-**修正済み**: v1.0.0以降、タイムアウト付き終了処理により、この問題は大幅に改善されています。
-
 ### デバイスが認識されない
 
-1. デバイスが接続されているか確認
-2. udevルールが正しく適用されているか確認
-3. 公式Loupedeckソフトウェアが動作していないか確認
+1. udevルールが適用されているか確認
+2. 公式Loupedeckソフトウェアが停止しているか確認
+3. デバイスを抜き差し
 
 ```bash
-# デバイス確認
 lsusb | grep Loupedeck
-
-# udevルール確認
-cat /etc/udev/rules.d/50-loupedeck.rules
 ```
 
-### 1Passwordが動作しない
+### 再起動できない
 
 ```bash
-# 1Passwordがインストールされているか確認
-which 1password
-
-# gnome-keyringが動作しているか確認
-secret-tool search application 1password
+pnpm run kill
+# デバイスを抜き差し後、再起動
+pnpm run dev
 ```
-
-### 音量制御が動作しない
-
-```bash
-# pamixerがインストールされているか確認
-which pamixer
-
-# 音量を手動で確認
-pamixer --get-volume
-```
-
-### Web UIがAPIに接続できない
-
-1. バックエンドが起動しているか確認（port 3000）
-2. CORSが有効になっているか確認（開発環境では自動有効）
-3. ファイアウォール設定を確認
 
 ## ライセンス
 
 ISC
-
-## 作者
-
-Arch Linux + Hyprland環境で開発されました。

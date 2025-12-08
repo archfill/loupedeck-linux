@@ -10,7 +10,6 @@ export default [
       '**/dist/**',
       '**/build/**',
       '**/*.min.js',
-      'web/**', // webワークスペースは独自のESLint設定を使用
     ],
   },
   js.configs.recommended,

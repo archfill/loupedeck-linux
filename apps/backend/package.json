@@ -1,0 +1,39 @@
+{
+  "name": "@loupedeck-linux/backend",
+  "version": "1.0.0",
+  "description": "Loupedeck Live S Linux controller backend",
+  "private": true,
+  "type": "module",
+  "main": "main.ts",
+  "scripts": {
+    "start": "LOG_LEVEL=info tsx main.ts",
+    "start:debug": "LOG_LEVEL=debug tsx main.ts",
+    "start:prod": "NODE_ENV=production tsx main.ts",
+    "dev": "LOG_LEVEL=debug tsx watch main.ts",
+    "dev:info": "LOG_LEVEL=info tsx watch main.ts",
+    "dev:no-led": "LOG_LEVEL=debug SKIP_LED=true tsx watch main.ts",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "tray": "tsx tray.ts"
+  },
+  "dependencies": {
+    "canvas": "^3.2.0",
+    "chokidar": "^4.0.3",
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "loupedeck": "^7.0.3",
+    "pino": "^10.0.0",
+    "pino-pretty": "^13.1.2",
+    "systray": "^1.0.5",
+    "zod": "^4.1.12"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.37.0",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.3",
+    "@types/node": "^24.7.2",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.4",
+    "typescript-eslint": "^8.46.1"
+  }
+}
