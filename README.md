@@ -161,9 +161,21 @@ pnpm run format         # Run formatter
 
 ### Install systemd Service
 
+**Requirements**: pnpm must be in your system PATH
+
 ```bash
+# Install pnpm globally if needed
+npm install -g pnpm
+
+# Install the service
 pnpm run service:install
 ```
+
+**Behavior**:
+
+- Automatically starts on login
+- Automatically stops on logout
+- GUI environment variables are inherited from your session
 
 ### Manage Service
 

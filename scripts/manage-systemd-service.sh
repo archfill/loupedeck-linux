@@ -67,6 +67,13 @@ service_active() {
 
 # Command: install
 cmd_install() {
+    # Check if pnpm is available
+    if ! command -v pnpm &> /dev/null; then
+        echo -e "${RED}Error: pnpm is not installed or not in PATH${NC}"
+        echo "Please install pnpm: npm install -g pnpm"
+        exit 1
+    fi
+
     # Verify service template file exists
     if [ ! -f "$SOURCE_FILE" ]; then
         echo -e "${RED}Error: Service template file not found: $SOURCE_FILE${NC}"
@@ -104,7 +111,8 @@ cmd_install() {
 
     echo -e "${GREEN}=== Installation Complete ===${NC}\n"
     echo "The user service is now running and will start automatically when you log in."
-    echo -e "${YELLOW}Note: User services have access to GUI environment variables (DISPLAY, WAYLAND_DISPLAY, etc.)${NC}"
+    echo -e "${YELLOW}Note: The service will automatically stop when you log out.${NC}"
+    echo -e "${YELLOW}      GUI environment variables are inherited from your session.${NC}"
     echo ""
     cmd_status
 }

@@ -2,7 +2,7 @@
 Description=Loupedeck Linux Controller (User Session)
 Documentation=https://github.com/archfill/loupedeck-linux
 After=graphical-session.target sound.target
-# Ensure we start after the GUI session is ready
+PartOf=graphical-session.target
 Wants=graphical-session.target
 
 [Service]
@@ -10,14 +10,12 @@ Type=simple
 WorkingDirectory={{PROJECT_DIR}}
 Environment=NODE_ENV=production
 Environment=LOG_LEVEL=info
-# Audio system access (PipeWire/PulseAudio)
-Environment=XDG_RUNTIME_DIR=/run/user/%U
-Environment=DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/%U/bus
-ExecStart={{PROJECT_DIR}}/scripts/start-loupedeck.sh
+Environment=PATH=/usr/local/bin:/usr/bin:/bin
+ExecStart=/usr/bin/pnpm --filter @loupedeck-linux/backend run start:prod
 Restart=on-failure
 RestartSec=10
 StandardOutput=journal
 StandardError=journal
 
 [Install]
-WantedBy=default.target
+WantedBy=graphical-session.target
