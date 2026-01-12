@@ -27,11 +27,3 @@ export const VIBRATION_PATTERNS = {
 } as const
 
 export type VibrationPattern = (typeof VIBRATION_PATTERNS)[keyof typeof VIBRATION_PATTERNS]
-
-// 物理ボタンのLED色設定（HEX形式）
-export const BUTTON_LED_COLORS: Record<number, string> = {
-  0: '#FFFFFF', // 左下: 白
-  1: '#FF0000', // 右上: 赤
-  2: '#00FF00', // 右中央: 緑
-  3: '#0000FF', // 右下: 青
-}

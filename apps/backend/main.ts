@@ -6,16 +6,19 @@ import { MediaControl } from './src/utils/mediaControl.ts'
 import { HyprlandControl } from './src/utils/hyprlandControl.ts'
 import { VolumeHandler } from './src/handlers/VolumeHandler.ts'
 import { PageHandler } from './src/handlers/PageHandler.ts'
+import { PhysicalButtonHandler } from './src/handlers/PhysicalButtonHandler.ts'
 import { AppLauncher } from './src/utils/appLauncher.ts'
 import { logger } from './src/utils/logger.ts'
-import { AUTO_UPDATE_INTERVAL_MS, BUTTON_LED_COLORS } from './src/config/constants.ts'
+import { AUTO_UPDATE_INTERVAL_MS } from './src/config/constants.ts'
 import { ApiServer } from './src/server/api.ts'
 import {
   watchConfig,
   stopWatchingConfig,
   clearConfigCache,
   loadConfig,
-  convertToPageConfig
+  convertToPageConfig,
+  extractPhysicalButtonConfigs,
+  extractLedColors,
 } from './src/config/configLoader.ts'
 import {
   createComponent,
@@ -39,6 +42,7 @@ async function buildComponents(
   workspaceButtons: WorkspaceButton[]
   volumeDisplay: VolumeDisplay | undefined
   mediaDisplay: MediaDisplay | undefined
+  physicalButtonConfigs: Map<number, Record<string, unknown>>
 }> {
   // キャッシュをクリアして最新の設定を読み込む
   clearConfigCache()
@@ -109,7 +113,16 @@ async function buildComponents(
 
   await layout.update()
 
-  return { componentsMap, workspaceButtons, volumeDisplay, mediaDisplay }
+  // 物理ボタン設定を抽出
+  const physicalButtonConfigs = extractPhysicalButtonConfigs(config)
+
+  return {
+    componentsMap,
+    workspaceButtons,
+    volumeDisplay,
+    mediaDisplay,
+    physicalButtonConfigs,
+  }
 }
 
 /**
@@ -132,22 +145,6 @@ async function main() {
 
     // デバイス情報を表示（物理ボタンの確認）
     loupedeckDevice.showDeviceInfo()
-
-    // 物理ボタンのLED色を設定（デバイス初期化を待つ）
-    // 環境変数 SKIP_LED=true でスキップ可能
-    if (process.env.SKIP_LED !== 'true') {
-      logger.info('物理ボタンのLED色を設定中...')
-      await new Promise((resolve) => setTimeout(resolve, 500)) // 500ms待機
-      try {
-        await loupedeckDevice.setButtonColors(BUTTON_LED_COLORS)
-        logger.info('✓ LED色の設定完了\n')
-      } catch (error: unknown) {
-        const message = error instanceof Error ? error.message : String(error)
-        logger.warn(`LED色の設定をスキップしました: ${message}\n`)
-      }
-    } else {
-      logger.info('LED色の設定をスキップしました（SKIP_LED=true）\n')
-    }
 
     // 振動ユーティリティを取得
     const vibration = loupedeckDevice.getVibration()
@@ -183,12 +180,27 @@ async function main() {
     }
 
     // コンポーネントを生成してレイアウトに追加
-    let { componentsMap, workspaceButtons, volumeDisplay, mediaDisplay } = await buildComponents(
-      layout,
-      deps,
-      hyprlandControl,
-      vibration
-    )
+    let { componentsMap, workspaceButtons, volumeDisplay, mediaDisplay, physicalButtonConfigs } =
+      await buildComponents(layout, deps, hyprlandControl, vibration)
+
+    // 物理ボタンのLED色を設定（デバイス初期化を待つ）
+    // 環境変数 SKIP_LED=true でスキップ可能
+    if (process.env.SKIP_LED !== 'true') {
+      logger.info('物理ボタンのLED色を設定中...')
+      await new Promise((resolve) => setTimeout(resolve, 5000)) // 5秒待機（tsx watch modeのプロセス終了待機）
+      try {
+        // config.jsonからLED色を取得
+        const config = loadConfig()
+        const ledColors = extractLedColors(config)
+        await loupedeckDevice.setButtonColors(ledColors)
+        logger.info('✓ LED色の設定完了\n')
+      } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : String(error)
+        logger.warn(`LED色の設定をスキップしました: ${message}\n`)
+      }
+    } else {
+      logger.info('LED色の設定をスキップしました（SKIP_LED=true）\n')
+    }
 
     if (!volumeDisplay || !mediaDisplay) {
       logger.warn('⚠️ volumeDisplay または mediaDisplay が見つかりません')
@@ -211,7 +223,9 @@ async function main() {
     // メディア再生/一時停止ボタンのアイコン更新を開始（2秒ごと）
     let mediaIconUpdateInterval: NodeJS.Timeout | undefined
     const updateMediaIcon = () => {
-      const mediaPlayPauseButton = componentsMap.get('mediaPlayPauseButton') as MediaPlayPauseButton | undefined
+      const mediaPlayPauseButton = componentsMap.get('mediaPlayPauseButton') as
+        | MediaPlayPauseButton
+        | undefined
       if (mediaPlayPauseButton) {
         mediaPlayPauseButton.updateIcon().then(() => layout.update())
       }
@@ -223,6 +237,15 @@ async function main() {
 
     // ページハンドラーを作成
     let pageHandler = new PageHandler(layout, workspaceButtons, vibration)
+
+    // 物理ボタンハンドラーを作成
+    let physicalButtonHandler = new PhysicalButtonHandler(
+      appLauncher,
+      layout,
+      workspaceButtons,
+      vibration,
+      physicalButtonConfigs as Map<number, any>
+    )
 
     // メディアハンドラーを作成（現在は未使用）
     // const mediaHandler = new MediaHandler(mediaControl, mediaDisplay, layout, vibration)
@@ -245,7 +268,7 @@ async function main() {
     logger.info('ノブ回転イベントハンドラーの登録完了')
 
     // ノブクリックイベントハンドラー（ミュート切り替えとページ1に戻る）
-    // 物理ボタン: ページ切替
+    // 物理ボタン: 設定ファイルベースの動作
     logger.info('ノブクリック・物理ボタンイベントハンドラーを登録しています...')
     loupedeckDevice.on('down', async (data: unknown) => {
       const event = data as { id: number | string }
@@ -256,26 +279,8 @@ async function main() {
         await volumeHandler.handleDown(event.id)
         await pageHandler.handleDown(event.id)
       } else {
-        // 物理ボタンの場合: ページ切替
-        logger.info(`物理ボタン ID=${event.id} でページ切替`)
-
-        // ボタン0 → ページ1、ボタン1 → ページ2
-        if (event.id === 0) {
-          await layout.switchPage(1)
-          await vibration?.vibratePattern('tap')
-          logger.info('ページ1に切り替えました（アプリケーション）')
-        } else if (event.id === 1) {
-          await layout.switchPage(2)
-          await vibration?.vibratePattern('tap')
-          logger.info('ページ2に切り替えました（ワークスペース切替）')
-          // ページ2に切り替えた時に、各ワークスペースボタンのアクティブ状態を更新
-          for (const wsButton of workspaceButtons) {
-            await wsButton.updateActiveState()
-          }
-          await layout.update()
-        } else {
-          logger.debug(`物理ボタン ID=${event.id} は未割り当てです`)
-        }
+        // 物理ボタンの場合: PhysicalButtonHandlerで処理
+        await physicalButtonHandler.handleDown(event.id)
       }
     })
     logger.info('ノブクリック・物理ボタンイベントハンドラーの登録完了')
@@ -299,10 +304,24 @@ async function main() {
         workspaceButtons = result.workspaceButtons
         volumeDisplay = result.volumeDisplay
         mediaDisplay = result.mediaDisplay
+        const physicalButtonConfigs = result.physicalButtonConfigs
+
+        // 物理ボタンのLED色を更新
+        const config = loadConfig()
+        const ledColors = extractLedColors(config)
+        await loupedeckDevice.setButtonColors(ledColors)
+        logger.info('✓ 物理ボタンのLED色を更新しました')
 
         // ハンドラーを再作成
         volumeHandler = new VolumeHandler(volumeControl, volumeDisplay!, layout, vibration)
         pageHandler = new PageHandler(layout, workspaceButtons, vibration)
+        physicalButtonHandler = new PhysicalButtonHandler(
+          appLauncher,
+          layout,
+          workspaceButtons,
+          vibration,
+          physicalButtonConfigs as Map<number, any>
+        )
 
         // メディアアイコン更新を再開
         mediaIconUpdateInterval = setInterval(updateMediaIcon, 2000)

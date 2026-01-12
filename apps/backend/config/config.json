@@ -28,9 +28,10 @@
         "appName": "firefox",
         "options": {
           "label": "Firefox",
+          "iconType": "auto",
           "iconSize": 48,
-          "bgColor": "#FF6611",
-          "borderColor": "#FF8833",
+          "bgColor": "#ff6600",
+          "borderColor": "#ff6600",
           "textColor": "#FFFFFF",
           "hoverBgColor": "#FF7722",
           "vibrationPattern": "tap"
@@ -46,6 +47,7 @@
         "appName": "1password",
         "options": {
           "label": "1Password",
+          "iconType": "auto",
           "iconSize": 48,
           "bgColor": "#0094F5",
           "borderColor": "#33AAFF",
@@ -64,6 +66,7 @@
         "appName": "thunderbird",
         "options": {
           "label": "Mail",
+          "iconType": "auto",
           "iconSize": 48,
           "bgColor": "#0A84FF",
           "borderColor": "#3399FF",
@@ -82,6 +85,7 @@
         "appName": "system-shutdown",
         "options": {
           "label": "Logout",
+          "iconType": "auto",
           "iconSize": 48,
           "bgColor": "#D32F2F",
           "borderColor": "#F44336",
@@ -100,6 +104,7 @@
         "appName": "preferences-system",
         "options": {
           "label": "Setup",
+          "iconType": "auto",
           "iconSize": 48,
           "bgColor": "#00AA55",
           "borderColor": "#22CC77",
@@ -118,6 +123,7 @@
         "appName": "security-high",
         "options": {
           "label": "Unlock",
+          "iconType": "auto",
           "iconSize": 48,
           "bgColor": "#00AA88",
           "borderColor": "#22CCAA",
@@ -210,6 +216,90 @@
           "statusColor": "#AAAAAA",
           "iconColor": "#FF88AA"
         }
+      },
+      "button0": {
+        "type": "button",
+        "position": {
+          "col": -1,
+          "row": -1
+        },
+        "options": {
+          "label": "Page 1",
+          "bgColor": "#FFFFFF",
+          "borderColor": "#CCCCCC",
+          "textColor": "#000000",
+          "vibrationPattern": "tap",
+          "ledColor": "#FFFFFF"
+        },
+        "command": "page:1"
+      },
+      "button1": {
+        "type": "button",
+        "position": {
+          "col": -1,
+          "row": -1
+        },
+        "options": {
+          "label": "Page 2",
+          "bgColor": "#FF0000",
+          "borderColor": "#FF4444",
+          "textColor": "#FFFFFF",
+          "vibrationPattern": "tap",
+          "ledColor": "#FF0000"
+        },
+        "command": "page:2"
+      },
+      "button2": {
+        "type": "button",
+        "position": {
+          "col": -1,
+          "row": -1
+        },
+        "options": {
+          "label": "Volume Mute",
+          "bgColor": "#00FF00",
+          "borderColor": "#44FF44",
+          "textColor": "#000000",
+          "vibrationPattern": "tap",
+          "ledColor": "#00FF00"
+        },
+        "command": "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"
+      },
+      "button3": {
+        "type": "button",
+        "position": {
+          "col": -1,
+          "row": -1
+        },
+        "options": {
+          "label": "Screenshot",
+          "bgColor": "#0000ff",
+          "borderColor": "#0000ff",
+          "textColor": "#FFFFFF",
+          "vibrationPattern": "success",
+          "ledColor": "#0000ff"
+        },
+        "command": "grim - | wl-copy"
+      },
+      "newButton1768226884552": {
+        "type": "button",
+        "position": {
+          "col": 1,
+          "row": 1
+        },
+        "appName": "google-chrome",
+        "options": {
+          "label": "google chrome stable",
+          "iconType": "auto",
+          "iconSize": 48,
+          "maxLabelLength": 12,
+          "bgColor": "#33c7ae",
+          "borderColor": "#33c7ae",
+          "textColor": "#FFFFFF",
+          "hoverBgColor": "#2D3748",
+          "vibrationPattern": "tap"
+        },
+        "command": "google-chrome-stable"
       }
     },
     "2": {

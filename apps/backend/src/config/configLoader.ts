@@ -14,10 +14,10 @@ import { logger } from '../utils/logger.js'
 // Zod Schemas
 // ========================================
 
-/** Position schema */
+/** Position schema (allows negative values for physical buttons) */
 const PositionSchema = z.object({
-  col: z.number().int().min(0).max(4),
-  row: z.number().int().min(0).max(2),
+  col: z.number().int().max(4),
+  row: z.number().int().max(2),
 })
 
 /** Vibration pattern schema */
@@ -41,21 +41,24 @@ const ClockComponentSchema = z.object({
 
 /** Button options schema */
 const ButtonOptionsSchema = z.object({
-  label: z.string(),
+  label: z.string().optional(),
+  iconType: z.enum(['none', 'nerdfont', 'auto', 'image']).optional(),
   icon: z.string().optional(),
-  iconSize: z.number(),
+  iconImage: z.string().optional(),
+  iconSize: z.number().optional(),
   bgColor: z.string(),
   borderColor: z.string(),
   textColor: z.string(),
-  hoverBgColor: z.string(),
-  vibrationPattern: VibrationPatternSchema,
+  hoverBgColor: z.string().optional(),
+  vibrationPattern: VibrationPatternSchema.optional(),
+  ledColor: z.string().optional(),
 })
 
 /** Button component schema */
 const ButtonComponentSchema = z.object({
   type: z.literal('button'),
   position: PositionSchema,
-  appName: z.string(),
+  appName: z.string().optional(),
   options: ButtonOptionsSchema,
   command: z.string(),
 })
@@ -116,13 +119,16 @@ const PageMetaSchema = z.object({
 })
 
 /** Page schema - フラット構造（_metaとコンポーネントが同じレベル） */
-const PageSchema = z.record(z.string(), z.union([
-  z.object({ title: z.string(), description: z.string() }), // _meta
-  ComponentSchema, // コンポーネント
-]))
+const PageSchema = z.record(
+  z.string(),
+  z.union([
+    z.object({ title: z.string(), description: z.string() }), // _meta
+    ComponentSchema, // コンポーネント
+  ])
+)
 
 /** Root configuration schema */
-const ConfigSchema = z.object({
+export const ConfigSchema = z.object({
   pages: z.record(z.string(), PageSchema),
 })
 
@@ -190,14 +196,21 @@ export function loadConfig(configPath?: string): Config {
   } catch (error) {
     if (error instanceof z.ZodError) {
       logger.error('Configuration validation failed:')
-      error.errors.forEach((err) => {
-        logger.error(`  - ${err.path.join('.')}: ${err.message}`)
-      })
+      const errors = (error as any).errors
+      logger.error(`Errors type: ${typeof errors}, is array: ${Array.isArray(errors)}`)
+      if (errors && Array.isArray(errors)) {
+        errors.forEach((err: any) => {
+          logger.error(`  - ${err.path?.join('.') || 'unknown'}: ${err.message}`)
+        })
+      } else {
+        logger.error(`Error object: ${JSON.stringify(error, null, 2)}`)
+      }
       throw new Error('Invalid configuration file')
     }
 
     if (error instanceof Error) {
       logger.error(`Failed to load configuration: ${error.message}`)
+      logger.error(`Error stack: ${error.stack}`)
     }
 
     throw error
@@ -216,10 +229,13 @@ export function clearConfigCache(): void {
  *
  * This bridges the gap between JSON storage and TypeScript interfaces
  */
-export function convertToPageConfig(config: Config): Record<number, {
-  meta: PageMeta
-  components: Record<string, Component>
-}> {
+export function convertToPageConfig(config: Config): Record<
+  number,
+  {
+    meta: PageMeta
+    components: Record<string, Component>
+  }
+> {
   const result: Record<number, { meta: PageMeta; components: Record<string, Component> }> = {}
 
   Object.entries(config.pages).forEach(([pageNum, pageData]) => {
@@ -303,4 +319,56 @@ export async function stopWatchingConfig(): Promise<void> {
     reloadCallback = null
     logger.info('Config watcher stopped')
   }
+}
+
+/**
+ * 設定ファイルから物理ボタン（button0-3）の設定を抽出する
+ *
+ * @param config - 設定オブジェクト
+ * @returns ボタンID (0-3) をキーとするボタン設定のマップ
+ */
+export function extractPhysicalButtonConfigs(config: Config): Map<number, Record<string, unknown>> {
+  const buttonMap = new Map<number, Record<string, unknown>>()
+  const page1 = config.pages?.['1']
+
+  if (!page1) return buttonMap
+
+  // button0-3を検索
+  for (let i = 0; i < 4; i++) {
+    const buttonKey = `button${i}`
+    const buttonConfig = page1[buttonKey]
+
+    if (buttonConfig && typeof buttonConfig === 'object' && 'type' in buttonConfig) {
+      buttonMap.set(i, buttonConfig as Record<string, unknown>)
+    }
+  }
+
+  return buttonMap
+}
+
+// Default LED colors for physical buttons (fallback when not set in config.json)
+const DEFAULT_LED_COLORS: Record<number, string> = {
+  0: '#FFFFFF', // White
+  1: '#FF0000', // Red
+  2: '#00FF00', // Green
+  3: '#0000FF', // Blue
+}
+
+/**
+ * Extract LED colors for physical buttons from config
+ * Uses DEFAULT_LED_COLORS as fallback when ledColor is not set
+ *
+ * @param config - Configuration object
+ * @returns Record mapping button IDs to LED colors
+ */
+export function extractLedColors(config: Config): Record<number, string> {
+  const physicalButtonConfigs = extractPhysicalButtonConfigs(config)
+  const ledColors: Record<number, string> = {}
+
+  for (const [buttonId, buttonConfig] of physicalButtonConfigs.entries()) {
+    const options = buttonConfig.options as { ledColor?: string }
+    ledColors[buttonId] = options.ledColor || DEFAULT_LED_COLORS[buttonId] || '#FFFFFF'
+  }
+
+  return ledColors
 }

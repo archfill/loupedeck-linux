@@ -1,3 +1,4 @@
+import fs from 'node:fs'
 import { discover, type LoupedeckDevice as LoupedeckDeviceType } from 'loupedeck'
 import { logger } from '../utils/logger.ts'
 import { VibrationUtil } from '../utils/vibration.ts'
@@ -183,23 +184,30 @@ export class LoupedeckDevice {
    * デバイスを切断
    */
   async disconnect(): Promise<void> {
-    if (!this.device) {
+    const deviceToClose = this.device
+    if (!deviceToClose) {
       return
     }
 
     try {
       logger.info('デバイスを切断中...')
 
+      // デバイスをクリア（画面とLEDをオフにする）
+      await this.clearDevice()
+
       // イベントリスナーを削除
-      if (typeof this.device.removeAllListeners === 'function') {
-        this.device.removeAllListeners()
+      if (typeof deviceToClose.removeAllListeners === 'function') {
+        deviceToClose.removeAllListeners()
         logger.debug('イベントリスナーを削除しました')
       }
 
       // デバイスのクローズ処理（タイムアウト付き）
-      if (typeof this.device.close === 'function') {
+      if (typeof deviceToClose.close === 'function') {
+        const closePromise = deviceToClose.close()
+        this.device = null
+        this.vibration = null
         await Promise.race([
-          this.device.close(),
+          closePromise,
           new Promise((resolve) =>
             setTimeout(() => {
               logger.warn('デバイスのクローズがタイムアウトしました')
@@ -208,10 +216,11 @@ export class LoupedeckDevice {
           ),
         ])
         logger.debug('device.close() 完了')
+      } else {
+        this.device = null
+        this.vibration = null
       }
 
-      this.device = null
-      this.vibration = null
       logger.info('✓ デバイスの切断が完了しました')
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : String(error)
@@ -219,6 +228,55 @@ export class LoupedeckDevice {
       // エラーが発生してもデバイスをnullにする
       this.device = null
       this.vibration = null
+    }
+  }
+
+  /**
+   * デバイスの画面とLEDをクリア
+   */
+  private async clearDevice(): Promise<void> {
+    if (!this.device) {
+      return
+    }
+
+    try {
+      logger.debug('デバイスをクリア中...')
+
+      // 全ボタンのLEDをオフ（黒色）
+      const buttonPromises: Promise<void>[] = []
+      for (let i = 0; i < 4; i++) {
+        buttonPromises.push(
+          this.device.setButtonColor({ id: i, color: '#000000' }).catch(() => {
+            // エラーを無視（デバイスが既に切断されている場合がある）
+          })
+        )
+      }
+      await Promise.all(buttonPromises)
+      logger.debug('ボタンLEDをオフにしました')
+
+      // 全画面をクリア（黒色で塗りつぶし）
+      const screens: Array<'left' | 'center' | 'right'> = ['center']
+      if (this.device.screens.left) {
+        screens.push('left')
+      }
+      if (this.device.screens.right) {
+        screens.push('right')
+      }
+
+      for (const screen of screens) {
+        await this.device
+          .drawScreen(screen, (ctx) => {
+            ctx.fillStyle = '#000000'
+            ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height)
+          })
+          .catch(() => {
+            // エラーを無視（デバイスが既に切断されている場合がある）
+          })
+      }
+      logger.debug('全画面をクリアしました')
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error)
+      logger.warn(`デバイスクリア中にエラーが発生しました（無視）: ${message}`)
     }
   }
 
@@ -233,30 +291,41 @@ export class LoupedeckDevice {
 
     logger.debug('デバイスの準備完了を待機中...')
 
-    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    // tsx watch modeの前回プロセスが終了するまで待機（最大30秒）
+    logger.debug('前回のプロセス終了を待機中...')
+    let deviceReadyFound = false
+    for (let waitAttempt = 1; waitAttempt <= 30; waitAttempt++) {
       try {
-        // テスト用にボタン0の色を設定（黒で目立たない）
+        // テスト用にボタン0の色を設定してデバイスの使用可否をチェック
         await Promise.race([
           this.device.setButtonColor({ id: 0, color: '#000000' }),
           new Promise((_, reject) => setTimeout(() => reject(new Error('タイムアウト')), 1000)),
         ])
-
-        // 成功したら準備完了
-        logger.debug(`デバイスの準備が完了しました（試行 ${attempt}/${maxAttempts}）`)
-        return
+        // 成功したら待機終了
+        logger.debug(`デバイスが使用可能になりました（待機 ${waitAttempt}回目）`)
+        deviceReadyFound = true
+        break
       } catch (error: unknown) {
-        // 最後の試行で失敗した場合のみ警告
-        if (attempt === maxAttempts) {
-          logger.warn(
-            `デバイスの準備完了を待機しましたがタイムアウトしました（${maxAttempts}試行）`
-          )
-          // ただし、処理は継続する（後のLED設定でリトライが効くため）
+        if (waitAttempt === 30) {
+          logger.warn('前回のプロセス終了待機がタイムアウトしました（処理継続）')
         } else {
-          // 500ms待機してリトライ
-          await new Promise((resolve) => setTimeout(resolve, 500))
+          // 1秒待機してリトライ
+          await new Promise((resolve) => setTimeout(resolve, 1000))
         }
       }
     }
+
+    // デバイス使用可能確認後、追加で5秒待機して完全な解放を待つ
+    // （tsx watch modeは前回プロセスの終了に時間がかかる場合がある）
+    if (deviceReadyFound) {
+      logger.debug('デバイス解放完了を追加待機中...')
+      await new Promise((resolve) => setTimeout(resolve, 5000))
+      logger.debug('デバイスの準備が完了しました')
+      return
+    }
+
+    // デバイス準備できなかった場合も警告して継続（LED設定でリトライ）
+    logger.warn('デバイスの準備状態を確認できませんでした（処理継続）')
   }
 
   /**
@@ -265,6 +334,76 @@ export class LoupedeckDevice {
    */
   setupExitHandlers(cleanupCallback?: () => void | Promise<void>): void {
     let isExiting = false
+    const pidFilePath = '/tmp/loupedeck-backend.pid'
+
+    const readPidFile = (): number | null => {
+      try {
+        const raw = fs.readFileSync(pidFilePath, 'utf8').trim()
+        const pid = Number(raw)
+        if (!Number.isInteger(pid) || pid <= 0) {
+          return null
+        }
+        return pid
+      } catch {
+        return null
+      }
+    }
+
+    const isProcessAlive = (pid: number): boolean => {
+      try {
+        process.kill(pid, 0)
+        return true
+      } catch {
+        return false
+      }
+    }
+
+    const removePidFile = (): void => {
+      try {
+        if (fs.existsSync(pidFilePath)) {
+          fs.unlinkSync(pidFilePath)
+        }
+      } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : String(error)
+        logger.warn(`PIDファイルの削除に失敗しました（無視）: ${message}`)
+      }
+    }
+
+    const existingPid = readPidFile()
+    if (existingPid && existingPid !== process.pid && isProcessAlive(existingPid)) {
+      logger.warn(`既存プロセス (PID: ${existingPid}) が動作中のため待機します...`)
+      const start = Date.now()
+      const waitTimeoutMs = 5000
+      const sleepMs = 250
+      while (Date.now() - start < waitTimeoutMs) {
+        const pid = readPidFile()
+        if (!pid || !isProcessAlive(pid)) {
+          break
+        }
+        Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, sleepMs)
+      }
+
+      const stillRunning = (() => {
+        const pid = readPidFile()
+        return pid ? isProcessAlive(pid) : false
+      })()
+      if (stillRunning) {
+        logger.warn('既存プロセスが終了していないため起動をスキップします')
+        process.exit(0)
+        return
+      }
+    } else if (existingPid && existingPid !== process.pid && !isProcessAlive(existingPid)) {
+      removePidFile()
+    }
+
+    try {
+      fs.writeFileSync(pidFilePath, String(process.pid), { encoding: 'utf8' })
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error)
+      logger.warn(`PIDファイルの作成に失敗しました（無視）: ${message}`)
+    }
+
+    process.once('exit', removePidFile)
 
     const exitHandler = async (signal: string) => {
       // 重複実行を防ぐ
@@ -274,35 +413,33 @@ export class LoupedeckDevice {
       isExiting = true
 
       logger.info(`\n終了シグナルを受信しました (${signal})...`)
+      const forceExitTimer = setTimeout(() => {
+        logger.warn('クリーンアップ処理がタイムアウトしました（強制終了）')
+        removePidFile()
+        process.exit(0)
+      }, 5000)
 
       try {
-        // 全クリーンアップ処理にタイムアウトを設定（5秒）
-        await Promise.race([
-          (async () => {
-            // クリーンアップコールバックを実行
-            if (cleanupCallback) {
-              logger.debug('クリーンアップコールバックを実行中...')
-              await cleanupCallback()
-            }
+        // クリーンアップコールバックを実行
+        if (cleanupCallback) {
+          logger.debug('クリーンアップコールバックを実行中...')
+          await cleanupCallback()
+        }
 
-            // デバイスを切断
-            await this.disconnect()
-          })(),
-          new Promise((resolve) =>
-            setTimeout(() => {
-              logger.warn('クリーンアップ処理がタイムアウトしました（強制終了）')
-              resolve(undefined)
-            }, 5000)
-          ),
-        ])
+        // デバイスを切断
+        await this.disconnect()
 
         logger.info('✓ 正常に終了しました')
 
         // プロセスを即座に終了
+        clearTimeout(forceExitTimer)
+        removePidFile()
         process.exit(0)
       } catch (error: unknown) {
         const message = error instanceof Error ? error.message : String(error)
         logger.error(`終了処理中にエラーが発生しました: ${message}`)
+        clearTimeout(forceExitTimer)
+        removePidFile()
         process.exit(1)
       }
     }
@@ -350,10 +487,10 @@ export class LoupedeckDevice {
           `ボタン ${buttonId} の色を設定中: ${color}${attempt > 1 ? ` (リトライ ${attempt - 1}/${maxRetries - 1})` : ''}`
         )
 
-        // タイムアウト付きでLED色を設定（2秒）
+        // タイムアウト付きでLED色を設定（5秒に延长）
         await Promise.race([
           this.device.setButtonColor({ id: buttonId, color }),
-          new Promise((_, reject) => setTimeout(() => reject(new Error('タイムアウト')), 2000)),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('タイムアウト')), 5000)),
         ])
 
         logger.debug(`ボタン ${buttonId} の色を設定完了: ${color}`)
@@ -367,9 +504,9 @@ export class LoupedeckDevice {
           return false
         }
 
-        // リトライ前に待機（デバイスの解放を待つ）
-        logger.debug(`ボタン ${buttonId} の色設定に失敗、1秒待機してリトライ: ${message}`)
-        await new Promise((resolve) => setTimeout(resolve, 1000))
+        // リトライ前に待機（デバイスの解放を待つ、3秒に延长）
+        logger.debug(`ボタン ${buttonId} の色設定に失敗、3秒待機してリトライ: ${message}`)
+        await new Promise((resolve) => setTimeout(resolve, 3000))
       }
     }
 
