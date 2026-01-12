@@ -233,7 +233,7 @@ export class ApiServer {
     })
 
     // 静的ファイル配信（Web UI） - APIルートの後に配置
-    const webDistPath = path.join(__dirname, '../../web/dist')
+    const webDistPath = path.join(__dirname, '../../../web/dist')
     this.app.use(express.static(webDistPath))
 
     // SPAのフォールバック - 静的ファイルが見つからない場合はindex.htmlを返す

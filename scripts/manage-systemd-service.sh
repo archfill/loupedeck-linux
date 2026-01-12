@@ -73,6 +73,8 @@ cmd_install() {
         echo "Please install pnpm: npm install -g pnpm"
         exit 1
     fi
+    PNPM_PATH="$(command -v pnpm)"
+    PNPM_DIR="$(dirname "$PNPM_PATH")"
 
     # Verify service template file exists
     if [ ! -f "$SOURCE_FILE" ]; then
@@ -91,8 +93,12 @@ cmd_install() {
 
     # Generate service file from template and replace placeholders
     echo "Generating service file from template..."
-    sed "s|{{PROJECT_DIR}}|$PROJECT_DIR|g" "$SOURCE_FILE" > "$INSTALLED_SERVICE_FILE"
-    echo -e "${GREEN}✓ Service file generated (PROJECT_DIR set to: $PROJECT_DIR)${NC}\n"
+    sed -e "s|{{PROJECT_DIR}}|$PROJECT_DIR|g" \
+        -e "s|{{PNPM_PATH}}|$PNPM_PATH|g" \
+        -e "s|{{PNPM_DIR}}|$PNPM_DIR|g" \
+        "$SOURCE_FILE" > "$INSTALLED_SERVICE_FILE"
+    echo -e "${GREEN}✓ Service file generated (PROJECT_DIR set to: $PROJECT_DIR)${NC}"
+    echo -e "${GREEN}✓ pnpm path set to: $PNPM_PATH${NC}\n"
 
     # Reload systemd
     echo "Reloading systemd daemon..."

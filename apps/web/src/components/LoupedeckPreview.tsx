@@ -10,6 +10,7 @@ import {
   useSensors,
 } from '@dnd-kit/core'
 import type { DragEndEvent } from '@dnd-kit/core'
+import type { ComponentConfig, PageData, PageMeta, Device } from '../types/config'
 
 /**
  * 色の明度を調整するヘルパー関数
@@ -40,51 +41,13 @@ function adjustBrightness(hex: string, amount: number): string {
   return `#${newR.toString(16).padStart(2, '0')}${newG.toString(16).padStart(2, '0')}${newB.toString(16).padStart(2, '0')}`
 }
 
-interface Component {
-  position?: { col: number; row: number }
-  type?: string
-  appName?: string
-  options?: {
-    label?: string
-    bgColor?: string
-    borderColor?: string
-    textColor?: string
-    icon?: string
-    iconSize?: number
-    cellBgColor?: string
-    cellBorderColor?: string
-    barFillColor?: string
-    titleColor?: string
-    artistColor?: string
-    statusColor?: string
-    iconColor?: string
-    timeColor?: string
-    dateColor?: string
-    showSeconds?: boolean
-    ledColor?: string
-  }
-  command?: string
-}
-
-interface PageMeta {
-  title: string
-  description: string
-}
-
-interface PageData {
-  _meta?: PageMeta
-  [key: string]: Component | PageMeta | undefined
-}
+// 型エイリアス（後方互換性のため）
+type Component = ComponentConfig
 
 interface LoupedeckPreviewProps {
-  components?: Record<string, Component>
+  components?: Record<string, ComponentConfig>
   pages?: Record<string, PageData>
-  device?: {
-    type?: string
-    grid?: { columns: number; rows: number }
-    knobs?: string[]
-    buttons?: number[]
-  }
+  device?: Device
   onPositionChange?: (
     componentName: string,
     pageNum: number,
