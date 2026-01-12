@@ -38,7 +38,7 @@ loupedeck-linux/
 
 ### システム要件
 
-- Linux（Arch Linux推奨 / Ubuntu 22.04+で動作確認済み）
+- Linux（Arch Linuxで動作確認済み）
 - Node.js 20以上
 - pnpm 9以上
 - Loupedeck Live S（その他のデバイスは動作未確認）
