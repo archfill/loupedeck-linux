@@ -1,11 +1,14 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { LoupedeckPreview } from './components/LoupedeckPreview'
 import { ComponentEditor } from './components/ComponentEditor'
+import { LanguageSwitcher } from './components/LanguageSwitcher'
 import { useConfig } from './hooks/useConfig'
 import { useConfigSync } from './hooks/useConfigSync'
 import type { ComponentConfig } from './types/config'
 
 function App() {
+  const { t } = useTranslation()
   const { data: config, isLoading: loading, error } = useConfig()
 
   // 型ガード関数
@@ -121,7 +124,7 @@ function App() {
   }
 
   const handleDeleteComponent = (componentName: string, pageNum: number) => {
-    if (!editedConfig || !confirm(`${componentName} を削除しますか？`)) return
+    if (!editedConfig || !confirm(t('app.alerts.deleteConfirm', { name: componentName }))) return
 
     const newConfig = JSON.parse(JSON.stringify(editedConfig))
     const pageKey = String(pageNum)
@@ -163,7 +166,7 @@ function App() {
     }
 
     if (!foundPosition) {
-      alert('グリッドが満杯です。空きスペースがありません。')
+      alert(t('app.alerts.gridFull'))
       return
     }
 
@@ -201,7 +204,7 @@ function App() {
       <div className="min-h-screen bg-gray-950 text-white flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
-          <p>Loading configuration...</p>
+          <p>{t('common.loading')}</p>
         </div>
       </div>
     )
@@ -211,11 +214,9 @@ function App() {
     return (
       <div className="min-h-screen bg-gray-950 text-white flex items-center justify-center">
         <div className="text-center text-red-400">
-          <p className="text-xl mb-2">❌ Error</p>
-          <p>{error instanceof Error ? error.message : 'Unknown error'}</p>
-          <p className="mt-4 text-sm text-gray-400">
-            Make sure the API server is running on port 9876
-          </p>
+          <p className="text-xl mb-2">❌ {t('common.error')}</p>
+          <p>{error instanceof Error ? error.message : t('common.error')}</p>
+          <p className="mt-4 text-sm text-gray-400">{t('app.alerts.apiError')}</p>
         </div>
       </div>
     )
@@ -226,30 +227,29 @@ function App() {
       <div className="max-w-7xl mx-auto">
         <header className="mb-8 flex justify-between items-start">
           <div>
-            <h1 className="text-4xl font-bold mb-2">🎛️ Loupedeck Configuration</h1>
-            <p className="text-gray-400">
-              Edit your Loupedeck settings - Click components to edit, drag to reposition
-            </p>
+            <h1 className="text-4xl font-bold mb-2">🎛️ {t('app.title')}</h1>
+            <p className="text-gray-400">{t('app.subtitle')}</p>
           </div>
           <div className="flex gap-3 items-center">
+            <LanguageSwitcher />
             {saveStatus !== 'idle' && (
               <div className="flex items-center gap-2 text-sm">
                 {saveStatus === 'saving' && (
                   <>
                     <span className="animate-spin">⏳</span>
-                    <span className="text-yellow-400">保存中...</span>
+                    <span className="text-yellow-400">{t('app.saveStatus.saving')}</span>
                   </>
                 )}
                 {saveStatus === 'success' && (
                   <>
                     <span>✓</span>
-                    <span className="text-green-400">保存完了</span>
+                    <span className="text-green-400">{t('app.saveStatus.saved')}</span>
                   </>
                 )}
                 {saveStatus === 'error' && (
                   <>
                     <span>✗</span>
-                    <span className="text-red-400">保存エラー</span>
+                    <span className="text-red-400">{t('app.saveStatus.error')}</span>
                   </>
                 )}
               </div>
@@ -269,7 +269,9 @@ function App() {
             <div className="flex items-start gap-3">
               <span className="text-2xl">{saveStatus === 'success' ? '✓' : '✗'}</span>
               <div className="flex-1">
-                <p className="font-semibold">{saveStatus === 'success' ? 'Success' : 'Error'}</p>
+                <p className="font-semibold">
+                  {saveStatus === 'success' ? t('common.success') : t('common.error')}
+                </p>
                 <p className="text-sm mt-1">{saveMessage}</p>
               </div>
             </div>
@@ -278,25 +280,25 @@ function App() {
 
         {/* Device Info */}
         <section className="mb-8">
-          <h2 className="text-2xl font-semibold mb-4">Device Information</h2>
+          <h2 className="text-2xl font-semibold mb-4">{t('app.deviceInfo.title')}</h2>
           <div className="bg-gray-900 rounded-lg p-6 border border-gray-800">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div>
-                <p className="text-gray-400 text-sm">Type</p>
+                <p className="text-gray-400 text-sm">{t('app.deviceInfo.type')}</p>
                 <p className="font-semibold">{config?.device?.type}</p>
               </div>
               <div>
-                <p className="text-gray-400 text-sm">Grid</p>
+                <p className="text-gray-400 text-sm">{t('app.deviceInfo.grid')}</p>
                 <p className="font-semibold">
                   {config?.device?.grid?.columns} × {config?.device?.grid?.rows}
                 </p>
               </div>
               <div>
-                <p className="text-gray-400 text-sm">Knobs</p>
+                <p className="text-gray-400 text-sm">{t('app.deviceInfo.knobs')}</p>
                 <p className="font-semibold">{config?.device?.knobs?.length}</p>
               </div>
               <div>
-                <p className="text-gray-400 text-sm">Buttons</p>
+                <p className="text-gray-400 text-sm">{t('app.deviceInfo.buttons')}</p>
                 <p className="font-semibold">{config?.device?.buttons?.length}</p>
               </div>
             </div>
@@ -306,12 +308,12 @@ function App() {
         {/* Device Preview */}
         <section className="mb-8">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-2xl font-semibold">Device Preview</h2>
+            <h2 className="text-2xl font-semibold">{t('app.devicePreview.title')}</h2>
             <button
               onClick={() => handleAddComponent(1)}
               className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold transition-colors flex items-center gap-2"
             >
-              ➕ ボタン追加
+              ➕ {t('app.devicePreview.addButton')}
             </button>
           </div>
           <div className="bg-gray-900 rounded-lg p-6 border border-gray-800">
@@ -341,7 +343,7 @@ function App() {
 
         {/* Constants */}
         <section>
-          <h2 className="text-2xl font-semibold mb-4">System Constants</h2>
+          <h2 className="text-2xl font-semibold mb-4">{t('app.systemConstants.title')}</h2>
           <div className="bg-gray-900 rounded-lg p-6 border border-gray-800">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {config?.constants &&

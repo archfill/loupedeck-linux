@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   DndContext,
   useDraggable,
@@ -200,6 +201,7 @@ export function LoupedeckPreview({
   onSwapComponents,
   onEditComponent,
 }: LoupedeckPreviewProps) {
+  const { t } = useTranslation()
   const [currentPage, setCurrentPage] = useState(1)
   const [activeId, setActiveId] = useState<string | null>(null)
   const [resolvedIcons, setResolvedIcons] = useState<Record<string, string>>({})
@@ -329,7 +331,7 @@ export function LoupedeckPreview({
       {pages && (
         <div className="flex items-center justify-center gap-4">
           <label htmlFor="page-select" className="text-gray-400 text-sm font-medium">
-            Page:
+            {t('preview.pageSelector')}:
           </label>
           <select
             id="page-select"
@@ -341,7 +343,8 @@ export function LoupedeckPreview({
               const pageMeta = pages[pageNum]._meta
               return (
                 <option key={pageNum} value={pageNum}>
-                  Page {pageNum}: {pageMeta?.title || `Page ${pageNum}`}
+                  {t('preview.pageSelector')} {pageNum}:{' '}
+                  {pageMeta?.title || `${t('preview.pageSelector')} ${pageNum}`}
                 </option>
               )
             })}
@@ -367,7 +370,7 @@ export function LoupedeckPreview({
             <div className="w-16 h-16 rounded-full bg-gray-800 border-4 border-gray-700 flex items-center justify-center shadow-lg">
               <div className="w-2 h-6 bg-gray-600 rounded-full"></div>
             </div>
-            <span className="text-xs text-gray-400 mt-2">VOL</span>
+            <span className="text-xs text-gray-400 mt-2">{t('preview.physicalButtons.vol')}</span>
           </button>
 
           {/* Center left knob - mediaDisplay */}
@@ -382,7 +385,7 @@ export function LoupedeckPreview({
             <div className="w-16 h-16 rounded-full bg-gray-800 border-4 border-gray-700 flex items-center justify-center shadow-lg">
               <div className="w-2 h-6 bg-gray-600 rounded-full"></div>
             </div>
-            <span className="text-xs text-gray-400 mt-2">PAGE</span>
+            <span className="text-xs text-gray-400 mt-2">{t('preview.physicalButtons.page')}</span>
           </button>
 
           {/* Physical button - ID 0 (bottom left) */}
@@ -411,7 +414,9 @@ export function LoupedeckPreview({
                 }}
               ></div>
             </div>
-            <span className="text-xs text-gray-400 mt-2">BTN 0</span>
+            <span className="text-xs text-gray-400 mt-2">
+              {t('preview.physicalButtons.btn', { id: 0 })}
+            </span>
           </button>
         </div>
 
@@ -512,8 +517,8 @@ export function LoupedeckPreview({
             </DndContext>
           </div>
           <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-xs text-gray-500">
-            {screenWidth} × {screenHeight}px
-            <span className="ml-2 text-blue-400">（ドラッグで位置変更）</span>
+            {t('preview.screenSize', { width: screenWidth, height: screenHeight })}
+            <span className="ml-2 text-blue-400">{t('app.devicePreview.dragHint')}</span>
           </div>
         </div>
 
@@ -545,7 +550,9 @@ export function LoupedeckPreview({
                 }}
               ></div>
             </div>
-            <span className="text-xs text-gray-400 mt-2">BTN 1</span>
+            <span className="text-xs text-gray-400 mt-2">
+              {t('preview.physicalButtons.btn', { id: 1 })}
+            </span>
           </button>
 
           {/* Physical button - ID 2 */}
@@ -574,7 +581,9 @@ export function LoupedeckPreview({
                 }}
               ></div>
             </div>
-            <span className="text-xs text-gray-400 mt-2">BTN 2</span>
+            <span className="text-xs text-gray-400 mt-2">
+              {t('preview.physicalButtons.btn', { id: 2 })}
+            </span>
           </button>
 
           {/* Physical button - ID 3 */}
@@ -603,7 +612,9 @@ export function LoupedeckPreview({
                 }}
               ></div>
             </div>
-            <span className="text-xs text-gray-400 mt-2">BTN 3</span>
+            <span className="text-xs text-gray-400 mt-2">
+              {t('preview.physicalButtons.btn', { id: 3 })}
+            </span>
           </button>
         </div>
       </div>

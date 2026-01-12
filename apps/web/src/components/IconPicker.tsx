@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import nerdFontIcons from '../data/nerdFontIcons.json'
 
 interface IconPickerProps {
@@ -19,12 +20,13 @@ interface CategoryData {
 }
 
 export function IconPicker({ onSelect, currentIcon, onClose }: IconPickerProps) {
+  const { t } = useTranslation()
   const [searchQuery, setSearchQuery] = useState('')
   const [activeCategory, setActiveCategory] = useState<string>('all')
 
   // カテゴリーリストの作成
   const categories = useMemo(() => {
-    const cats = [{ id: 'all', name: 'すべて' }]
+    const cats = [{ id: 'all', name: t('iconPicker.categories.all') }]
     Object.entries(nerdFontIcons.categories).forEach(([key, value]: [string, CategoryData]) => {
       cats.push({ id: key, name: value.name })
     })
@@ -78,14 +80,14 @@ export function IconPicker({ onSelect, currentIcon, onClose }: IconPickerProps) 
         {/* Header */}
         <div className="sticky top-0 bg-gray-900 border-b border-gray-800 p-6">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-2xl font-bold">アイコンを選択</h2>
+            <h2 className="text-2xl font-bold">{t('iconPicker.title')}</h2>
             <div className="flex gap-2">
               {currentIcon && (
                 <button
                   onClick={handleClear}
                   className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
                 >
-                  クリア
+                  {t('common.clear')}
                 </button>
               )}
               <button
@@ -103,7 +105,7 @@ export function IconPicker({ onSelect, currentIcon, onClose }: IconPickerProps) 
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="検索... (例: play, music, wifi)"
+              placeholder={t('iconPicker.searchPlaceholder')}
               className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
               autoFocus
             />
@@ -130,9 +132,7 @@ export function IconPicker({ onSelect, currentIcon, onClose }: IconPickerProps) 
         {/* Icon Grid */}
         <div className="flex-1 overflow-y-auto p-6">
           {filteredIcons.length === 0 ? (
-            <div className="text-center text-gray-500 py-12">
-              該当するアイコンが見つかりませんでした
-            </div>
+            <div className="text-center text-gray-500 py-12">{t('iconPicker.noResults')}</div>
           ) : (
             <div className="grid grid-cols-6 sm:grid-cols-8 md:grid-cols-10 lg:grid-cols-12 gap-2">
               {filteredIcons.map((icon) => (
@@ -144,7 +144,10 @@ export function IconPicker({ onSelect, currentIcon, onClose }: IconPickerProps) 
                       ? 'border-blue-500 ring-2 ring-blue-500 ring-opacity-50'
                       : 'border-gray-700'
                   }`}
-                  title={`${icon.name}: ${icon.keywords.join(', ')}`}
+                  title={t('iconPicker.tooltip', {
+                    name: icon.name,
+                    keywords: icon.keywords.join(', '),
+                  })}
                 >
                   {icon.char}
                 </button>
@@ -155,7 +158,7 @@ export function IconPicker({ onSelect, currentIcon, onClose }: IconPickerProps) 
 
         {/* Footer */}
         <div className="sticky bottom-0 bg-gray-900 border-t border-gray-800 p-4 text-center text-sm text-gray-500">
-          {filteredIcons.length} 個のアイコン
+          {t('iconPicker.iconCount', { count: filteredIcons.length })}
         </div>
       </div>
     </div>

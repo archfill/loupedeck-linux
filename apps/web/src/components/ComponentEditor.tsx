@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import type { ComponentConfig } from '../types/config'
 import { IconPicker } from './IconPicker.tsx'
 
@@ -18,6 +19,7 @@ interface NerdFontIconSelectorProps {
 }
 
 function NerdFontIconSelector({ currentIcon, onSelect }: NerdFontIconSelectorProps) {
+  const { t } = useTranslation()
   const [showPicker, setShowPicker] = useState(false)
 
   return (
@@ -26,7 +28,7 @@ function NerdFontIconSelector({ currentIcon, onSelect }: NerdFontIconSelectorPro
       <button
         onClick={() => setShowPicker(true)}
         className="w-16 h-16 bg-gray-800 border border-gray-700 rounded-lg flex items-center justify-center text-4xl hover:border-blue-500 transition-colors nerd-font"
-        title={currentIcon || 'アイコンを選択'}
+        title={currentIcon || t('editor.icon.select')}
       >
         {currentIcon || '+'}
       </button>
@@ -37,7 +39,7 @@ function NerdFontIconSelector({ currentIcon, onSelect }: NerdFontIconSelectorPro
           {currentIcon ? (
             <span className="text-white">{currentIcon}</span>
           ) : (
-            <span>アイコンを選択してください</span>
+            <span>{t('editor.icon.selectButton')}</span>
           )}
         </div>
       </div>
@@ -48,7 +50,7 @@ function NerdFontIconSelector({ currentIcon, onSelect }: NerdFontIconSelectorPro
           onClick={() => onSelect(null)}
           className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
         >
-          クリア
+          {t('common.clear')}
         </button>
       )}
 
@@ -74,6 +76,7 @@ export function ComponentEditor({
   onSave,
   onDelete,
 }: ComponentEditorProps) {
+  const { t } = useTranslation()
   const [editedComponent, setEditedComponent] = useState(component)
 
   useEffect(() => {
@@ -180,7 +183,7 @@ export function ComponentEditor({
         {/* Header */}
         <div className="sticky top-0 bg-gray-900 border-b border-gray-800 p-6 flex justify-between items-center">
           <div>
-            <h2 className="text-2xl font-bold">Edit Component</h2>
+            <h2 className="text-2xl font-bold">{t('editor.title')}</h2>
             <p className="text-gray-400 mt-1">{name}</p>
           </div>
           <button
@@ -196,7 +199,9 @@ export function ComponentEditor({
           {/* Icon Section - 物理ボタン以外で表示 */}
           {!isPhysicalButton && (
             <div>
-              <label className="block text-sm font-semibold mb-2 text-gray-300">アイコン</label>
+              <label className="block text-sm font-semibold mb-2 text-gray-300">
+                {t('editor.icon.label')}
+              </label>
 
               {/* Icon Type Selector */}
               <select
@@ -217,10 +222,10 @@ export function ComponentEditor({
                 }}
                 className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white mb-3 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <option value="none">なし</option>
-                <option value="nerdfont">NerdFont アイコン</option>
-                <option value="auto">自動解決（アプリ名）</option>
-                <option value="image">画像ファイル</option>
+                <option value="none">{t('editor.icon.types.none')}</option>
+                <option value="nerdfont">{t('editor.icon.types.nerdfont')}</option>
+                <option value="auto">{t('editor.icon.types.auto')}</option>
+                <option value="image">{t('editor.icon.types.image')}</option>
               </select>
 
               {/* Conditional Fields */}
@@ -234,19 +239,21 @@ export function ComponentEditor({
               {getIconType === 'auto' && (
                 <div>
                   <label className="block text-sm font-semibold mb-2 text-gray-300">
-                    <span className="text-yellow-500">ℹ️</span> アプリ名（appName）
+                    <span className="text-yellow-500">ℹ️</span> {t('editor.icon.appNameHint')}
                   </label>
                   <input
                     type="text"
                     value={getField(['appName']) || ''}
                     onChange={(e) => updateField(['appName'], e.target.value)}
                     className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"
-                    placeholder="例: google-chrome, firefox"
+                    placeholder={t('editor.icon.placeholder')}
                   />
                   <p className="text-xs text-gray-500 mt-1">
-                    コマンドから自動設定されますが、手動で変更も可能です
+                    {t('editor.icon.appNameDescription')}
                     {getField(['appName']) && (
-                      <span className="text-gray-400 ml-2">（現在: {getField(['appName'])}）</span>
+                      <span className="text-gray-400 ml-2">
+                        {t('editor.icon.current', { appName: getField(['appName']) })}
+                      </span>
                     )}
                   </p>
                 </div>
@@ -267,7 +274,9 @@ export function ComponentEditor({
           {/* Label - 物理ボタン以外で表示 */}
           {!isPhysicalButton && getField(['options', 'label']) !== undefined && (
             <div>
-              <label className="block text-sm font-semibold mb-2 text-gray-300">Label</label>
+              <label className="block text-sm font-semibold mb-2 text-gray-300">
+                {t('editor.label')}
+              </label>
               <input
                 type="text"
                 value={getField(['options', 'label']) || ''}
@@ -281,7 +290,7 @@ export function ComponentEditor({
           {!isPhysicalButton && getField(['options', 'bgColor']) !== undefined && (
             <div>
               <label className="block text-sm font-semibold mb-2 text-gray-300">
-                Background Color
+                {t('editor.colors.background')}
               </label>
               <div className="flex gap-3">
                 <input
@@ -304,7 +313,9 @@ export function ComponentEditor({
           {/* Text Color - 物理ボタン以外で表示 */}
           {!isPhysicalButton && getField(['options', 'textColor']) !== undefined && (
             <div>
-              <label className="block text-sm font-semibold mb-2 text-gray-300">Text Color</label>
+              <label className="block text-sm font-semibold mb-2 text-gray-300">
+                {t('editor.colors.text')}
+              </label>
               <div className="flex gap-3">
                 <input
                   type="color"
@@ -326,7 +337,9 @@ export function ComponentEditor({
           {/* LED Color */}
           {getField(['options', 'ledColor']) !== undefined && (
             <div>
-              <label className="block text-sm font-semibold mb-2 text-gray-300">LED Color</label>
+              <label className="block text-sm font-semibold mb-2 text-gray-300">
+                {t('editor.colors.led')}
+              </label>
               <div className="flex gap-3">
                 <input
                   type="color"
@@ -348,7 +361,9 @@ export function ComponentEditor({
           {/* Command */}
           {getField(['command']) !== undefined && (
             <div>
-              <label className="block text-sm font-semibold mb-2 text-gray-300">Command</label>
+              <label className="block text-sm font-semibold mb-2 text-gray-300">
+                {t('editor.command')}
+              </label>
               <input
                 type="text"
                 value={getField(['command']) || ''}
@@ -363,7 +378,7 @@ export function ComponentEditor({
           {getField(['options', 'iconSize']) !== undefined && (
             <div>
               <label className="block text-sm font-semibold mb-2 text-gray-300">
-                Icon Size: {getField(['options', 'iconSize'])}px
+                {t('editor.iconSize', { size: getField(['options', 'iconSize']) })}
               </label>
               <input
                 type="range"
@@ -381,17 +396,17 @@ export function ComponentEditor({
           {getField(['position']) && (
             <div>
               <label className="block text-sm font-semibold mb-2 text-gray-300">
-                Position (Read-only)
+                {t('editor.position.label')}
               </label>
               <div className="flex gap-4">
                 <div className="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-gray-500">
-                  Col: {getField(['position', 'col'])}
+                  {t('editor.position.col')}: {getField(['position', 'col'])}
                 </div>
                 <div className="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-gray-500">
-                  Row: {getField(['position', 'row'])}
+                  {t('editor.position.row')}: {getField(['position', 'row'])}
                 </div>
               </div>
-              <p className="text-xs text-gray-500 mt-1">Position editing coming in Phase 3</p>
+              <p className="text-xs text-gray-500 mt-1">{t('editor.position.comingSoon')}</p>
             </div>
           )}
         </div>
@@ -405,7 +420,7 @@ export function ComponentEditor({
               }}
               className="px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors font-semibold"
             >
-              🗑️ 削除
+              🗑️ {t('editor.actions.delete')}
             </button>
           )}
           <div className="flex gap-3 ml-auto">
@@ -413,13 +428,13 @@ export function ComponentEditor({
               onClick={onClose}
               className="px-6 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded-lg transition-colors"
             >
-              Cancel
+              {t('common.cancel')}
             </button>
             <button
               onClick={handleSave}
               className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-semibold"
             >
-              Save Changes
+              {t('editor.actions.saveChanges')}
             </button>
           </div>
         </div>
