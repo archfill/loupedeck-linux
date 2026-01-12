@@ -60,6 +60,9 @@ export class LoupedeckDevice {
       // 接続完了の振動フィードバック
       await this.vibration.vibratePattern('connect')
 
+      // デバイスがコマンドを受け付けられるようになるまで待機
+      await this.waitForDeviceReady()
+
       return this.device
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : String(error)
@@ -220,6 +223,43 @@ export class LoupedeckDevice {
   }
 
   /**
+   * デバイスがコマンドを受け付けられるようになるまで待機
+   * 主に再起動時のUSBデバイス解放待ちに使用
+   */
+  private async waitForDeviceReady(maxAttempts = 10): Promise<void> {
+    if (!this.device) {
+      return
+    }
+
+    logger.debug('デバイスの準備完了を待機中...')
+
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        // テスト用にボタン0の色を設定（黒で目立たない）
+        await Promise.race([
+          this.device.setButtonColor({ id: 0, color: '#000000' }),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('タイムアウト')), 1000)),
+        ])
+
+        // 成功したら準備完了
+        logger.debug(`デバイスの準備が完了しました（試行 ${attempt}/${maxAttempts}）`)
+        return
+      } catch (error: unknown) {
+        // 最後の試行で失敗した場合のみ警告
+        if (attempt === maxAttempts) {
+          logger.warn(
+            `デバイスの準備完了を待機しましたがタイムアウトしました（${maxAttempts}試行）`
+          )
+          // ただし、処理は継続する（後のLED設定でリトライが効くため）
+        } else {
+          // 500ms待機してリトライ
+          await new Promise((resolve) => setTimeout(resolve, 500))
+        }
+      }
+    }
+  }
+
+  /**
    * 終了処理のセットアップ
    * @param cleanupCallback - 終了時のクリーンアップ関数
    */
@@ -293,30 +333,47 @@ export class LoupedeckDevice {
   }
 
   /**
-   * 物理ボタンのLED色を設定
+   * 物理ボタンのLED色を設定（リトライ付き）
    * @param buttonId - ボタンID (0-3)
    * @param color - 色（例: 'red', '#FF0000', 'rgb(255,0,0)'）
+   * @param maxRetries - 最大リトライ回数（デフォルト3回）
    */
-  async setButtonColor(buttonId: number, color: string): Promise<void> {
+  async setButtonColor(buttonId: number, color: string, maxRetries = 3): Promise<boolean> {
     if (!this.device) {
       logger.warn('デバイスが接続されていません')
-      return
+      return false
     }
 
-    try {
-      logger.debug(`ボタン ${buttonId} の色を設定中: ${color}`)
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        logger.debug(
+          `ボタン ${buttonId} の色を設定中: ${color}${attempt > 1 ? ` (リトライ ${attempt - 1}/${maxRetries - 1})` : ''}`
+        )
 
-      // タイムアウト付きでLED色を設定（2秒）
-      await Promise.race([
-        this.device.setButtonColor({ id: buttonId, color }),
-        new Promise((_, reject) => setTimeout(() => reject(new Error('タイムアウト')), 2000)),
-      ])
+        // タイムアウト付きでLED色を設定（2秒）
+        await Promise.race([
+          this.device.setButtonColor({ id: buttonId, color }),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('タイムアウト')), 2000)),
+        ])
 
-      logger.debug(`ボタン ${buttonId} の色を設定完了: ${color}`)
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : String(error)
-      logger.warn(`ボタン ${buttonId} の色設定に失敗（スキップ）: ${message}`)
+        logger.debug(`ボタン ${buttonId} の色を設定完了: ${color}`)
+        return true
+      } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : String(error)
+
+        // 最後のリトライでも失敗した場合
+        if (attempt === maxRetries) {
+          logger.warn(`ボタン ${buttonId} の色設定に失敗（スキップ）: ${message}`)
+          return false
+        }
+
+        // リトライ前に待機（デバイスの解放を待つ）
+        logger.debug(`ボタン ${buttonId} の色設定に失敗、1秒待機してリトライ: ${message}`)
+        await new Promise((resolve) => setTimeout(resolve, 1000))
+      }
     }
+
+    return false
   }
 
   /**
