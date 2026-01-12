@@ -37,6 +37,19 @@ export function autoSizeText(
 }
 
 /**
+ * テキストを省略する
+ * @param text - 元のテキスト
+ * @param maxLength - 最大文字数（...を含まない）
+ * @returns 省略されたテキスト
+ */
+export function ellipsisText(text: string, maxLength: number): string {
+  if (text.length <= maxLength) {
+    return text
+  }
+  return text.substring(0, maxLength) + '...'
+}
+
+/**
  * 日付フォーマット
  * @param date - Date オブジェクト
  * @returns MM/DD 形式の日付

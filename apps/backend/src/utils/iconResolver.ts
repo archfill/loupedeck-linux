@@ -9,20 +9,53 @@ export class IconResolver {
   private static cache = new Map<string, string | null>()
 
   /**
-   * アプリ名からアイコンパスを解決
-   * @param appName - アプリケーション名（例: 'firefox', '1password'）
-   * @param preferredSize - 優先サイズ（デフォルト: 64）
-   * @returns アイコンパス、または見つからない場合はnull
+   * フォールバック用のアプリ名候補を生成
+   *
+   * コマンド名とアイコン名が異なるケース（google-chrome-stable → google-chrome）に対応
+   *
+   * @param appName - 元のアプリ名
+   * @returns フォールバック候補のリスト
    */
-  static resolve(appName: string, preferredSize: number = 64): string | null {
-    // キャッシュをチェック
-    const cacheKey = `${appName}-${preferredSize}`
-    if (this.cache.has(cacheKey)) {
-      return this.cache.get(cacheKey) || null
+  private static generateFallbackNames(appName: string): string[] {
+    const fallbacks: string[] = []
+
+    // 一般的なバージョンサフィックスを削除
+    const suffixes = [
+      '-stable',
+      '-beta',
+      '-devel',
+      '-devedition',
+      '-snapshot',
+      '-canary',
+      '-nightly',
+      '-latest',
+      '-git',
+    ]
+
+    for (const suffix of suffixes) {
+      if (appName.endsWith(suffix)) {
+        const baseName = appName.slice(0, -suffix.length)
+        fallbacks.push(baseName)
+        break // 1つのサフィックスのみ削除
+      }
     }
 
-    // 検索パスのリスト（優先順位順）
-    const searchPaths = [
+    // -oss サフィックスの処理（例: code-oss → code）
+    if (appName.endsWith('-oss')) {
+      fallbacks.push(appName.slice(0, -4))
+    }
+
+    return fallbacks
+  }
+
+  /**
+   * 指定されたアプリ名に対する検索パスのリストを生成
+   * @param appName - アプリケーション名
+   * @param preferredSize - 優先サイズ
+   * @returns 検索パスの配列
+   */
+  private static getSearchPaths(appName: string, preferredSize: number): string[] {
+    return [
       // hicolor テーマ（優先サイズ）
       `/usr/share/icons/hicolor/${preferredSize}x${preferredSize}/apps/${appName}.png`,
       // hicolor テーマ（代替サイズ）
@@ -40,18 +73,66 @@ export class IconResolver {
       `/usr/share/icons/hicolor/64x64/apps/appimagekit-${appName}.png`,
       `/usr/share/icons/Papirus/64x64/apps/appimagekit-${appName}.svg`,
     ]
+  }
 
-    // 各パスを順番にチェック
+  /**
+   * 単一のアプリ名でアイコンを検索（キャッシュなし）
+   * @param appName - アプリケーション名
+   * @param preferredSize - 優先サイズ
+   * @returns アイコンパス、または見つからない場合はnull
+   */
+  private static searchIcon(appName: string, preferredSize: number): string | null {
+    const searchPaths = this.getSearchPaths(appName, preferredSize)
+
     for (const iconPath of searchPaths) {
       if (existsSync(iconPath)) {
         logger.debug(`IconResolver: ${appName} のアイコンが見つかりました: ${iconPath}`)
-        this.cache.set(cacheKey, iconPath)
         return iconPath
       }
     }
 
+    return null
+  }
+
+  /**
+   * アプリ名からアイコンパスを解決（フォールバック対応）
+   * @param appName - アプリケーション名（例: 'firefox', 'google-chrome-stable'）
+   * @param preferredSize - 優先サイズ（デフォルト: 64）
+   * @returns アイコンパス、または見つからない場合はnull
+   */
+  static resolve(appName: string, preferredSize: number = 64): string | null {
+    // キャッシュをチェック
+    const cacheKey = `${appName}-${preferredSize}`
+    if (this.cache.has(cacheKey)) {
+      return this.cache.get(cacheKey) || null
+    }
+
+    // まず正確な appName で検索
+    let iconPath = this.searchIcon(appName, preferredSize)
+
+    // 見つからなかった場合、フォールバック名を試行
+    if (!iconPath) {
+      const fallbacks = this.generateFallbackNames(appName)
+      for (const fallbackName of fallbacks) {
+        logger.debug(`IconResolver: フォールバックを試行: ${fallbackName} (元: ${appName})`)
+        iconPath = this.searchIcon(fallbackName, preferredSize)
+        if (iconPath) {
+          logger.info(
+            `IconResolver: フォールバックでアイコンが見つかりました: ${fallbackName} → ${appName}`
+          )
+          break
+        }
+      }
+    }
+
+    // 結果をキャッシュ
+    if (iconPath) {
+      this.cache.set(cacheKey, iconPath)
+      return iconPath
+    }
+
     // 見つからなかった場合
-    logger.warn(`IconResolver: ${appName} のアイコンが見つかりませんでした`)
+    logger.warn(`IconResolver: ${appName} のアイコンが見つかりませんでした（フォールバック含む）`)
     this.cache.set(cacheKey, null)
     return null
   }

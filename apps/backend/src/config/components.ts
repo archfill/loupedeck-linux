@@ -40,6 +40,7 @@ export interface ButtonOptions {
   textColor: string
   hoverBgColor: string
   vibrationPattern: VibrationPattern
+  maxLabelLength?: number // ラベルの最大文字数（デフォルト: 15）
 }
 
 /** ボタンコンポーネントの設定 */

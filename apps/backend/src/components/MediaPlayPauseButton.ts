@@ -2,7 +2,7 @@ import { Button, type ButtonOptions } from './Button.ts'
 import type { MediaControl } from '../utils/mediaControl.ts'
 import type { CanvasRenderingContext2D } from 'canvas'
 import type { CellCoord } from './Screen.ts'
-import { autoSizeText } from '../utils/textUtils.ts'
+import { autoSizeText, ellipsisText } from '../utils/textUtils.ts'
 
 /**
  * メディア再生/一時停止ボタン
@@ -20,12 +20,7 @@ export class MediaPlayPauseButton extends Button {
    * @param mediaControl - メディア制御インスタンス
    * @param options - ボタンオプション
    */
-  constructor(
-    col: number,
-    row: number,
-    mediaControl: MediaControl,
-    options: ButtonOptions = {}
-  ) {
+  constructor(col: number, row: number, mediaControl: MediaControl, options: ButtonOptions = {}) {
     // 初期アイコンとして再生アイコンを設定
     super(col, row, { ...options, icon: '󰐊' })
     this.mediaControl = mediaControl
@@ -72,8 +67,9 @@ export class MediaPlayPauseButton extends Button {
     // ラベルを下部に表示
     const label = 'Play/Pause'
     const maxWidth = width - 10
-    autoSizeText(ctx, label, maxWidth, 14, 10, '', 'sans-serif')
-    ctx.fillText(label, x + width / 2, y + height / 2 + 28)
+    const truncatedLabel = ellipsisText(label, 12)
+    autoSizeText(ctx, truncatedLabel, maxWidth, 14, 10, '', 'sans-serif')
+    ctx.fillText(truncatedLabel, x + width / 2, y + height / 2 + 28)
   }
 
   /**

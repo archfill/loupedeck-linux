@@ -1,4 +1,4 @@
-import { autoSizeText } from '../utils/textUtils.ts'
+import { autoSizeText, ellipsisText } from '../utils/textUtils.ts'
 import { logger } from '../utils/logger.ts'
 import { loadImageFile, drawImage } from '../utils/imageLoader.ts'
 import type { Image, CanvasRenderingContext2D } from 'canvas'
@@ -20,6 +20,7 @@ export interface ButtonOptions {
   onClick?: () => void | Promise<void>
   vibration?: VibrationUtil | null
   vibrationPattern?: string
+  maxLabelLength?: number
 }
 
 /**
@@ -40,6 +41,7 @@ export class Button {
   private onClick: () => void | Promise<void>
   private vibration: VibrationUtil | null
   private vibrationPattern: string
+  private maxLabelLength: number
   private isHovered: boolean
   private loadedImage: Image | null
   private imageLoading: boolean
@@ -65,6 +67,7 @@ export class Button {
     this.onClick = options.onClick || (() => {})
     this.vibration = options.vibration || null // 振動ユーティリティ
     this.vibrationPattern = options.vibrationPattern || 'tap' // 振動パターン
+    this.maxLabelLength = options.maxLabelLength || 15 // ラベルの最大文字数（デフォルト: 15）
 
     this.isHovered = false
     this.loadedImage = null // 読み込まれた画像オブジェクト
@@ -137,8 +140,9 @@ export class Button {
       )
 
       // ラベルを下部に表示
-      autoSizeText(ctx, this.label, maxWidth, 14, 10, '', 'sans-serif')
-      ctx.fillText(this.label, x + width / 2, y + height / 2 + this.iconSize / 2 + 8)
+      const label1 = ellipsisText(this.label, this.maxLabelLength)
+      autoSizeText(ctx, label1, maxWidth, 14, 10, '', 'sans-serif')
+      ctx.fillText(label1, x + width / 2, y + height / 2 + this.iconSize / 2 + 8)
     } else if (this.icon) {
       // 絵文字/NerdFontアイコンがある場合
       ctx.fillStyle = this.textColor
@@ -150,16 +154,18 @@ export class Button {
       ctx.fillText(this.icon, x + width / 2, y + height / 2 - 10)
 
       // ラベルを下部に表示
-      autoSizeText(ctx, this.label, maxWidth, 14, 10, '', 'sans-serif')
-      ctx.fillText(this.label, x + width / 2, y + height / 2 + 28)
+      const label2 = ellipsisText(this.label, this.maxLabelLength)
+      autoSizeText(ctx, label2, maxWidth, 14, 10, '', 'sans-serif')
+      ctx.fillText(label2, x + width / 2, y + height / 2 + 28)
     } else {
       // アイコンがない場合はラベルのみ中央に表示
       ctx.fillStyle = this.textColor
       ctx.textAlign = 'center'
       ctx.textBaseline = 'middle'
 
-      autoSizeText(ctx, this.label, maxWidth, 20, 12, 'bold', 'sans-serif')
-      ctx.fillText(this.label, x + width / 2, y + height / 2)
+      const label3 = ellipsisText(this.label, this.maxLabelLength)
+      autoSizeText(ctx, label3, maxWidth, 20, 12, 'bold', 'sans-serif')
+      ctx.fillText(label3, x + width / 2, y + height / 2)
     }
   }
 
