@@ -167,6 +167,9 @@ pnpm run format         # フォーマッター実行
 # pnpmをグローバルにインストール（まだの場合）
 npm install -g pnpm
 
+# Web UIをビルド（本番環境で必要）
+pnpm run build:web
+
 # サービスをインストール
 pnpm run service:install
 ```
@@ -176,6 +179,7 @@ pnpm run service:install
 - ログイン時に自動起動
 - ログアウト時に自動停止
 - GUI環境変数はセッションから継承
+- バックエンドがAPIとWeb UIの両方を配信（http://localhost:9876）
 
 ### サービスの管理
 

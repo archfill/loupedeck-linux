@@ -167,6 +167,9 @@ pnpm run format         # Run formatter
 # Install pnpm globally if needed
 npm install -g pnpm
 
+# Build Web UI (required for production)
+pnpm run build:web
+
 # Install the service
 pnpm run service:install
 ```
@@ -176,6 +179,7 @@ pnpm run service:install
 - Automatically starts on login
 - Automatically stops on logout
 - GUI environment variables are inherited from your session
+- Backend serves both API and Web UI on http://localhost:9876
 
 ### Manage Service
 
