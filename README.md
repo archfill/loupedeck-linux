@@ -4,46 +4,48 @@
 [![Node Version](https://img.shields.io/badge/node-%3E%3D20.0.0-brightgreen)](https://nodejs.org)
 [![Package Manager](https://img.shields.io/badge/pnpm-%3E%3D9.0.0-red)](https://pnpm.io)
 
-Linux向けのLoupedeckデバイスコントローラー。Web UIで直感的に設定できる、オープンソースのデバイス管理アプリケーションです。
+[English](./README.md) | [日本語](./README.ja.md)
 
-## 🌟 特徴
+An open-source device controller application for Loupedeck devices on Linux with an intuitive Web UI for configuration.
 
-- 🎮 **対応デバイス**: Loupedeck Live S（他デバイスは動作未確認）
-- 🖥️ **タッチスクリーン**: 5×3グリッドレイアウトでカスタムボタンを配置可能
-- 💡 **LEDコントロール**: 物理ボタンの色をカスタマイズ
-- 🎚️ **ノブ操作**: 音量調整・メディア制御を直感的に操作可能
-- 🚀 **アプリケーションランチャー**: よく使うアプリをワンタップで起動
-- 🌐 **Web UI**: モダンな設定画面（React + Vite + TailwindCSS v4）
-- ⚡ **ホットリロード**: 設定変更を即座に反映
+## 🌟 Features
 
-## 📁 プロジェクト構成
+- 🎮 **Supported Device**: Loupedeck Live S (other devices untested)
+- 🖥️ **Touchscreen**: Custom button layout on 5×3 grid
+- 💡 **LED Control**: Customize physical button colors
+- 🎚️ **Knob Control**: Intuitive volume and media control
+- 🚀 **Application Launcher**: Launch your favorite apps with one tap
+- 🌐 **Web UI**: Modern configuration interface (React + Vite + TailwindCSS v4)
+- ⚡ **Hot Reload**: Instantly apply configuration changes
 
-pnpm workspacesを使用したモノレポ構成です：
+## 📁 Project Structure
+
+Monorepo using pnpm workspaces:
 
 ```
 loupedeck-linux/
 ├── apps/
-│   ├── backend/           # バックエンド (@loupedeck-linux/backend)
-│   │   ├── main.ts       # エントリーポイント
-│   │   ├── src/          # ソースコード
-│   │   └── config/       # ランタイム設定
-│   └── web/              # フロントエンド (React + Vite)
-├── docs/                  # 詳細ドキュメント
-├── scripts/               # 管理スクリプト
-├── package.json          # ルート設定
-└── pnpm-workspace.yaml   # ワークスペース定義
+│   ├── backend/           # Backend (@loupedeck-linux/backend)
+│   │   ├── main.ts       # Entry point
+│   │   ├── src/          # Source code
+│   │   └── config/       # Runtime configuration
+│   └── web/              # Frontend (React + Vite)
+├── docs/                  # Detailed documentation
+├── scripts/               # Management scripts
+├── package.json          # Root configuration
+└── pnpm-workspace.yaml   # Workspace definition
 ```
 
-## 📋 必須要件
+## 📋 Requirements
 
-### システム要件
+### System Requirements
 
-- Linux（Arch Linuxで動作確認済み）
-- Node.js 20以上
-- pnpm 9以上
-- Loupedeck Live S（その他のデバイスは動作未確認）
+- Linux (tested on Arch Linux)
+- Node.js 20+
+- pnpm 9+
+- Loupedeck Live S (other devices untested)
 
-### システムパッケージ
+### System Packages
 
 ```bash
 # Arch Linux
@@ -54,9 +56,9 @@ sudo apt install nodejs npm libusb-1.0-0-dev
 npm install -g pnpm
 ```
 
-### udevルール設定
+### udev Rules
 
-Loupedeckデバイスへのアクセス権限を設定：
+Set up permissions for Loupedeck device:
 
 ```bash
 sudo tee /etc/udev/rules.d/50-loupedeck.rules > /dev/null <<EOF
@@ -67,7 +69,7 @@ sudo udevadm control --reload-rules
 sudo udevadm trigger
 ```
 
-### オプション依存パッケージ
+### Optional Dependencies
 
 ```bash
 # Arch Linux
@@ -77,25 +79,25 @@ sudo pacman -S pamixer playerctl wtype
 sudo apt install pamixer playerctl wtype
 ```
 
-## 🚀 クイックスタート
+## 🚀 Quick Start
 
 ```bash
-# リポジトリをクローン
+# Clone repository
 git clone https://github.com/archfill/loupedeck-linux.git
 cd loupedeck-linux
 
-# 依存関係をインストール
+# Install dependencies
 pnpm install
 
-# バックエンド + Web UIを同時起動
+# Start backend + Web UI
 pnpm run dev:all
 ```
 
-ブラウザで http://localhost:5173 にアクセスしてWeb UIを開いてください。
+Open http://localhost:5173 in your browser to access the Web UI.
 
-## 🔧 詳細セットアップ
+## 🔧 Detailed Setup
 
-### システムパッケージのインストール
+### Install System Packages
 
 ```bash
 # Arch Linux
@@ -106,9 +108,9 @@ sudo apt install nodejs npm libusb-1.0-0-dev pamixer playerctl wtype
 npm install -g pnpm
 ```
 
-### udevルールの設定
+### Configure udev Rules
 
-Loupedeckデバイスへのアクセス権限を設定：
+Set up permissions for Loupedeck device:
 
 ```bash
 sudo tee /etc/udev/rules.d/50-loupedeck.rules > /dev/null <<EOF
@@ -119,165 +121,165 @@ sudo udevadm control --reload-rules
 sudo udevadm trigger
 ```
 
-### アプリケーションのインストール
+### Install Application
 
 ```bash
-# リポジトリをクローン
+# Clone repository
 git clone https://github.com/archfill/loupedeck-linux.git
 cd loupedeck-linux
 
-# 依存関係をインストール
+# Install dependencies
 pnpm install
 
-# スクリプトに実行権限を付与
+# Make scripts executable
 chmod +x scripts/*.sh
 ```
 
-## 💻 開発
+## 💻 Development
 
 ```bash
-# バックエンドのみ起動
+# Start backend only
 pnpm run dev
 
-# Web UIのみ起動
+# Start Web UI only
 pnpm run dev:web
 
-# バックエンド + Web UIを同時起動
+# Start both
 pnpm run dev:all
 ```
 
-### その他のコマンド
+### Other Commands
 
 ```bash
-pnpm start              # プロダクションモードで起動
-pnpm run build:web      # Web UIをビルド
-pnpm run lint           # リンター実行
-pnpm run format         # フォーマッター実行
+pnpm start              # Start in production mode
+pnpm run build:web      # Build Web UI
+pnpm run lint           # Run linter
+pnpm run format         # Run formatter
 ```
 
-## 🚀 本番環境での自動起動
+## 🚀 Production Auto-start
 
-### systemdサービスのインストール
+### Install systemd Service
 
 ```bash
 pnpm run service:install
 ```
 
-### サービスの管理
+### Manage Service
 
 ```bash
-pnpm run service:status    # ステータス確認
-pnpm run service:stop      # 停止
-pnpm run service:restart   # 再起動
-pnpm run service:logs      # ログ確認
-pnpm run service:uninstall # 削除
+pnpm run service:status    # Check status
+pnpm run service:stop      # Stop service
+pnpm run service:restart   # Restart service
+pnpm run service:logs      # View logs
+pnpm run service:uninstall # Remove service
 ```
 
-## 📖 使い方
+## 📖 Usage
 
-### デバイスレイアウト
+### Device Layout
 
-#### タッチスクリーングリッド（5列×3行）
+#### Touchscreen Grid (5 columns × 3 rows)
 
 ```
-列:     0           1           2           3           4
-行0: [時計]     [Firefox]  [1Password] [Thunderbird] [ ]
-行1: [Setup]    [ ]        [Unlock]    [ ]           [ ]
-行2: [ ]        [ ]        [ ]         [ ]           [ ]
+Col:    0           1           2           3           4
+Row0: [Clock]    [Firefox]  [1Password] [Thunderbird] [ ]
+Row1: [Setup]    [ ]        [Unlock]    [ ]           [ ]
+Row2: [ ]        [ ]        [ ]         [ ]           [ ]
 ```
 
-#### ノブ
+#### Knobs
 
-| ノブ             | 回転          | クリック      |
-| ---------------- | ------------- | ------------- |
-| knobTL（左上）   | 音量調整      | ミュート切替  |
-| knobCL（左中央） | 次/前トラック | 再生/一時停止 |
+| Knob            | Rotate              | Click       |
+| --------------- | ------------------- | ----------- |
+| knobTL (top)    | Volume adjustment   | Mute toggle |
+| knobCL (center) | Previous/Next track | Play/Pause  |
 
 ### Web UI
 
-- 開発: http://localhost:5173
+- Development: http://localhost:5173
 - API: http://localhost:9876/api/config
 
-## ⚙️ 設定
+## ⚙️ Configuration
 
-ランタイム設定は `apps/backend/config/config.json` で管理されます。
-設定変更はホットリロードで即座に反映されます。
+Runtime configuration is managed in `apps/backend/config/config.json`.
+Changes are applied immediately via hot reload.
 
-## API エンドポイント
+## API Endpoints
 
-| エンドポイント               | 説明               |
+| Endpoint                     | Description        |
 | ---------------------------- | ------------------ |
-| `GET /api/health`            | ヘルスチェック     |
-| `GET /api/config`            | 全設定             |
-| `GET /api/config/components` | コンポーネント設定 |
-| `GET /api/config/constants`  | システム定数       |
-| `GET /api/device`            | デバイス情報       |
+| `GET /api/health`            | Health check       |
+| `GET /api/config`            | Full configuration |
+| `GET /api/config/components` | Component config   |
+| `GET /api/config/constants`  | System constants   |
+| `GET /api/device`            | Device information |
 
-## 📚 ドキュメント
+## 📚 Documentation
 
-詳細なドキュメントは `docs/` ディレクトリを参照：
+Detailed documentation is available in the `docs/` directory:
 
-- [architecture.md](docs/architecture.md) - アーキテクチャ詳細
-- [component-guide.md](docs/component-guide.md) - コンポーネント作成ガイド
-- [api-reference.md](docs/api-reference.md) - API リファレンス
-- [patterns.md](docs/patterns.md) - 共通パターン
-- [setup.md](docs/setup.md) - デバイスセットアップ詳細
+- [architecture.md](docs/architecture.md) - Architecture details
+- [component-guide.md](docs/component-guide.md) - Component creation guide
+- [api-reference.md](docs/api-reference.md) - API reference
+- [patterns.md](docs/patterns.md) - Common patterns
+- [setup.md](docs/setup.md) - Detailed device setup
 
-## 🔍 トラブルシューティング
+## 🔍 Troubleshooting
 
-### デバイスが認識されない
+### Device Not Recognized
 
-1. udevルールが適用されているか確認
-2. 公式Loupedeckソフトウェアが停止しているか確認
-3. デバイスを抜き差し
+1. Check if udev rules are applied
+2. Ensure official Loupedeck software is not running
+3. Reconnect the device
 
 ```bash
-# デバイス確認
+# Check device
 lsusb | grep Loupedeck
 
-# 権限確認
+# Check permissions
 sudo chmod 666 /dev/bus/usb/xxx/yyy
 ```
 
-### アプリケーションが起動しない
+### Application Won't Start
 
 ```bash
-# プロセスを強制終了
+# Force kill process
 pnpm run kill
 
-# デバイスを抜き差し後、再起動
+# Reconnect device and restart
 pnpm run dev:all
 ```
 
-### その他の問題
+### Other Issues
 
-[GitHub Issues](https://github.com/archfill/loupedeck-linux/issues)で同じ問題がないか検索するか、新しいIssueを作成してください。
+Search [GitHub Issues](https://github.com/archfill/loupedeck-linux/issues) or create a new issue.
 
-## 🤝 貢献
+## 🤝 Contributing
 
-バグ報告、機能要望、プルリクエストはいつでも歓迎します！
+Bug reports, feature requests, and pull requests are welcome!
 
-1. リポジトリをフォーク
-2. フィーチャーブランチを作成 (`git checkout -b feature/AmazingFeature`)
-3. 変更をコミット (`git commit -m 'feat: Add some AmazingFeature'`)
-4. ブランチにプッシュ (`git push origin feature/AmazingFeature`)
-5. プルリクエストを作成
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'feat: Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
-## 📝 ライセンス
+## 📝 License
 
-MIT License - [LICENSE](./LICENSE) を参照してください。
+MIT License - see [LICENSE](./LICENSE) for details.
 
-## ⭐ スターをつける
+## ⭐ Star Us
 
-このプロジェクトが役に立った場合は、GitHubリポジトリにスターをつけてください！
+If you find this project helpful, please give it a star on GitHub!
 
 ## 🙏 Acknowledgments
 
-本プロジェクトは以下の素晴らしいライブラリを使用しています：
+This project uses the following amazing libraries:
 
-- [foxxyz/loupedeck](https://github.com/foxxyz/loupedeck) - Loupedeck デバイス制御ライブラリ (MIT)
+- [foxxyz/loupedeck](https://github.com/foxxyz/loupedeck) - Loupedeck device control library (MIT)
 - [node-canvas](https://github.com/Automattic/node-canvas) - Canvas API for Node.js (MIT)
-- [Express](https://expressjs.com/) - Webサーバーフレームワーク (MIT)
-- [React](https://react.dev/) - UIライブラリ (MIT)
-- [Vite](https://vitejs.dev/) - ビルドツール (MIT)
-- [TailwindCSS](https://tailwindcss.com/) - CSSフレームワーク (MIT)
+- [Express](https://expressjs.com/) - Web server framework (MIT)
+- [React](https://react.dev/) - UI library (MIT)
+- [Vite](https://vitejs.dev/) - Build tool (MIT)
+- [TailwindCSS](https://tailwindcss.com/) - CSS framework (MIT)
