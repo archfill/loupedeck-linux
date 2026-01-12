@@ -1,7 +1,8 @@
 {
   "name": "loupedeck-linux",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "Loupedeck Live S Linux controller application with web UI",
+  "license": "MIT",
   "bin": {
     "loupedeck-linux": "./bin/loupedeck-linux"
   },

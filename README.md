@@ -142,9 +142,9 @@ pnpm run service:uninstall # 削除
 
 #### ノブ
 
-| ノブ | 回転 | クリック |
-|-----|------|---------|
-| knobTL（左上） | 音量調整 | ミュート切替 |
+| ノブ             | 回転          | クリック      |
+| ---------------- | ------------- | ------------- |
+| knobTL（左上）   | 音量調整      | ミュート切替  |
 | knobCL（左中央） | 次/前トラック | 再生/一時停止 |
 
 ### Web UI
@@ -159,13 +159,13 @@ pnpm run service:uninstall # 削除
 
 ## API エンドポイント
 
-| エンドポイント | 説明 |
-|--------------|------|
-| `GET /api/health` | ヘルスチェック |
-| `GET /api/config` | 全設定 |
+| エンドポイント               | 説明               |
+| ---------------------------- | ------------------ |
+| `GET /api/health`            | ヘルスチェック     |
+| `GET /api/config`            | 全設定             |
 | `GET /api/config/components` | コンポーネント設定 |
-| `GET /api/config/constants` | システム定数 |
-| `GET /api/device` | デバイス情報 |
+| `GET /api/config/constants`  | システム定数       |
+| `GET /api/device`            | デバイス情報       |
 
 ## ドキュメント
 
@@ -199,4 +199,15 @@ pnpm run dev
 
 ## ライセンス
 
-ISC
+MIT License - [LICENSE](./LICENSE) を参照してください。
+
+## 謝辞
+
+本プロジェクトは以下の素晴らしいライブラリを使用しています：
+
+- [foxxyz/loupedeck](https://github.com/foxxyz/loupedeck) - Loupedeck デバイス制御ライブラリ (MIT)
+- [node-canvas](https://github.com/Automattic/node-canvas) - Canvas API for Node.js (MIT)
+- [Express](https://expressjs.com/) - Webサーバーフレームワーク (MIT)
+- [React](https://react.dev/) - UIライブラリ (MIT)
+- [Vite](https://vitejs.dev/) - ビルドツール (MIT)
+- [TailwindCSS](https://tailwindcss.com/) - CSSフレームワーク (MIT)

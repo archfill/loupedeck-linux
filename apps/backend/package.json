@@ -1,7 +1,8 @@
 {
   "name": "@loupedeck-linux/backend",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "Loupedeck Live S Linux controller backend",
+  "license": "MIT",
   "private": true,
   "type": "module",
   "main": "main.ts",
