@@ -1,0 +1,97 @@
+{
+  "common": {
+    "save": "保存",
+    "cancel": "キャンセル",
+    "delete": "削除",
+    "edit": "編集",
+    "loading": "読み込み中...",
+    "error": "エラー",
+    "success": "成功",
+    "close": "閉じる",
+    "clear": "クリア"
+  },
+  "app": {
+    "title": "Loupedeck 設定",
+    "subtitle": "Loupedeckの設定を編集 - コンポーネントをクリックして編集、ドラッグで位置変更",
+    "deviceInfo": {
+      "title": "デバイス情報",
+      "type": "タイプ",
+      "grid": "グリッド",
+      "knobs": "ノブ",
+      "buttons": "ボタン"
+    },
+    "devicePreview": {
+      "title": "デバイスプレビュー",
+      "addButton": "ボタン追加",
+      "dragHint": "（ドラッグで位置変更）"
+    },
+    "systemConstants": {
+      "title": "システム定数"
+    },
+    "saveStatus": {
+      "saving": "保存中...",
+      "saved": "保存完了",
+      "error": "保存エラー"
+    },
+    "alerts": {
+      "deleteConfirm": "{{name}} を削除しますか？",
+      "gridFull": "グリッドが満杯です。空きスペースがありません。",
+      "apiError": "APIサーバーがポート9876で実行されていることを確認してください"
+    }
+  },
+  "editor": {
+    "title": "コンポーネント編集",
+    "icon": {
+      "label": "アイコン",
+      "select": "アイコンを選択",
+      "selectButton": "アイコンを選択してください",
+      "types": {
+        "none": "なし",
+        "nerdfont": "NerdFont アイコン",
+        "auto": "自動解決（アプリ名）",
+        "image": "画像ファイル"
+      },
+      "appNameHint": "アプリ名（appName）",
+      "appNameDescription": "コマンドから自動設定されますが、手動で変更も可能です",
+      "current": "（現在: {{appName}}）",
+      "placeholder": "例: google-chrome, firefox"
+    },
+    "label": "ラベル",
+    "colors": {
+      "background": "背景色",
+      "text": "テキスト色",
+      "led": "LED色"
+    },
+    "command": "コマンド",
+    "iconSize": "アイコンサイズ: {{size}}px",
+    "position": {
+      "label": "位置（読み取り専用）",
+      "col": "列",
+      "row": "行",
+      "comingSoon": "位置編集はフェーズ3で予定されています"
+    },
+    "actions": {
+      "saveChanges": "変更を保存",
+      "delete": "削除"
+    }
+  },
+  "iconPicker": {
+    "title": "アイコンを選択",
+    "searchPlaceholder": "検索... (例: play, music, wifi)",
+    "categories": {
+      "all": "すべて"
+    },
+    "noResults": "該当するアイコンが見つかりませんでした",
+    "iconCount": "{{count}} 個のアイコン",
+    "tooltip": "{{name}}: {{keywords}}"
+  },
+  "preview": {
+    "pageSelector": "ページ",
+    "physicalButtons": {
+      "vol": "音量",
+      "page": "ページ",
+      "btn": "BTN {{id}}"
+    },
+    "screenSize": "{{width}} × {{height}}px"
+  }
+}
