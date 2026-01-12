@@ -1,1 +1,6 @@
+@import url("https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono@5.0.0/index.css");
 @import "tailwindcss";
+
+.nerd-font {
+  font-family: "JetBrainsMono Nerd Font Mono", monospace;
+}

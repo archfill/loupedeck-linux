@@ -1,0 +1,213 @@
+{
+  "categories": {
+    "media": {
+      "name": "メディア",
+      "icons": [
+        { "char": "󰐊", "name": "play", "keywords": ["play", "start", "media"] },
+        { "char": "󰓛", "name": "pause", "keywords": ["pause", "stop", "media"] },
+        { "char": "󰔀", "name": "stop", "keywords": ["stop", "media"] },
+        { "char": "󰒮", "name": "previous", "keywords": ["prev", "backward", "media"] },
+        { "char": "󰒭", "name": "next", "keywords": ["forward", "skip", "media"] },
+        { "char": "󰒫", "name": "backward", "keywords": ["rewind", "backward"] },
+        { "char": "󰒬", "name": "forward", "keywords": ["fast", "forward"] },
+        { "char": "󰚩", "name": "volume-high", "keywords": ["volume", "loud"] },
+        { "char": "󰝛", "name": "volume-low", "keywords": ["volume", "quiet"] },
+        { "char": "󰝟", "name": "mute", "keywords": ["mute", "silent"] },
+        { "char": "󰕾", "name": "music", "keywords": ["music", "audio", "sound"] },
+        { "char": "󰝆", "name": "microphone", "keywords": ["mic", "record"] },
+        { "char": "󰎤", "name": "headphones", "keywords": ["audio", "headphones"] },
+        { "char": "󰓇", "name": "video", "keywords": ["video", "camera", "film"] },
+        { "char": "󰄜", "name": "image", "keywords": ["image", "photo", "picture"] },
+        { "char": "󰹘", "name": "speaker", "keywords": ["speaker", "audio"] }
+      ]
+    },
+    "files": {
+      "name": "ファイル",
+      "icons": [
+        { "char": "󰈔", "name": "file", "keywords": ["file", "document"] },
+        { "char": "󰉋", "name": "folder", "keywords": ["folder", "directory"] },
+        { "char": "󰉏", "name": "folder-open", "keywords": ["folder", "open", "directory"] },
+        { "char": "󰋚", "name": "download", "keywords": ["download", "save"] },
+        { "char": "󰈄", "name": "upload", "keywords": ["upload", "export"] },
+        { "char": "󰆽", "name": "copy", "keywords": ["copy", "duplicate"] },
+        { "char": "󰆐", "name": "cut", "keywords": ["cut", "scissors"] },
+        { "char": "󰕌", "name": "paste", "keywords": ["paste", "clipboard"] },
+        { "char": "󰻓", "name": "save", "keywords": ["save", "disk", "floppy"] },
+        { "char": "󰋩", "name": "archive", "keywords": ["archive", "zip", "compress"] },
+        { "char": "󰌔", "name": "search", "keywords": ["search", "find", "magnifying"] },
+        { "char": "󰅁", "name": "trash", "keywords": ["trash", "delete", "remove"] },
+        { "char": "󰋪", "name": "file-code", "keywords": ["code", "source", "file"] },
+        { "char": "󰏟", "name": "document", "keywords": ["document", "text", "file"] },
+        { "char": "󰈣", "name": "lock", "keywords": ["lock", "secure", "private"] },
+        { "char": "󰌐", "name": "unlock", "keywords": ["unlock", "open"] }
+      ]
+    },
+    "system": {
+      "name": "システム",
+      "icons": [
+        { "char": "󰐥", "name": "power", "keywords": ["power", "shutdown", "off"] },
+        { "char": "󰤄", "name": "restart", "keywords": ["restart", "reboot", "refresh"] },
+        { "char": "󰍜", "name": "logout", "keywords": ["logout", "signout", "exit"] },
+        { "char": "󰍛", "name": "login", "keywords": ["login", "signin", "enter"] },
+        { "char": "󰒓", "name": "sleep", "keywords": ["sleep", "suspend"] },
+        { "char": "󰏰", "name": "settings", "keywords": ["settings", "config", "gear"] },
+        { "char": "󰂚", "name": "terminal", "keywords": ["terminal", "console", "shell"] },
+        { "char": "󰆣", "name": "cog", "keywords": ["cog", "gear", "settings"] },
+        { "char": "󰋔", "name": "tools", "keywords": ["tools", "wrench", "settings"] },
+        { "char": "󰔧", "name": "sliders", "keywords": ["sliders", "settings", "controls"] },
+        { "char": "󰒔", "name": "keyboard", "keywords": ["keyboard", "input"] },
+        { "char": "󰍽", "name": "mouse", "keywords": ["mouse", "pointer"] },
+        { "char": "󰖟", "name": "monitor", "keywords": ["monitor", "display", "screen"] },
+        { "char": "󰀻", "name": "desktop", "keywords": ["desktop", "computer"] },
+        { "char": "󰂺", "name": "laptop", "keywords": ["laptop", "notebook"] },
+        { "char": "󰖯", "name": "battery-full", "keywords": ["battery", "power"] },
+        { "char": "󰂎", "name": "battery-charging", "keywords": ["battery", "charging"] },
+        { "char": "󰂜", "name": "battery-empty", "keywords": ["battery", "empty"] },
+        { "char": "󰌗", "name": "bell", "keywords": ["bell", "notification", "alarm"] },
+        { "char": "󰪰", "name": "wifi", "keywords": ["wifi", "wireless", "network"] }
+      ]
+    },
+    "dev": {
+      "name": "開発",
+      "icons": [
+        { "char": "󰊤", "name": "git", "keywords": ["git", "version", "control"] },
+        { "char": "󰊢", "name": "git-branch", "keywords": ["branch", "git"] },
+        { "char": "󰊠", "name": "git-commit", "keywords": ["commit", "git"] },
+        { "char": "󰊡", "name": "git-pull", "keywords": ["pull", "git"] },
+        { "char": "󰊣", "name": "git-push", "keywords": ["push", "git"] },
+        { "char": "󰊻", "name": "git-merge", "keywords": ["merge", "git"] },
+        { "char": "󰊿", "name": "git-compare", "keywords": ["compare", "git"] },
+        { "char": "󰗹", "name": "code", "keywords": ["code", "programming", "dev"] },
+        { "char": "󰘦", "name": "terminal", "keywords": ["terminal", "console", "shell"] },
+        { "char": "󰙨", "name": "bug", "keywords": ["bug", "error", "issue"] },
+        { "char": "󰠠", "name": "database", "keywords": ["database", "db", "storage"] },
+        { "char": "󰚺", "name": "api", "keywords": ["api", "interface", "rest"] },
+        { "char": "󰑕", "name": "json", "keywords": ["json", "data", "format"] },
+        { "char": "󰏗", "name": "yaml", "keywords": ["yaml", "config", "data"] },
+        { "char": "󰌓", "name": "xml", "keywords": ["xml", "markup", "data"] },
+        { "char": "󰯠", "name": "docker", "keywords": ["docker", "container", "ship"] },
+        { "char": "󰅞", "name": "nodejs", "keywords": ["node", "nodejs", "javascript"] },
+        { "char": "󰈎", "name": "typescript", "keywords": ["typescript", "ts"] },
+        { "char": "󰌞", "name": "python", "keywords": ["python", "py"] },
+        { "char": "󰄠", "name": "rust", "keywords": ["rust", "rs"] },
+        { "char": "󰙓", "name": "go", "keywords": ["go", "golang"] },
+        { "char": "󰏑", "name": "java", "keywords": ["java", "jar"] },
+        { "char": "󰬘", "name": "cpp", "keywords": ["cpp", "c++", "cplusplus"] }
+      ]
+    },
+    "nav": {
+      "name": "ナビゲーション",
+      "icons": [
+        { "char": "󰕾", "name": "home", "keywords": ["home", "house"] },
+        { "char": "󰀍", "name": "up", "keywords": ["up", "arrow", "top"] },
+        { "char": "󰀂", "name": "down", "keywords": ["down", "arrow", "bottom"] },
+        { "char": "󰀃", "name": "left", "keywords": ["left", "arrow", "back"] },
+        { "char": "󰀁", "name": "right", "keywords": ["right", "arrow", "forward"] },
+        { "char": "󰛝", "name": "arrows-alt", "keywords": ["arrows", "expand"] },
+        { "char": "󰁆", "name": "expand", "keywords": ["expand", "maximize"] },
+        { "char": "󰁄", "name": "compress", "keywords": ["compress", "minimize"] },
+        { "char": "󰖔", "name": "external-link", "keywords": ["external", "link", "outbound"] },
+        { "char": "󰌛", "name": "link", "keywords": ["link", "url", "chain"] },
+        { "char": "󰔃", "name": "refresh", "keywords": ["refresh", "reload", "sync"] },
+        { "char": "󰒺", "name": "undo", "keywords": ["undo", "revert"] },
+        { "char": "󰒻", "name": "redo", "keywords": ["redo", "repeat"] },
+        { "char": "󰍶", "name": "tab", "keywords": ["tab", "window"] },
+        { "char": "󰖭", "name": "window", "keywords": ["window", "screen"] }
+      ]
+    },
+    "network": {
+      "name": "ネットワーク",
+      "icons": [
+        { "char": "󰪰", "name": "wifi", "keywords": ["wifi", "wireless"] },
+        { "char": "󰖩", "name": "ethernet", "keywords": ["ethernet", "wired", "lan"] },
+        { "char": "󰂮", "name": "bluetooth", "keywords": ["bluetooth", "wireless"] },
+        { "char": "󰈀", "name": "server", "keywords": ["server", "host", "remote"] },
+        { "char": "󰒍", "name": "globe", "keywords": ["globe", "world", "internet"] },
+        { "char": "󰈭", "name": "cloud", "keywords": ["cloud", "online", "sync"] },
+        { "char": "󰇄", "name": "download-cloud", "keywords": ["download", "cloud"] },
+        { "char": "󰇂", "name": "upload-cloud", "keywords": ["upload", "cloud"] },
+        { "char": "󰒔", "name": "network", "keywords": ["network", "connection"] },
+        { "char": "󰂢", "name": "share", "keywords": ["share", "broadcast"] }
+      ]
+    },
+    "apps": {
+      "name": "アプリ",
+      "icons": [
+        { "char": "󰈹", "name": "browser", "keywords": ["browser", "web", "internet"] },
+        { "char": "󰇮", "name": "mail", "keywords": ["email", "mail", "message"] },
+        { "char": "󰇰", "name": "mail-send", "keywords": ["send", "mail"] },
+        { "char": "󰋜", "name": "mail-open", "keywords": ["inbox", "mail"] },
+        { "char": "󰖫", "name": "calendar", "keywords": ["calendar", "date", "schedule"] },
+        { "char": "󰃻", "name": "clock", "keywords": ["clock", "time", "schedule"] },
+        { "char": "󰄀", "name": "camera", "keywords": ["camera", "photo", "video"] },
+        { "char": "󰉹", "name": "image", "keywords": ["image", "photo", "gallery"] },
+        { "char": "󰝒", "name": "calculator", "keywords": ["calculator", "math"] },
+        { "char": "󰔎", "name": "slack", "keywords": ["slack", "chat", "team"] },
+        { "char": "󰊻", "name": "discord", "keywords": ["discord", "chat", "voice"] },
+        { "char": "󰝗", "name": "github", "keywords": ["github", "git", "code"] },
+        { "char": "󰂛", "name": "gitlab", "keywords": ["gitlab", "git", "dev"] },
+        { "char": "󰊁", "name": "bitbucket", "keywords": ["bitbucket", "git", "atlassian"] },
+        { "char": "󰮮", "name": "gimp", "keywords": ["gimp", "image", "editor"] },
+        { "char": "󰝩", "name": "inkscape", "keywords": ["inkscape", "vector", "svg"] },
+        { "char": "󰝆", "name": "blender", "keywords": ["blender", "3d", "model"] },
+        { "char": "󰮠", "name": "vim", "keywords": ["vim", "editor"] },
+        { "char": "󰘦", "name": "vscode", "keywords": ["vscode", "editor", "code"] },
+        { "char": "󰚀", "name": "idea", "keywords": ["idea", "lightbulb", "thought"] },
+        { "char": "󰉼", "name": "user", "keywords": ["user", "person", "account"] },
+        { "char": "󰔀", "name": "users", "keywords": ["users", "people", "group"] },
+        { "char": "󰗝", "name": "key", "keywords": ["key", "password", "security"] },
+        { "char": "󰌖", "name": "lock", "keywords": ["lock", "secure", "privacy"] },
+        { "char": "󰌐", "name": "unlock", "keywords": ["unlock", "open"] }
+      ]
+    },
+    "status": {
+      "name": "ステータス",
+      "icons": [
+        { "char": "󰄬", "name": "check", "keywords": ["check", "success", "done"] },
+        { "char": "󰗧", "name": "check-circle", "keywords": ["check", "success", "verified"] },
+        { "char": "󰗴", "name": "x", "keywords": ["x", "close", "cancel"] },
+        { "char": "󰗶", "name": "x-circle", "keywords": ["x", "error", "wrong"] },
+        { "char": "󰀦", "name": "exclamation", "keywords": ["warning", "alert", "attention"] },
+        { "char": "󰀪", "name": "exclamation-triangle", "keywords": ["warning", "alert"] },
+        { "char": "󰀎", "name": "info", "keywords": ["info", "information", "help"] },
+        { "char": "󰋽", "name": "question", "keywords": ["question", "help", "faq"] },
+        { "char": "󰀵", "name": "minus", "keywords": ["minus", "remove", "delete"] },
+        { "char": "󰐶", "name": "plus", "keywords": ["plus", "add", "create"] },
+        { "char": "󰔟", "name": "loading", "keywords": ["loading", "spinner", "progress"] },
+        { "char": "󰔘", "name": "hourglass", "keywords": ["hourglass", "time", "wait"] },
+        { "char": "󰂍", "name": "battery-full", "keywords": ["battery", "full"] },
+        { "char": "󰂎", "name": "battery-three-quarters", "keywords": ["battery", "75"] },
+        { "char": "󰂌", "name": "battery-half", "keywords": ["battery", "50"] },
+        { "char": "󰂊", "name": "battery-quarter", "keywords": ["battery", "25"] },
+        { "char": "󰂜", "name": "battery-empty", "keywords": ["battery", "empty", "0"] },
+        { "char": "󰖩", "name": "signal", "keywords": ["signal", "connection", "strength"] }
+      ]
+    },
+    "ui": {
+      "name": "UI",
+      "icons": [
+        { "char": "󰀋", "name": "list", "keywords": ["list", "ul", "ol"] },
+        { "char": "󰀍", "name": "grid", "keywords": ["grid", "table", "layout"] },
+        { "char": "󰀫", "name": "bars", "keywords": ["bars", "menu", "hamburger"] },
+        { "char": "󰍟", "name": "ellipsis", "keywords": ["ellipsis", "dots", "more"] },
+        { "char": "󰍠", "name": "ellipsis-v", "keywords": ["ellipsis", "dots", "more", "vertical"] },
+        {
+          "char": "󰍡",
+          "name": "ellipsis-h",
+          "keywords": ["ellipsis", "dots", "more", "horizontal"]
+        },
+        { "char": "󰖪", "name": "star", "keywords": ["star", "favorite", "bookmark"] },
+        { "char": "󰆟", "name": "star-empty", "keywords": ["star", "empty", "outline"] },
+        { "char": "󰄪", "name": "heart", "keywords": ["heart", "like", "love"] },
+        { "char": "󰄬", "name": "bookmark", "keywords": ["bookmark", "save"] },
+        { "char": "󰐣", "name": "tag", "keywords": ["tag", "label", "badge"] },
+        { "char": "󰂗", "name": "filter", "keywords": ["filter", "funnel", "sort"] },
+        { "char": "󰈄", "name": "sort", "keywords": ["sort", "order"] },
+        { "char": "󰅝", "name": "sort-up", "keywords": ["sort", "asc", "up"] },
+        { "char": "󰅞", "name": "sort-down", "keywords": ["sort", "desc", "down"] },
+        { "char": "󰋾", "name": "menu", "keywords": ["menu", "hamburger", "nav"] },
+        { "char": "󰌠", "name": "more", "keywords": ["more", "options", "menu"] }
+      ]
+    }
+  }
+}

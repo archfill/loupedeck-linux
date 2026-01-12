@@ -53,7 +53,7 @@ export const useConfigStore = create<ConfigStore>((set) => ({
   fetchConfig: async () => {
     set({ loading: true, error: null })
     try {
-      const response = await fetch('http://localhost:3000/api/config')
+      const response = await fetch('http://localhost:9876/api/config')
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`)
       }

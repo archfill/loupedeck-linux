@@ -1,36 +1,41 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { LoupedeckPreview } from './components/LoupedeckPreview'
 import { ComponentEditor } from './components/ComponentEditor'
 import { useConfig } from './hooks/useConfig'
+import { useConfigSync } from './hooks/useConfigSync'
+import type { ComponentConfig } from './types/config'
 
 function App() {
   const { data: config, isLoading: loading, error } = useConfig()
-  const [isEditMode, setIsEditMode] = useState(false)
+
+  // 型ガード関数
+  const isComponentConfig = (value: unknown): value is ComponentConfig => {
+    return typeof value === 'object' && value !== null && 'type' in value
+  }
   const [selectedComponent, setSelectedComponent] = useState<{
     name: string
-    component: any
+    component: ComponentConfig
     pageNum: number
   } | null>(null)
-  const [editedConfig, setEditedConfig] = useState<any>(null)
-  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'success' | 'error'>('idle')
-  const [saveMessage, setSaveMessage] = useState<string>('')
+  const {
+    editedConfig,
+    setEditedConfig,
+    saveStatus,
+    saveMessage,
+    queueImmediateSave,
+    queueDebouncedSave,
+  } = useConfigSync({ config })
 
-  // Initialize editedConfig when config loads
-  useEffect(() => {
-    if (config && !editedConfig) {
-      setEditedConfig(config)
-    }
-  }, [config, editedConfig])
-
-  const handleComponentSave = (updatedComponent: any) => {
+  const handleComponentSave = (updatedComponent: ComponentConfig) => {
     if (!selectedComponent || !editedConfig) return
 
     // Create a deep copy of the config
     const newConfig = JSON.parse(JSON.stringify(editedConfig))
+    const pageKey = String(selectedComponent.pageNum)
 
     // Update the component in the config
-    if (newConfig.pages && newConfig.pages[selectedComponent.pageNum]) {
-      const components = newConfig.pages[selectedComponent.pageNum]
+    if (newConfig.pages && newConfig.pages[pageKey]) {
+      const components = newConfig.pages[pageKey]
       // Find and update the component (skip _meta)
       Object.keys(components).forEach((key) => {
         if (key !== '_meta' && key === selectedComponent.name) {
@@ -40,45 +45,59 @@ function App() {
     }
 
     setEditedConfig(newConfig)
-    setSaveStatus('idle')
+    setSelectedComponent((prev) => (prev ? { ...prev, component: updatedComponent } : prev))
+    queueDebouncedSave(newConfig.pages)
   }
 
-  const handlePositionChange = (componentName: string, pageNum: number, newCol: number, newRow: number) => {
+  const handlePositionChange = (
+    componentName: string,
+    pageNum: number,
+    newCol: number,
+    newRow: number
+  ) => {
     if (!editedConfig) return
 
     // Create a deep copy of the config
     const newConfig = JSON.parse(JSON.stringify(editedConfig))
+    const pageKey = String(pageNum)
 
     // Update the component position
-    if (newConfig.pages && newConfig.pages[pageNum]) {
-      const components = newConfig.pages[pageNum]
+    if (newConfig.pages && newConfig.pages[pageKey]) {
+      const components = newConfig.pages[pageKey]
       Object.keys(components).forEach((key) => {
         if (key !== '_meta' && key === componentName) {
-          if (components[key].position) {
-            components[key].position.col = newCol
-            components[key].position.row = newRow
+          const component = components[key] as ComponentConfig | undefined
+          if (component?.position) {
+            component.position.col = newCol
+            component.position.row = newRow
           }
         }
       })
     }
 
     setEditedConfig(newConfig)
+    queueImmediateSave(newConfig.pages)
   }
 
-  const handleSwapComponents = (componentName1: string, componentName2: string, pageNum: number) => {
+  const handleSwapComponents = (
+    componentName1: string,
+    componentName2: string,
+    pageNum: number
+  ) => {
     if (!editedConfig) return
 
     console.log('Swapping in App.tsx:', componentName1, componentName2, pageNum)
 
     // Create a deep copy of the config
     const newConfig = JSON.parse(JSON.stringify(editedConfig))
+    const pageKey = String(pageNum)
 
     // Get the positions of both components
-    const page = newConfig.pages?.[pageNum]
+    const page = newConfig.pages?.[pageKey]
     if (!page) return
 
-    const comp1 = page[componentName1]
-    const comp2 = page[componentName2]
+    const comp1 = page[componentName1] as ComponentConfig | undefined
+    const comp2 = page[componentName2] as ComponentConfig | undefined
 
     if (!comp1 || !comp2 || !comp1.position || !comp2.position) return
 
@@ -89,33 +108,43 @@ function App() {
     comp2.position.col = tempPosition.col
     comp2.position.row = tempPosition.row
 
-    console.log('Swapped positions:', componentName1, comp1.position, componentName2, comp2.position)
+    console.log(
+      'Swapped positions:',
+      componentName1,
+      comp1.position,
+      componentName2,
+      comp2.position
+    )
 
     setEditedConfig(newConfig)
+    queueImmediateSave(newConfig.pages)
   }
 
   const handleDeleteComponent = (componentName: string, pageNum: number) => {
     if (!editedConfig || !confirm(`${componentName} を削除しますか？`)) return
 
     const newConfig = JSON.parse(JSON.stringify(editedConfig))
+    const pageKey = String(pageNum)
 
-    if (newConfig.pages && newConfig.pages[pageNum]) {
-      delete newConfig.pages[pageNum][componentName]
+    if (newConfig.pages && newConfig.pages[pageKey]) {
+      delete newConfig.pages[pageKey][componentName]
     }
 
     setEditedConfig(newConfig)
+    queueImmediateSave(newConfig.pages)
   }
 
   const handleAddComponent = (pageNum: number) => {
     if (!editedConfig) return
 
     const newConfig = JSON.parse(JSON.stringify(editedConfig))
+    const pageKey = String(pageNum)
 
     // 空いているグリッド位置を見つける
     const usedPositions = new Set<string>()
-    if (newConfig.pages && newConfig.pages[pageNum]) {
-      Object.entries(newConfig.pages[pageNum]).forEach(([key, comp]: [string, any]) => {
-        if (key !== '_meta' && comp?.position) {
+    if (newConfig.pages && newConfig.pages[pageKey]) {
+      Object.entries(newConfig.pages[pageKey]).forEach(([key, comp]) => {
+        if (key !== '_meta' && comp && isComponentConfig(comp) && comp.position) {
           usedPositions.add(`${comp.position.col},${comp.position.row}`)
         }
       })
@@ -143,9 +172,10 @@ function App() {
     const newButton = {
       type: 'button',
       position: foundPosition,
-      appName: 'application',
+      appName: '', // 空にしておく（commandから自動設定される）
       options: {
         label: 'New Button',
+        iconType: 'none', // デフォルトはなし
         iconSize: 48,
         bgColor: '#4A5568',
         borderColor: '#718096',
@@ -153,46 +183,18 @@ function App() {
         hoverBgColor: '#2D3748',
         vibrationPattern: 'tap',
       },
-      command: 'echo "New button clicked"',
+      command: '', // 空にしておく（ユーザーが入力）
     }
 
-    if (newConfig.pages && newConfig.pages[pageNum]) {
-      newConfig.pages[pageNum][newButtonName] = newButton
+    if (newConfig.pages && newConfig.pages[pageKey]) {
+      newConfig.pages[pageKey][newButtonName] = newButton
     }
 
     setEditedConfig(newConfig)
+    queueImmediateSave(newConfig.pages)
   }
 
-  const handleSaveAll = async () => {
-    setSaveStatus('saving')
-    try {
-      const response = await fetch('http://localhost:9876/api/config', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(editedConfig.pages),
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to save configuration')
-      }
-
-      setSaveStatus('success')
-      setSaveMessage('Configuration saved! Please restart the backend to apply changes.')
-      setTimeout(() => {
-        setSaveStatus('idle')
-        setSaveMessage('')
-      }, 5000)
-    } catch (err) {
-      setSaveStatus('error')
-      setSaveMessage(err instanceof Error ? err.message : 'Unknown error occurred')
-      setTimeout(() => {
-        setSaveStatus('idle')
-        setSaveMessage('')
-      }, 5000)
-    }
-  }
+  // handleSaveAllは削除（リアルタイム自動保存に移行）
 
   if (loading) {
     return (
@@ -226,35 +228,32 @@ function App() {
           <div>
             <h1 className="text-4xl font-bold mb-2">🎛️ Loupedeck Configuration</h1>
             <p className="text-gray-400">
-              {isEditMode ? 'Edit your Loupedeck settings' : 'View your current Loupedeck Live S settings'}
+              Edit your Loupedeck settings - Click components to edit, drag to reposition
             </p>
           </div>
-          <div className="flex gap-3">
-            {isEditMode && (
-              <button
-                onClick={handleSaveAll}
-                disabled={saveStatus === 'saving'}
-                className="px-6 py-3 bg-green-600 hover:bg-green-700 disabled:bg-gray-700 disabled:cursor-not-allowed text-white rounded-lg font-semibold transition-colors flex items-center gap-2"
-              >
-                {saveStatus === 'saving' ? (
+          <div className="flex gap-3 items-center">
+            {saveStatus !== 'idle' && (
+              <div className="flex items-center gap-2 text-sm">
+                {saveStatus === 'saving' && (
                   <>
-                    <span className="animate-spin">⏳</span> Saving...
+                    <span className="animate-spin">⏳</span>
+                    <span className="text-yellow-400">保存中...</span>
                   </>
-                ) : (
-                  <>💾 Save All Changes</>
                 )}
-              </button>
+                {saveStatus === 'success' && (
+                  <>
+                    <span>✓</span>
+                    <span className="text-green-400">保存完了</span>
+                  </>
+                )}
+                {saveStatus === 'error' && (
+                  <>
+                    <span>✗</span>
+                    <span className="text-red-400">保存エラー</span>
+                  </>
+                )}
+              </div>
             )}
-            <button
-              onClick={() => setIsEditMode(!isEditMode)}
-              className={`px-6 py-3 rounded-lg font-semibold transition-colors ${
-                isEditMode
-                  ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                  : 'bg-gray-800 hover:bg-gray-700 text-gray-200 border border-gray-700'
-              }`}
-            >
-              {isEditMode ? '👁️ View Mode' : '✏️ Edit Mode'}
-            </button>
           </div>
         </header>
 
@@ -268,13 +267,9 @@ function App() {
             }`}
           >
             <div className="flex items-start gap-3">
-              <span className="text-2xl">
-                {saveStatus === 'success' ? '✓' : '✗'}
-              </span>
+              <span className="text-2xl">{saveStatus === 'success' ? '✓' : '✗'}</span>
               <div className="flex-1">
-                <p className="font-semibold">
-                  {saveStatus === 'success' ? 'Success' : 'Error'}
-                </p>
+                <p className="font-semibold">{saveStatus === 'success' ? 'Success' : 'Error'}</p>
                 <p className="text-sm mt-1">{saveMessage}</p>
               </div>
             </div>
@@ -310,130 +305,39 @@ function App() {
 
         {/* Device Preview */}
         <section className="mb-8">
-          <h2 className="text-2xl font-semibold mb-4">Device Preview</h2>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-2xl font-semibold">Device Preview</h2>
+            <button
+              onClick={() => handleAddComponent(1)}
+              className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold transition-colors flex items-center gap-2"
+            >
+              ➕ ボタン追加
+            </button>
+          </div>
           <div className="bg-gray-900 rounded-lg p-6 border border-gray-800">
             <LoupedeckPreview
               components={config?.components}
               pages={editedConfig?.pages || config?.pages}
               device={config?.device}
-              isEditMode={isEditMode}
               onPositionChange={handlePositionChange}
               onSwapComponents={handleSwapComponents}
+              onEditComponent={(componentName, pageNum) => {
+                const pageKey = String(pageNum)
+                const page = (editedConfig?.pages || config?.pages)?.[pageKey]
+                if (!page) return
+
+                const component = page[componentName] as ComponentConfig
+                if (component) {
+                  setSelectedComponent({
+                    name: componentName,
+                    component,
+                    pageNum,
+                  })
+                }
+              }}
             />
           </div>
         </section>
-
-        {/* Components Grid - All Pages */}
-        {config?.pages && Object.entries(config.pages).map(([pageNum, pageData]) => {
-          // 型ガード: PageDataかどうか確認
-          if (!pageData || typeof pageData !== 'object') return null
-
-          const pageMeta = pageData._meta
-          const components = Object.entries(pageData).filter(([key]) => key !== '_meta')
-
-          return (
-            <section key={pageNum} className="mb-8">
-              <div className="flex justify-between items-center mb-4">
-                <div>
-                  <h2 className="text-2xl font-semibold">
-                    Page {pageNum}: {pageMeta?.title || `Page ${pageNum}`}
-                    {isEditMode && <span className="text-sm text-gray-400 ml-2">(クリックして編集)</span>}
-                  </h2>
-                  <p className="text-gray-400 text-sm mt-1">{pageMeta?.description}</p>
-                </div>
-                {isEditMode && Number(pageNum) !== 2 && (
-                  <button
-                    onClick={() => handleAddComponent(Number(pageNum))}
-                    className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold transition-colors flex items-center gap-2"
-                  >
-                    ➕ ボタン追加
-                  </button>
-                )}
-              </div>
-              <div className="bg-gray-900 rounded-lg p-6 border border-gray-800">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {components.map(([name, component]: [string, any]) => {
-                    // layoutコンポーネントはスキップ（動的生成）
-                    if (component?.type === 'layout') {
-                      return (
-                        <div key={name} className="bg-gray-800 rounded-lg p-4 border border-gray-700 opacity-50">
-                          <h3 className="font-semibold text-lg mb-2">{component?.options?.label || name}</h3>
-                          <p className="text-sm text-gray-500">動的生成（編集不可）</p>
-                        </div>
-                      )
-                    }
-
-                    return (
-                      <div
-                        key={name}
-                        className={`bg-gray-800 rounded-lg p-4 border border-gray-700 transition-all relative ${
-                          isEditMode
-                            ? 'hover:border-blue-500 hover:bg-gray-750'
-                            : 'hover:border-gray-600'
-                        }`}
-                      >
-                        <div className="flex items-start justify-between mb-2">
-                          <h3
-                            className={`font-semibold text-lg flex-1 ${isEditMode ? 'cursor-pointer' : ''}`}
-                            onClick={() => isEditMode && setSelectedComponent({ name, component, pageNum: Number(pageNum) })}
-                          >
-                            {component?.options?.label || name}
-                          </h3>
-                          {isEditMode && (
-                            <div className="flex gap-2">
-                              <button
-                                onClick={() => setSelectedComponent({ name, component, pageNum: Number(pageNum) })}
-                                className="text-blue-400 hover:text-blue-300 text-sm px-2 py-1 rounded hover:bg-blue-900/20"
-                                title="編集"
-                              >
-                                ✏️
-                              </button>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  handleDeleteComponent(name, Number(pageNum))
-                                }}
-                                className="text-red-400 hover:text-red-300 text-sm px-2 py-1 rounded hover:bg-red-900/20"
-                                title="削除"
-                              >
-                                🗑️
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                        <div className="text-sm space-y-1">
-                          <p className="text-gray-400">
-                            Position:{' '}
-                            <span className="text-white">
-                              ({component?.position?.col}, {component?.position?.row})
-                            </span>
-                          </p>
-                          {component?.options?.bgColor && (
-                            <div className="flex items-center gap-2">
-                              <span className="text-gray-400">Color:</span>
-                              <div
-                                className="w-6 h-6 rounded border border-gray-600"
-                                style={{ backgroundColor: component.options.bgColor }}
-                              ></div>
-                              <span className="text-xs text-gray-500">
-                                {component.options.bgColor}
-                              </span>
-                            </div>
-                          )}
-                          {component?.command && (
-                            <p className="text-gray-400">
-                              Command: <span className="text-white font-mono text-xs">{component.command}</span>
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
-              </div>
-            </section>
-          )
-        })}
 
         {/* Constants */}
         <section>
@@ -442,7 +346,10 @@ function App() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {config?.constants &&
                 Object.entries(config.constants).map(([key, value]) => (
-                  <div key={key} className="flex justify-between items-center py-2 border-b border-gray-800 last:border-0">
+                  <div
+                    key={key}
+                    className="flex justify-between items-center py-2 border-b border-gray-800 last:border-0"
+                  >
                     <span className="text-gray-400">{key}</span>
                     <span className="font-mono text-sm">
                       {typeof value === 'object' ? JSON.stringify(value) : String(value)}
@@ -462,6 +369,10 @@ function App() {
           pageNum={selectedComponent.pageNum}
           onClose={() => setSelectedComponent(null)}
           onSave={handleComponentSave}
+          onDelete={() => {
+            handleDeleteComponent(selectedComponent.name, selectedComponent.pageNum)
+            setSelectedComponent(null)
+          }}
         />
       )}
     </div>

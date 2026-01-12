@@ -1,50 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-
-interface Component {
-  position?: { col: number; row: number }
-  appName?: string
-  options?: {
-    label?: string
-    bgColor?: string
-    borderColor?: string
-    textColor?: string
-    icon?: string
-    iconSize?: number
-  }
-  command?: string
-}
-
-interface PageMeta {
-  title: string
-  description: string
-}
-
-interface PageData {
-  _meta?: PageMeta
-  [key: string]: Component | PageMeta | undefined
-}
-
-interface Device {
-  type?: string
-  grid?: { columns: number; rows: number }
-  knobs?: string[]
-  buttons?: number[]
-}
-
-interface Constants {
-  autoUpdateInterval?: number
-  buttonLedColors?: Record<number, string>
-  knobIds?: Record<string, string>
-  volumeStep?: number
-  volumeDisplayTimeout?: number
-}
-
-export interface Config {
-  components?: Record<string, Component>
-  pages?: Record<string, PageData>
-  constants?: Constants
-  device?: Device
-}
+import type { Config } from '../types/config'
 
 const fetchConfig = async (): Promise<Config> => {
   const response = await fetch('/api/config')
