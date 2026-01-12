@@ -1,18 +1,22 @@
 # Loupedeck Linux
 
-Linux用のLoupedeckコントローラーアプリケーションです。デバイス制御、アプリケーション起動、音量/メディア制御を提供し、Web UIで設定を確認できます。
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Node Version](https://img.shields.io/badge/node-%3E%3D20.0.0-brightgreen)](https://nodejs.org)
+[![Package Manager](https://img.shields.io/badge/pnpm-%3E%3D9.0.0-red)](https://pnpm.io)
 
-## 特徴
+Linux向けのLoupedeckデバイスコントローラー。Web UIで直感的に設定できる、オープンソースのデバイス管理アプリケーションです。
 
-- Loupedeck Live S / Live / CT デバイス制御
-- 5×3タッチスクリーングリッドレイアウト
-- 物理ボタンのLEDカラーコントロール
-- ノブによる音量・メディア制御
-- アプリケーションランチャー
-- Web UIで設定表示（React + Vite + TailwindCSS v4）
-- 設定のホットリロード対応
+## 🌟 特徴
 
-## プロジェクト構成
+- 🎮 **マルチデバイス対応**: Loupedeck Live S / Live / CT / Razer Stream Controller
+- 🖥️ **タッチスクリーン**: 5×3グリッドレイアウトでカスタムボタン配置
+- 💡 **LEDコントロール**: 物理ボタンの色をカスタマイズ
+- 🎚️ **ノブ操作**: 音量調整・メディア制御を直感的に操作
+- 🚀 **アプリケーションランチャー**: よく使うアプリをワンタップで起動
+- 🌐 **Web UI**: モダンな設定画面（React + Vite + TailwindCSS v4）
+- ⚡ **ホットリロード**: 設定変更を即座に反映
+
+## 📁 プロジェクト構成
 
 pnpm workspacesを使用したモノレポ構成です：
 
@@ -30,14 +34,14 @@ loupedeck-linux/
 └── pnpm-workspace.yaml   # ワークスペース定義
 ```
 
-## 必須要件
+## 📋 必須要件
 
 ### システム要件
 
-- Linux（Arch Linux推奨）
+- Linux（Arch Linux推奨 / Ubuntu 22.04+で動作確認済み）
 - Node.js 20以上
-- pnpm
-- Loupedeck Live S / Live / CT デバイス
+- pnpm 9以上
+- Loupedeckデバイス（Live S / Live / CT / Razer Stream Controller）
 
 ### システムパッケージ
 
@@ -73,11 +77,53 @@ sudo pacman -S pamixer playerctl wtype
 sudo apt install pamixer playerctl wtype
 ```
 
-## セットアップ
+## 🚀 クイックスタート
 
 ```bash
 # リポジトリをクローン
-git clone <repository-url>
+git clone https://github.com/archfill/loupedeck-linux.git
+cd loupedeck-linux
+
+# 依存関係をインストール
+pnpm install
+
+# バックエンド + Web UIを同時起動
+pnpm run dev:all
+```
+
+ブラウザで http://localhost:5173 にアクセスしてWeb UIを開いてください。
+
+## 🔧 詳細セットアップ
+
+### システムパッケージのインストール
+
+```bash
+# Arch Linux
+sudo pacman -S nodejs pnpm libusb pamixer playerctl wtype
+
+# Ubuntu/Debian
+sudo apt install nodejs npm libusb-1.0-0-dev pamixer playerctl wtype
+npm install -g pnpm
+```
+
+### udevルールの設定
+
+Loupedeckデバイスへのアクセス権限を設定：
+
+```bash
+sudo tee /etc/udev/rules.d/50-loupedeck.rules > /dev/null <<EOF
+SUBSYSTEM=="usb", ATTR{idVendor}=="2ec2", ATTR{idProduct}=="0004", MODE="0666"
+EOF
+
+sudo udevadm control --reload-rules
+sudo udevadm trigger
+```
+
+### アプリケーションのインストール
+
+```bash
+# リポジトリをクローン
+git clone https://github.com/archfill/loupedeck-linux.git
 cd loupedeck-linux
 
 # 依存関係をインストール
@@ -87,7 +133,7 @@ pnpm install
 chmod +x scripts/*.sh
 ```
 
-## 開発
+## 💻 開発
 
 ```bash
 # バックエンドのみ起動
@@ -109,7 +155,7 @@ pnpm run lint           # リンター実行
 pnpm run format         # フォーマッター実行
 ```
 
-## 本番環境での自動起動
+## 🚀 本番環境での自動起動
 
 ### systemdサービスのインストール
 
@@ -127,7 +173,7 @@ pnpm run service:logs      # ログ確認
 pnpm run service:uninstall # 削除
 ```
 
-## 使い方
+## 📖 使い方
 
 ### デバイスレイアウト
 
@@ -152,7 +198,7 @@ pnpm run service:uninstall # 削除
 - 開発: http://localhost:5173
 - API: http://localhost:9876/api/config
 
-## 設定
+## ⚙️ 設定
 
 ランタイム設定は `apps/backend/config/config.json` で管理されます。
 設定変更はホットリロードで即座に反映されます。
@@ -167,7 +213,7 @@ pnpm run service:uninstall # 削除
 | `GET /api/config/constants`  | システム定数       |
 | `GET /api/device`            | デバイス情報       |
 
-## ドキュメント
+## 📚 ドキュメント
 
 詳細なドキュメントは `docs/` ディレクトリを参照：
 
@@ -177,7 +223,7 @@ pnpm run service:uninstall # 削除
 - [patterns.md](docs/patterns.md) - 共通パターン
 - [setup.md](docs/setup.md) - デバイスセットアップ詳細
 
-## トラブルシューティング
+## 🔍 トラブルシューティング
 
 ### デバイスが認識されない
 
@@ -186,22 +232,46 @@ pnpm run service:uninstall # 削除
 3. デバイスを抜き差し
 
 ```bash
+# デバイス確認
 lsusb | grep Loupedeck
+
+#権限確認
+sudo chmod 666 /dev/bus/usb/xxx/yyy
 ```
 
-### 再起動できない
+### アプリケーションが起動しない
 
 ```bash
+# プロセスを強制終了
 pnpm run kill
+
 # デバイスを抜き差し後、再起動
-pnpm run dev
+pnpm run dev:all
 ```
 
-## ライセンス
+### その他の問題
+
+[GitHub Issues](https://github.com/archfill/loupedeck-linux/issues)で同じ問題がないか検索するか、新しいIssueを作成してください。
+
+## 🤝 貢献
+
+バグ報告、機能要望、プルリクエストはいつでも歓迎します！
+
+1. リポジトリをフォーク
+2. フィーチャーブランチを作成 (`git checkout -b feature/AmazingFeature`)
+3. 変更をコミット (`git commit -m 'feat: Add some AmazingFeature'`)
+4. ブランチにプッシュ (`git push origin feature/AmazingFeature`)
+5. プルリクエストを作成
+
+## 📝 ライセンス
 
 MIT License - [LICENSE](./LICENSE) を参照してください。
 
-## 謝辞
+## ⭐ スターをつける
+
+このプロジェクトが役に立った場合は、GitHubリポジトリにスターをつけてください！
+
+## 🙏 謝辞
 
 本プロジェクトは以下の素晴らしいライブラリを使用しています：
 
