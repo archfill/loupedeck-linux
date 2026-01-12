@@ -8,10 +8,10 @@ Linux向けのLoupedeckデバイスコントローラー。Web UIで直感的に
 
 ## 🌟 特徴
 
-- 🎮 **マルチデバイス対応**: Loupedeck Live S / Live / CT / Razer Stream Controller
-- 🖥️ **タッチスクリーン**: 5×3グリッドレイアウトでカスタムボタン配置
+- 🎮 **対応デバイス**: Loupedeck Live S（他デバイスは動作未確認）
+- 🖥️ **タッチスクリーン**: 5×3グリッドレイアウトでカスタムボタンを配置可能
 - 💡 **LEDコントロール**: 物理ボタンの色をカスタマイズ
-- 🎚️ **ノブ操作**: 音量調整・メディア制御を直感的に操作
+- 🎚️ **ノブ操作**: 音量調整・メディア制御を直感的に操作可能
 - 🚀 **アプリケーションランチャー**: よく使うアプリをワンタップで起動
 - 🌐 **Web UI**: モダンな設定画面（React + Vite + TailwindCSS v4）
 - ⚡ **ホットリロード**: 設定変更を即座に反映
@@ -41,7 +41,7 @@ loupedeck-linux/
 - Linux（Arch Linux推奨 / Ubuntu 22.04+で動作確認済み）
 - Node.js 20以上
 - pnpm 9以上
-- Loupedeckデバイス（Live S / Live / CT / Razer Stream Controller）
+- Loupedeck Live S（その他のデバイスは動作未確認）
 
 ### システムパッケージ
 
@@ -235,7 +235,7 @@ pnpm run service:uninstall # 削除
 # デバイス確認
 lsusb | grep Loupedeck
 
-#権限確認
+# 権限確認
 sudo chmod 666 /dev/bus/usb/xxx/yyy
 ```
 
@@ -271,7 +271,7 @@ MIT License - [LICENSE](./LICENSE) を参照してください。
 
 このプロジェクトが役に立った場合は、GitHubリポジトリにスターをつけてください！
 
-## 🙏 謝辞
+## 🙏 Acknowledgments
 
 本プロジェクトは以下の素晴らしいライブラリを使用しています：
 
