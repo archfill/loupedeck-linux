@@ -2,7 +2,9 @@
   "name": "loupedeck-linux",
   "version": "1.0.0",
   "description": "Loupedeck Live S Linux controller application with web UI",
-  "private": true,
+  "bin": {
+    "loupedeck-linux": "./bin/loupedeck-linux"
+  },
   "type": "module",
   "scripts": {
     "start": "pnpm --filter @loupedeck-linux/backend run start",
