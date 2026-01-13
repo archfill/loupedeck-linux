@@ -233,7 +233,9 @@ export class ApiServer {
     })
 
     // 静的ファイル配信（Web UI） - APIルートの後に配置
-    const webDistPath = path.join(__dirname, '../../../web/dist')
+    // 環境変数または__dirnameからプロジェクトルートを特定
+    const projectRoot = process.env.LOUPEDECK_PROJECT_ROOT || path.resolve(__dirname, '../../..')
+    const webDistPath = path.join(projectRoot, 'apps/web/dist')
     this.app.use(express.static(webDistPath))
 
     // SPAのフォールバック - 静的ファイルが見つからない場合はindex.htmlを返す

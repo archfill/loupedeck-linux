@@ -10,6 +10,7 @@ Type=simple
 WorkingDirectory={{PROJECT_DIR}}
 Environment=NODE_ENV=production
 Environment=LOG_LEVEL=info
+Environment=LOUPEDECK_PROJECT_ROOT={{PROJECT_DIR}}
 Environment=PATH={{PNPM_DIR}}:/usr/local/bin:/usr/bin:/bin
 ExecStart={{PNPM_PATH}} --filter @loupedeck-linux/backend run start:prod
 Restart=on-failure
