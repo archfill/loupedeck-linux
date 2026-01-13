@@ -100,6 +100,12 @@ cmd_install() {
     echo -e "${GREEN}✓ Service file generated (PROJECT_DIR set to: $PROJECT_DIR)${NC}"
     echo -e "${GREEN}✓ pnpm path set to: $PNPM_PATH${NC}\n"
 
+    # Build backend
+    echo "Building backend..."
+    cd "$PROJECT_DIR"
+    pnpm --filter @loupedeck-linux/backend run build
+    echo -e "${GREEN}✓ Backend built${NC}\n"
+
     # Reload systemd
     echo "Reloading systemd daemon..."
     systemctl --user daemon-reload

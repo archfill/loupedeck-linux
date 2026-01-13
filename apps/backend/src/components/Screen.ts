@@ -24,6 +24,8 @@ export class Screen {
   protected rows: number
   protected totalWidth: number
   protected marginX: number
+  private updateInProgress: boolean
+  private updateQueued: boolean
 
   /**
    * @param device - Loupedeckデバイスオブジェクト
@@ -37,6 +39,8 @@ export class Screen {
     this.rows = device.rows
     this.totalWidth = this.keySize * this.columns
     this.marginX = (this.screenWidth - this.totalWidth) / 2
+    this.updateInProgress = false
+    this.updateQueued = false
   }
 
   /**
@@ -95,8 +99,22 @@ export class Screen {
    * 画面を更新
    */
   async update(): Promise<void> {
-    await this.device.drawScreen('center', (ctx: CanvasRenderingContext2D) => {
-      this.draw(ctx)
-    })
+    if (this.updateInProgress) {
+      this.updateQueued = true
+      return
+    }
+
+    this.updateInProgress = true
+    try {
+      await this.device.drawScreen('center', (ctx: CanvasRenderingContext2D) => {
+        this.draw(ctx)
+      })
+    } finally {
+      this.updateInProgress = false
+      if (this.updateQueued) {
+        this.updateQueued = false
+        await this.update()
+      }
+    }
   }
 }

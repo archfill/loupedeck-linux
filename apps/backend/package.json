@@ -9,10 +9,12 @@
   "scripts": {
     "start": "LOG_LEVEL=info tsx main.ts",
     "start:debug": "LOG_LEVEL=debug tsx main.ts",
-    "start:prod": "NODE_ENV=production tsx main.ts",
+    "start:prod": "NODE_ENV=production LOG_LEVEL=info node dist/main.js",
     "dev": "LOG_LEVEL=debug tsx watch main.ts",
     "dev:info": "LOG_LEVEL=info tsx watch main.ts",
     "dev:no-led": "LOG_LEVEL=debug SKIP_LED=true tsx watch main.ts",
+    "build": "esbuild main.ts --bundle --platform=node --format=esm --outfile=dist/main.js --sourcemap --external:canvas --external:express --external:loupedeck --external:pino --external:pino-pretty --external:chokidar --external:cors --external:zod",
+    "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix"
   },
