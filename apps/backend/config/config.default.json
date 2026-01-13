@@ -38,29 +38,10 @@
         },
         "command": "firefox"
       },
-      "onePasswordButton": {
-        "type": "button",
-        "position": {
-          "col": 2,
-          "row": 0
-        },
-        "appName": "1password",
-        "options": {
-          "label": "1Password",
-          "iconType": "auto",
-          "iconSize": 48,
-          "bgColor": "#0094F5",
-          "borderColor": "#33AAFF",
-          "textColor": "#FFFFFF",
-          "hoverBgColor": "#1AA5FF",
-          "vibrationPattern": "tap"
-        },
-        "command": "1password"
-      },
       "thunderbirdButton": {
         "type": "button",
         "position": {
-          "col": 3,
+          "col": 2,
           "row": 0
         },
         "appName": "thunderbird",
@@ -75,63 +56,6 @@
           "vibrationPattern": "tap"
         },
         "command": "thunderbird"
-      },
-      "wlogoutButton": {
-        "type": "button",
-        "position": {
-          "col": 4,
-          "row": 0
-        },
-        "appName": "system-shutdown",
-        "options": {
-          "label": "Logout",
-          "iconType": "auto",
-          "iconSize": 48,
-          "bgColor": "#D32F2F",
-          "borderColor": "#F44336",
-          "textColor": "#FFFFFF",
-          "hoverBgColor": "#E53935",
-          "vibrationPattern": "tap"
-        },
-        "command": "wlogout"
-      },
-      "workspaceSetupButton": {
-        "type": "button",
-        "position": {
-          "col": 0,
-          "row": 1
-        },
-        "appName": "preferences-system",
-        "options": {
-          "label": "Setup",
-          "iconType": "auto",
-          "iconSize": 48,
-          "bgColor": "#00AA55",
-          "borderColor": "#22CC77",
-          "textColor": "#FFFFFF",
-          "hoverBgColor": "#22BB66",
-          "vibrationPattern": "tap"
-        },
-        "command": "/home/archfill/git/loupedeck-linux/scripts/workspace-setup.sh"
-      },
-      "onePasswordUnlockButton": {
-        "type": "button",
-        "position": {
-          "col": 2,
-          "row": 1
-        },
-        "appName": "security-high",
-        "options": {
-          "label": "Unlock",
-          "iconType": "auto",
-          "iconSize": 48,
-          "bgColor": "#00AA88",
-          "borderColor": "#22CCAA",
-          "textColor": "#FFFFFF",
-          "hoverBgColor": "#22BB99",
-          "vibrationPattern": "tap"
-        },
-        "command": "/home/archfill/git/loupedeck-linux/scripts/1password-unlock.sh"
       },
       "mediaPreviousButton": {
         "type": "button",
@@ -280,42 +204,12 @@
           "ledColor": "#0000ff"
         },
         "command": "grim - | wl-copy"
-      },
-      "newButton1768226884552": {
-        "type": "button",
-        "position": {
-          "col": 1,
-          "row": 1
-        },
-        "appName": "google-chrome",
-        "options": {
-          "label": "google chrome stable",
-          "iconType": "auto",
-          "iconSize": 48,
-          "maxLabelLength": 12,
-          "bgColor": "#33c7ae",
-          "borderColor": "#33c7ae",
-          "textColor": "#FFFFFF",
-          "hoverBgColor": "#2D3748",
-          "vibrationPattern": "tap"
-        },
-        "command": "google-chrome-stable"
       }
     },
     "2": {
       "_meta": {
-        "title": "Workspaces",
-        "description": "Hyprland workspace switching (1-10)"
-      },
-      "layout": {
-        "type": "layout",
-        "position": {
-          "col": 0,
-          "row": 0
-        },
-        "options": {
-          "label": "Workspace buttons 1-10 (dynamically generated)"
-        }
+        "title": "Page 2",
+        "description": "Custom buttons"
       }
     }
   }
