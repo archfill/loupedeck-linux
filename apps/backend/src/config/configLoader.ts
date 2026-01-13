@@ -9,6 +9,12 @@ import { readFileSync } from 'fs'
 import { resolve } from 'path'
 import { watch, type FSWatcher } from 'chokidar'
 import { logger } from '../utils/logger.js'
+import {
+  getUserConfigPath,
+  getDefaultConfigPath,
+  configExists,
+  copyDefaultToUser,
+} from '../utils/xdgPaths.js'
 
 // ========================================
 // Zod Schemas
@@ -169,7 +175,7 @@ let reloadCallback: (() => void) | null = null
 /**
  * Load configuration from JSON file
  *
- * @param configPath - Path to config.json (defaults to config/config.json)
+ * @param configPath - Path to config.json (defaults to XDG path)
  * @returns Validated configuration object
  */
 export function loadConfig(configPath?: string): Config {
@@ -178,8 +184,18 @@ export function loadConfig(configPath?: string): Config {
     return cachedConfig
   }
 
-  // Resolve config path
-  const resolvedPath = configPath || resolve(process.cwd(), 'config/config.json')
+  // Resolve config path (use XDG path if not specified)
+  let resolvedPath = configPath
+  if (!resolvedPath) {
+    // Initialize user config if it doesn't exist
+    if (!configExists()) {
+      logger.info('初回実行: デフォルト設定をコピーします...')
+      copyDefaultToUser()
+      const userPath = getUserConfigPath()
+      logger.info(`✓ 設定ファイルを作成しました: ${userPath}`)
+    }
+    resolvedPath = getUserConfigPath()
+  }
 
   try {
     // Read JSON file
@@ -261,11 +277,11 @@ export function convertToPageConfig(config: Config): Record<
 /**
  * Start watching config file for changes and reload automatically
  *
- * @param configPath - Path to config.json
+ * @param configPath - Path to config.json (defaults to XDG path)
  * @param onReload - Callback function called when config is reloaded
  */
 export function watchConfig(configPath?: string, onReload?: () => void): void {
-  const resolvedPath = configPath || resolve(process.cwd(), 'config/config.json')
+  const resolvedPath = configPath || getUserConfigPath()
 
   if (watcher) {
     logger.warn('Config watcher already running')

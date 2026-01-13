@@ -13,6 +13,7 @@ import {
 } from '../config/configLoader.ts'
 import { ZodError } from 'zod'
 import { IconResolver } from '../utils/iconResolver.ts'
+import { getUserConfigPath } from '../utils/xdgPaths.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -171,8 +172,8 @@ export class ApiServer {
         // Zodでバリデーション（異常値の永続化を防止）
         const validatedConfig = ConfigSchema.parse({ pages: updatedPages })
 
-        // 設定ファイルパス
-        const configPath = path.resolve(process.cwd(), 'config/config.json')
+        // 設定ファイルパス（XDG Base Directory 準拠）
+        const configPath = getUserConfigPath()
         tempPath = configPath + '.tmp'
 
         // 一時ファイルに書き込み（クラッシュ時の破損防止）

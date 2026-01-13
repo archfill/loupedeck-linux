@@ -37,6 +37,9 @@ coverage/
 loupedeck.service
 loupedeck-tray.desktop
 
+# User configuration (managed by XDG)
+config/config.json
+
 # Cache directories
 .cache/
 
