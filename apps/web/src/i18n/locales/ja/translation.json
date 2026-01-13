@@ -87,6 +87,19 @@
   },
   "preview": {
     "pageSelector": "ページ",
+    "pageActions": {
+      "add": "追加",
+      "delete": "削除",
+      "editMeta": "情報編集",
+      "deleteConfirm": "このページを削除しますか？"
+    },
+    "meta": {
+      "title": "タイトル",
+      "description": "説明",
+      "titlePlaceholder": "ページタイトルを入力",
+      "descriptionPlaceholder": "ページの説明を入力",
+      "defaultTitle": "新しいページ"
+    },
     "physicalButtons": {
       "vol": "音量",
       "page": "ページ",

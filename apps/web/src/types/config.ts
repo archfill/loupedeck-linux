@@ -63,3 +63,32 @@ export interface Config {
 }
 
 export type PagesConfig = Record<string, PageData>
+
+// Page Management API Types
+export interface CreatePageRequest {
+  title?: string
+  description?: string
+}
+
+export interface CreatePageResponse {
+  success: boolean
+  pageNum: string
+  pages: PagesConfig
+}
+
+export interface UpdatePageMetaRequest {
+  title: string
+  description: string
+}
+
+export interface UpdatePageMetaResponse {
+  success: boolean
+  pageNum: string
+  meta: PageMeta
+}
+
+export interface DeletePageResponse {
+  success: boolean
+  deletedPageNum: string
+  pages: PagesConfig
+}

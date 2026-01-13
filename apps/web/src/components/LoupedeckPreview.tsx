@@ -57,6 +57,9 @@ interface LoupedeckPreviewProps {
   ) => void
   onSwapComponents?: (componentName1: string, componentName2: string, pageNum: number) => void
   onEditComponent?: (componentName: string, pageNum: number) => void
+  onAddPage?: () => void
+  onDeletePage?: (pageNum: number) => void
+  onEditPageMeta?: (pageNum: number) => void
 }
 
 // ドラッグ&ドロップ可能なコンポーネント
@@ -200,6 +203,9 @@ export function LoupedeckPreview({
   onPositionChange,
   onSwapComponents,
   onEditComponent,
+  onAddPage,
+  onDeletePage,
+  onEditPageMeta,
 }: LoupedeckPreviewProps) {
   const { t } = useTranslation()
   const [currentPage, setCurrentPage] = useState(1)
@@ -327,7 +333,7 @@ export function LoupedeckPreview({
 
   return (
     <div className="space-y-4">
-      {/* Page selector dropdown */}
+      {/* Page selector dropdown and actions */}
       {pages && (
         <div className="flex items-center justify-center gap-4">
           <label htmlFor="page-select" className="text-gray-400 text-sm font-medium">
@@ -352,6 +358,36 @@ export function LoupedeckPreview({
           {pages[pageKey]?._meta && (
             <span className="text-gray-500 text-sm italic">{pages[pageKey]._meta.description}</span>
           )}
+
+          {/* Page action buttons */}
+          <div className="flex gap-2 ml-4">
+            <button
+              onClick={() => onAddPage?.()}
+              className="px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors"
+              title={t('preview.pageActions.add')}
+            >
+              ➕ {t('preview.pageActions.add')}
+            </button>
+            <button
+              onClick={() => onEditPageMeta?.(currentPage)}
+              className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+              title={t('preview.pageActions.editMeta')}
+            >
+              ✏️ {t('preview.pageActions.editMeta')}
+            </button>
+            <button
+              onClick={() => {
+                if (window.confirm(t('preview.pageActions.deleteConfirm'))) {
+                  onDeletePage?.(currentPage)
+                }
+              }}
+              disabled={Object.keys(pages).length <= 1}
+              className="px-3 py-2 bg-red-600 hover:bg-red-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors"
+              title={t('preview.pageActions.delete')}
+            >
+              🗑️ {t('preview.pageActions.delete')}
+            </button>
+          </div>
         </div>
       )}
 

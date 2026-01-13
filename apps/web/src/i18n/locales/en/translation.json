@@ -87,6 +87,19 @@
   },
   "preview": {
     "pageSelector": "Page",
+    "pageActions": {
+      "add": "Add",
+      "delete": "Delete",
+      "editMeta": "Edit Info",
+      "deleteConfirm": "Are you sure you want to delete this page?"
+    },
+    "meta": {
+      "title": "Title",
+      "description": "Description",
+      "titlePlaceholder": "Enter page title",
+      "descriptionPlaceholder": "Enter page description",
+      "defaultTitle": "New Page"
+    },
     "physicalButtons": {
       "vol": "Volume",
       "page": "Page",

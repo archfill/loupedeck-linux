@@ -2,14 +2,17 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { LoupedeckPreview } from './components/LoupedeckPreview'
 import { ComponentEditor } from './components/ComponentEditor'
+import { PageMetaEditor } from './components/PageMetaEditor'
 import { LanguageSwitcher } from './components/LanguageSwitcher'
 import { useConfig } from './hooks/useConfig'
 import { useConfigSync } from './hooks/useConfigSync'
-import type { ComponentConfig } from './types/config'
+import { usePageApi } from './hooks/usePageApi'
+import type { ComponentConfig, PageMeta } from './types/config'
 
 function App() {
   const { t } = useTranslation()
   const { data: config, isLoading: loading, error } = useConfig()
+  const { createPage, deletePage, updatePageMeta } = usePageApi()
 
   // 型ガード関数
   const isComponentConfig = (value: unknown): value is ComponentConfig => {
@@ -19,6 +22,10 @@ function App() {
     name: string
     component: ComponentConfig
     pageNum: number
+  } | null>(null)
+  const [pageMetaEditorState, setPageMetaEditorState] = useState<{
+    pageNum: number
+    meta: PageMeta
   } | null>(null)
   const {
     editedConfig,
@@ -197,6 +204,52 @@ function App() {
     queueImmediateSave(newConfig.pages)
   }
 
+  // ページ操作ハンドラー
+  const handleAddPage = async () => {
+    try {
+      const pageNum = await createPage(t('preview.meta.defaultTitle'), '')
+      console.log('Page added:', pageNum)
+      // 設定を再読み込み
+      window.location.reload()
+    } catch (err) {
+      console.error('Failed to add page:', err)
+      alert(err instanceof Error ? err.message : t('common.error'))
+    }
+  }
+
+  const handleDeletePage = async (pageNum: number) => {
+    try {
+      await deletePage(String(pageNum))
+      // 設定を再読み込み
+      window.location.reload()
+    } catch (err) {
+      console.error('Failed to delete page:', err)
+      alert(err instanceof Error ? err.message : t('common.error'))
+    }
+  }
+
+  const handleEditPageMeta = (pageNum: number) => {
+    const pageKey = String(pageNum)
+    const page = editedConfig?.pages?.[pageKey] || config?.pages?.[pageKey]
+    if (!page || !page._meta) return
+
+    setPageMetaEditorState({
+      pageNum,
+      meta: page._meta,
+    })
+  }
+
+  const handleSavePageMeta = async (pageNum: number, meta: PageMeta) => {
+    try {
+      await updatePageMeta(String(pageNum), meta)
+      // 設定を再読み込み
+      window.location.reload()
+    } catch (err) {
+      console.error('Failed to update page meta:', err)
+      alert(err instanceof Error ? err.message : t('common.error'))
+    }
+  }
+
   // handleSaveAllは削除（リアルタイム自動保存に移行）
 
   if (loading) {
@@ -337,6 +390,9 @@ function App() {
                   })
                 }
               }}
+              onAddPage={handleAddPage}
+              onDeletePage={handleDeletePage}
+              onEditPageMeta={handleEditPageMeta}
             />
           </div>
         </section>
@@ -375,6 +431,16 @@ function App() {
             handleDeleteComponent(selectedComponent.name, selectedComponent.pageNum)
             setSelectedComponent(null)
           }}
+        />
+      )}
+
+      {/* Page Meta Editor Modal */}
+      {pageMetaEditorState && (
+        <PageMetaEditor
+          pageNum={pageMetaEditorState.pageNum}
+          initialMeta={pageMetaEditorState.meta}
+          onClose={() => setPageMetaEditorState(null)}
+          onSave={handleSavePageMeta}
         />
       )}
     </div>

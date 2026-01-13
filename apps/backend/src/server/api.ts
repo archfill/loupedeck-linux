@@ -233,6 +233,248 @@ export class ApiServer {
       }
     })
 
+    // ページ追加 (POST)
+    this.app.post('/api/pages', (req: Request, res: Response) => {
+      let tempPath: string | null = null
+      try {
+        const { title, description } = req.body
+
+        // 現在の設定を読み込み
+        const config = loadConfig()
+        const pages = config.pages
+
+        // 次のページ番号を算出
+        const pageNumbers = Object.keys(pages).map((n) => parseInt(n, 10))
+        const maxPageNum = pageNumbers.length > 0 ? Math.max(...pageNumbers) : 0
+        const newPageNum = String(maxPageNum + 1)
+
+        // 新しいページを作成
+        const newPage = {
+          _meta: {
+            title: title || `Page ${newPageNum}`,
+            description: description || '',
+          },
+        }
+
+        // ページを追加
+        const updatedConfig = { ...config, pages: { ...pages, [newPageNum]: newPage } }
+
+        // Zodでバリデーション
+        const validatedConfig = ConfigSchema.parse(updatedConfig)
+
+        // 設定ファイルパス
+        const configPath = getUserConfigPath()
+        tempPath = configPath + '.tmp'
+
+        // 一時ファイルに書き込み
+        writeFileSync(tempPath, JSON.stringify(validatedConfig, null, 2), 'utf-8')
+
+        // atomic rename
+        renameSync(tempPath, configPath)
+
+        // キャッシュをクリア
+        clearConfigCache()
+
+        logger.info(`✓ Page ${newPageNum} created`)
+        res.status(201).json({
+          success: true,
+          pageNum: newPageNum,
+          pages: validatedConfig.pages,
+        })
+      } catch (error) {
+        if (tempPath && existsSync(tempPath)) {
+          try {
+            rmSync(tempPath)
+          } catch (cleanupError) {
+            const cleanupMessage =
+              cleanupError instanceof Error ? cleanupError.message : String(cleanupError)
+            logger.warn(`Failed to cleanup temp config file: ${cleanupMessage}`)
+          }
+        }
+
+        const message = error instanceof Error ? error.message : String(error)
+        logger.error(`Failed to create page: ${message}`)
+
+        if (error instanceof ZodError) {
+          res.status(400).json({
+            success: false,
+            message: 'Validation error',
+            issues: error.issues.map((issue) => ({
+              path: issue.path.join('.'),
+              message: issue.message,
+            })),
+          })
+          return
+        }
+
+        res.status(500).json({
+          success: false,
+          message: `Failed to create page: ${message}`,
+        })
+      }
+    })
+
+    // ページ削除 (DELETE)
+    this.app.delete('/api/pages/:pageNum', (req: Request, res: Response) => {
+      let tempPath: string | null = null
+      try {
+        const { pageNum } = req.params
+
+        // 現在の設定を読み込み
+        const config = loadConfig()
+        const pages = config.pages
+
+        // ページ存在チェック
+        if (!pages[pageNum]) {
+          res.status(404).json({
+            success: false,
+            message: `Page ${pageNum} not found`,
+          })
+          return
+        }
+
+        // ページ数チェック（少なくとも1ページは残す）
+        if (Object.keys(pages).length <= 1) {
+          res.status(400).json({
+            success: false,
+            message: 'Cannot delete the last page',
+          })
+          return
+        }
+
+        // ページを削除
+        const { [pageNum]: deletedPage, ...remainingPages } = pages
+        const updatedConfig = { ...config, pages: remainingPages }
+
+        // Zodでバリデーション
+        const validatedConfig = ConfigSchema.parse(updatedConfig)
+
+        // 設定ファイルパス
+        const configPath = getUserConfigPath()
+        tempPath = configPath + '.tmp'
+
+        // 一時ファイルに書き込み
+        writeFileSync(tempPath, JSON.stringify(validatedConfig, null, 2), 'utf-8')
+
+        // atomic rename
+        renameSync(tempPath, configPath)
+
+        // キャッシュをクリア
+        clearConfigCache()
+
+        logger.info(`✓ Page ${pageNum} deleted`)
+        res.json({
+          success: true,
+          deletedPageNum: pageNum,
+          pages: validatedConfig.pages,
+        })
+      } catch (error) {
+        if (tempPath && existsSync(tempPath)) {
+          try {
+            rmSync(tempPath)
+          } catch (cleanupError) {
+            const cleanupMessage =
+              cleanupError instanceof Error ? cleanupError.message : String(cleanupError)
+            logger.warn(`Failed to cleanup temp config file: ${cleanupMessage}`)
+          }
+        }
+
+        const message = error instanceof Error ? error.message : String(error)
+        logger.error(`Failed to delete page: ${message}`)
+
+        res.status(500).json({
+          success: false,
+          message: `Failed to delete page: ${message}`,
+        })
+      }
+    })
+
+    // ページ情報更新 (PUT)
+    this.app.put('/api/pages/:pageNum/meta', (req: Request, res: Response) => {
+      let tempPath: string | null = null
+      try {
+        const { pageNum } = req.params
+        const { title, description } = req.body
+
+        // 現在の設定を読み込み
+        const config = loadConfig()
+        const pages = config.pages
+
+        // ページ存在チェック
+        if (!pages[pageNum]) {
+          res.status(404).json({
+            success: false,
+            message: `Page ${pageNum} not found`,
+          })
+          return
+        }
+
+        // ページメタデータを更新
+        const updatedPage = {
+          ...pages[pageNum],
+          _meta: { title, description },
+        }
+
+        const updatedConfig = {
+          ...config,
+          pages: { ...pages, [pageNum]: updatedPage },
+        }
+
+        // Zodでバリデーション
+        const validatedConfig = ConfigSchema.parse(updatedConfig)
+
+        // 設定ファイルパス
+        const configPath = getUserConfigPath()
+        tempPath = configPath + '.tmp'
+
+        // 一時ファイルに書き込み
+        writeFileSync(tempPath, JSON.stringify(validatedConfig, null, 2), 'utf-8')
+
+        // atomic rename
+        renameSync(tempPath, configPath)
+
+        // キャッシュをクリア
+        clearConfigCache()
+
+        logger.info(`✓ Page ${pageNum} meta updated`)
+        res.json({
+          success: true,
+          pageNum,
+          meta: validatedConfig.pages[pageNum]._meta,
+        })
+      } catch (error) {
+        if (tempPath && existsSync(tempPath)) {
+          try {
+            rmSync(tempPath)
+          } catch (cleanupError) {
+            const cleanupMessage =
+              cleanupError instanceof Error ? cleanupError.message : String(cleanupError)
+            logger.warn(`Failed to cleanup temp config file: ${cleanupMessage}`)
+          }
+        }
+
+        const message = error instanceof Error ? error.message : String(error)
+        logger.error(`Failed to update page meta: ${message}`)
+
+        if (error instanceof ZodError) {
+          res.status(400).json({
+            success: false,
+            message: 'Validation error',
+            issues: error.issues.map((issue) => ({
+              path: issue.path.join('.'),
+              message: issue.message,
+            })),
+          })
+          return
+        }
+
+        res.status(500).json({
+          success: false,
+          message: `Failed to update page meta: ${message}`,
+        })
+      }
+    })
+
     // 静的ファイル配信（Web UI） - APIルートの後に配置
     // 環境変数または__dirnameからプロジェクトルートを特定
     const projectRoot = process.env.LOUPEDECK_PROJECT_ROOT || path.resolve(__dirname, '../../..')
