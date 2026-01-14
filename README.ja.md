@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="./docs/logo.png" alt="Loupedeck Linux Logo" width="200" height="200">
+</p>
+
 # Loupedeck Linux
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
