@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="./docs/logo.png" alt="Loupedeck Linux Logo" width="200" height="200">
+  <img src="./docs/logo.svg" alt="Loupedeck Linux Logo" width="200" height="200">
 </p>
 
 # Loupedeck Linux
