@@ -1,0 +1,31 @@
+<svg width="192" height="192" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="grad-favicon" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stopColor="#3b82f6" />
+      <stop offset="100%" stopColor="#8b5cf6" />
+    </linearGradient>
+  </defs>
+
+  <rect x="64" y="96" width="384" height="320" rx="24" fill="url(#grad-favicon)" />
+  <rect x="80" y="112" width="352" height="288" rx="16" fill="#1e293b" />
+
+  <rect x="120" y="152" width="56" height="56" rx="8" fill="#334155" opacity="0.8" />
+  <rect x="192" y="152" width="56" height="56" rx="8" fill="#334155" opacity="0.8" />
+  <rect x="264" y="152" width="56" height="56" rx="8" fill="#334155" opacity="0.8" />
+  <rect x="336" y="152" width="56" height="56" rx="8" fill="#334155" opacity="0.8" />
+
+  <rect x="120" y="224" width="56" height="56" rx="8" fill="#334155" opacity="0.8" />
+  <rect x="192" y="224" width="56" height="56" rx="8" fill="#334155" opacity="0.8" />
+  <rect x="264" y="224" width="56" height="56" rx="8" fill="#334155" opacity="0.8" />
+  <rect x="336" y="224" width="56" height="56" rx="8" fill="#334155" opacity="0.8" />
+
+  <rect x="120" y="296" width="56" height="56" rx="8" fill="#334155" opacity="0.8" />
+  <rect x="192" y="296" width="56" height="56" rx="8" fill="#334155" opacity="0.8" />
+  <rect x="264" y="296" width="56" height="56" rx="8" fill="#334155" opacity="0.8" />
+  <rect x="336" y="296" width="56" height="56" rx="8" fill="#334155" opacity="0.8" />
+
+  <circle cx="120" cy="370" r="8" fill="#3b82f6" opacity="0.8" />
+  <circle cx="392" cy="370" r="8" fill="#8b5cf6" opacity="0.8" />
+
+  <rect x="200" y="360" width="112" height="24" rx="12" fill="#475569" opacity="0.6" />
+</svg>
