@@ -59,5 +59,8 @@
       "@tailwindcss/oxide",
       "@serialport/bindings-cpp"
     ]
+  },
+  "dependencies": {
+    "next-themes": "^0.4.6"
   }
 }

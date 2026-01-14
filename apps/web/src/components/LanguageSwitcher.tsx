@@ -1,5 +1,7 @@
+import { Languages } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { SUPPORTED_LANGUAGES } from '../i18n/config'
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 
 export function LanguageSwitcher() {
   const { i18n } = useTranslation()
@@ -11,22 +13,22 @@ export function LanguageSwitcher() {
   }
 
   return (
-    <div className="flex items-center gap-2">
+    <ToggleGroup
+      type="single"
+      value={currentLang}
+      onValueChange={(value) => {
+        if (value) handleLanguageChange(value)
+      }}
+      variant="outline"
+      size="sm"
+      aria-label="Language"
+    >
       {SUPPORTED_LANGUAGES.map((lang) => (
-        <button
-          key={lang.code}
-          onClick={() => handleLanguageChange(lang.code)}
-          className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-            currentLang === lang.code
-              ? 'bg-blue-600 text-white'
-              : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-          }`}
-          title={lang.name}
-        >
-          <span className="mr-1">{lang.flag}</span>
+        <ToggleGroupItem key={lang.code} value={lang.code} title={lang.name}>
+          <Languages className="mr-1 h-4 w-4" aria-hidden="true" />
           <span className="hidden sm:inline">{lang.name}</span>
-        </button>
+        </ToggleGroupItem>
       ))}
-    </div>
+    </ToggleGroup>
   )
 }

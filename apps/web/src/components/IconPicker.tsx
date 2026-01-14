@@ -1,6 +1,12 @@
 import { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
+import { X } from 'lucide-react'
 import nerdFontIcons from '../data/nerdFontIcons.json'
+import { Button } from '@/components/ui/button'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { ScrollArea } from '@/components/ui/scroll-area'
 
 interface IconPickerProps {
   onSelect: (icon: string | null) => void
@@ -75,92 +81,83 @@ export function IconPicker({ onSelect, currentIcon, onClose }: IconPickerProps) 
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-gray-900 rounded-lg border border-gray-700 max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
-        {/* Header */}
-        <div className="sticky top-0 bg-gray-900 border-b border-gray-800 p-6">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-2xl font-bold">{t('iconPicker.title')}</h2>
+    <Dialog open onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+        <DialogHeader>
+          <div className="flex justify-between items-center">
+            <DialogTitle className="text-2xl font-bold">{t('iconPicker.title')}</DialogTitle>
             <div className="flex gap-2">
               {currentIcon && (
-                <button
-                  onClick={handleClear}
-                  className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
-                >
+                <Button type="button" variant="destructive" onClick={handleClear}>
                   {t('common.clear')}
-                </button>
+                </Button>
               )}
-              <button
-                onClick={onClose}
-                className="text-gray-400 hover:text-white text-2xl leading-none"
-              >
-                ×
-              </button>
+              <Button type="button" variant="ghost" size="icon" onClick={onClose}>
+                <X className="h-4 w-4" />
+              </Button>
             </div>
           </div>
 
           {/* Search Box */}
-          <div className="mb-4">
-            <input
+          <div className="mt-4">
+            <Input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={t('iconPicker.searchPlaceholder')}
-              className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
               autoFocus
             />
           </div>
+        </DialogHeader>
 
-          {/* Category Tabs */}
-          <div className="flex gap-2 overflow-x-auto pb-2">
+        {/* Category Tabs */}
+        <Tabs value={activeCategory} onValueChange={setActiveCategory} className="w-full">
+          <TabsList className="w-full justify-start overflow-x-auto h-auto">
             {categories.map((cat) => (
-              <button
-                key={cat.id}
-                onClick={() => setActiveCategory(cat.id)}
-                className={`px-4 py-2 rounded-lg whitespace-nowrap transition-colors ${
-                  activeCategory === cat.id
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-                }`}
-              >
+              <TabsTrigger key={cat.id} value={cat.id} className="whitespace-nowrap">
                 {cat.name}
-              </button>
+              </TabsTrigger>
             ))}
-          </div>
-        </div>
+          </TabsList>
 
-        {/* Icon Grid */}
-        <div className="flex-1 overflow-y-auto p-6">
-          {filteredIcons.length === 0 ? (
-            <div className="text-center text-gray-500 py-12">{t('iconPicker.noResults')}</div>
-          ) : (
-            <div className="grid grid-cols-6 sm:grid-cols-8 md:grid-cols-10 lg:grid-cols-12 gap-2">
-              {filteredIcons.map((icon) => (
-                <button
-                  key={icon.char}
-                  onClick={() => handleIconClick(icon.char)}
-                  className={`aspect-square bg-gray-800 border-2 rounded-lg flex items-center justify-center text-3xl hover:border-blue-500 hover:bg-gray-750 transition-all nerd-font ${
-                    currentIcon === icon.char
-                      ? 'border-blue-500 ring-2 ring-blue-500 ring-opacity-50'
-                      : 'border-gray-700'
-                  }`}
-                  title={t('iconPicker.tooltip', {
-                    name: icon.name,
-                    keywords: icon.keywords.join(', '),
-                  })}
-                >
-                  {icon.char}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
+          <TabsContent value={activeCategory} className="mt-4">
+            {/* Icon Grid */}
+            <ScrollArea className="h-[500px]">
+              {filteredIcons.length === 0 ? (
+                <div className="text-center text-muted-foreground py-12">
+                  {t('iconPicker.noResults')}
+                </div>
+              ) : (
+                <div className="grid grid-cols-6 sm:grid-cols-8 md:grid-cols-10 lg:grid-cols-12 gap-2 pr-4">
+                  {filteredIcons.map((icon) => (
+                    <Button
+                      key={icon.char}
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      className={`aspect-square nerd-font text-3xl ${
+                        currentIcon === icon.char ? 'border-primary ring-2 ring-primary' : ''
+                      }`}
+                      onClick={() => handleIconClick(icon.char)}
+                      title={t('iconPicker.tooltip', {
+                        name: icon.name,
+                        keywords: icon.keywords.join(', '),
+                      })}
+                    >
+                      {icon.char}
+                    </Button>
+                  ))}
+                </div>
+              )}
+            </ScrollArea>
+          </TabsContent>
+        </Tabs>
 
         {/* Footer */}
-        <div className="sticky bottom-0 bg-gray-900 border-t border-gray-800 p-4 text-center text-sm text-gray-500">
+        <div className="border-t pt-4 text-center text-sm text-muted-foreground">
           {t('iconPicker.iconCount', { count: filteredIcons.length })}
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   )
 }

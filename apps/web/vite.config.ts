@@ -11,6 +11,22 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (!id.includes('node_modules')) return
+          if (id.includes('@dnd-kit')) return 'dnd-kit'
+          if (id.includes('@radix-ui')) return 'radix'
+          if (id.includes('react')) return 'react'
+          if (id.includes('react-i18next') || id.includes('i18next')) return 'i18n'
+          if (id.includes('@tanstack')) return 'tanstack'
+          if (id.includes('lucide-react') || id.includes('@radix-ui/react-icons')) return 'icons'
+          return 'vendor'
+        },
+      },
+    },
+  },
   server: {
     port: 5173,
     proxy: {

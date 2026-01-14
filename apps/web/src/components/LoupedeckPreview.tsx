@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
+import { Plus, Edit, Trash2 } from 'lucide-react'
 import {
   DndContext,
   useDraggable,
@@ -12,6 +13,24 @@ import {
 } from '@dnd-kit/core'
 import type { DragEndEvent } from '@dnd-kit/core'
 import type { ComponentConfig, PageData, PageMeta, Device } from '../types/config'
+import { Button } from '@/components/ui/button'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 
 /**
  * 色の明度を調整するヘルパー関数
@@ -62,7 +81,7 @@ interface LoupedeckPreviewProps {
   onEditPageMeta?: (pageNum: number) => void
 }
 
-// ドラッグ&ドロップ可能なコンポーネント
+// ドラッグ&ドロップ可能なコンポーネント - 改善版
 function DraggableComponent({
   component,
   name,
@@ -101,7 +120,8 @@ function DraggableComponent({
   const style = transform
     ? {
         transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
-        opacity: isDragging ? 0.5 : 1,
+        opacity: isDragging ? 0.8 : 1,
+        scale: isDragging ? 1.05 : 1,
       }
     : {}
 
@@ -123,14 +143,17 @@ function DraggableComponent({
         width: cellSize,
         height: cellSize,
         backgroundColor: options.bgColor || '#2a4a6a',
-        borderColor: isOver ? '#60a5fa' : options.borderColor || '#4a7a9a',
+        borderColor: isOver ? 'hsl(var(--primary))' : options.borderColor || '#4a7a9a',
         borderWidth: isOver ? '3px' : '2px',
         borderStyle: 'solid',
         cursor: 'pointer',
         position: 'relative',
         zIndex: 10,
+        boxShadow: isDragging
+          ? '0 0 30px hsl(var(--primary) / 0.5), 0 0 60px hsl(var(--primary) / 0.3)'
+          : '0 2px 8px rgba(0, 0, 0, 0.3)',
       }}
-      className="flex flex-col items-center justify-center rounded hover:brightness-110 transition-all"
+      className="flex flex-col items-center justify-center rounded"
       onClick={handleClick}
       {...listeners}
       {...attributes}
@@ -167,6 +190,7 @@ function DraggableComponent({
       {options.label && (
         <div
           style={{ color: options.textColor || '#FFFFFF', fontSize: '12px', fontWeight: 'bold' }}
+          className="drop-shadow-md"
         >
           {options.label.length > 10 ? options.label.substring(0, 10) + '...' : options.label}
         </div>
@@ -175,7 +199,7 @@ function DraggableComponent({
   )
 }
 
-// ドロップ可能なセル
+// ドロップ可能なセル - 改善版
 function DroppableCell({ col, row, cellSize }: { col: number; row: number; cellSize: number }) {
   const { setNodeRef, isOver } = useDroppable({
     id: `cell-${col}-${row}`,
@@ -188,10 +212,13 @@ function DroppableCell({ col, row, cellSize }: { col: number; row: number; cellS
       style={{
         width: cellSize,
         height: cellSize,
-        border: '1px solid #333',
-        backgroundColor: isOver ? 'rgba(59, 130, 246, 0.3)' : 'transparent',
+        border: '1px dashed hsl(var(--border))',
+        backgroundColor: isOver ? 'hsl(var(--primary) / 0.2)' : 'hsl(var(--muted) / 0.3)',
         pointerEvents: 'auto',
+        transition: 'all 0.2s ease',
+        boxShadow: isOver ? 'inset 0 0 20px hsl(var(--primary) / 0.3)' : 'none',
       }}
+      className={isOver ? 'animate-pulse' : ''}
     />
   )
 }
@@ -211,6 +238,7 @@ export function LoupedeckPreview({
   const [currentPage, setCurrentPage] = useState(1)
   const [activeId, setActiveId] = useState<string | null>(null)
   const [resolvedIcons, setResolvedIcons] = useState<Record<string, string>>({})
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
 
   // ドラッグとクリックを区別するためのセンサー設定
   // 5px以上移動したときのみドラッグとみなす
@@ -332,116 +360,133 @@ export function LoupedeckPreview({
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       {/* Page selector dropdown and actions */}
       {pages && (
-        <div className="flex items-center justify-center gap-4">
-          <label htmlFor="page-select" className="text-gray-400 text-sm font-medium">
-            {t('preview.pageSelector')}:
-          </label>
-          <select
-            id="page-select"
-            value={currentPage}
-            onChange={(e) => setCurrentPage(Number(e.target.value))}
-            className="bg-gray-800 text-white px-4 py-2 rounded-lg border border-gray-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer hover:bg-gray-750 transition-colors"
-          >
-            {Object.keys(pages).map((pageNum) => {
-              const pageMeta = pages[pageNum]._meta
-              return (
-                <option key={pageNum} value={pageNum}>
-                  {t('preview.pageSelector')} {pageNum}:{' '}
-                  {pageMeta?.title || `${t('preview.pageSelector')} ${pageNum}`}
-                </option>
-              )
-            })}
-          </select>
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 flex-wrap p-4 rounded-lg bg-muted border">
+          <div className="flex items-center gap-3">
+            <label
+              htmlFor="page-select"
+              className="text-muted-foreground text-sm font-semibold uppercase tracking-wide"
+            >
+              {t('preview.pageSelector')}:
+            </label>
+            <Select
+              value={String(currentPage)}
+              onValueChange={(value) => setCurrentPage(Number(value))}
+            >
+              <SelectTrigger className="w-[300px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {Object.keys(pages).map((pageNum) => {
+                  const pageMeta = pages[pageNum]._meta
+                  return (
+                    <SelectItem key={pageNum} value={pageNum}>
+                      {t('preview.pageSelector')} {pageNum}:{' '}
+                      {pageMeta?.title || `${t('preview.pageSelector')} ${pageNum}`}
+                    </SelectItem>
+                  )
+                })}
+              </SelectContent>
+            </Select>
+          </div>
           {pages[pageKey]?._meta && (
-            <span className="text-gray-500 text-sm italic">{pages[pageKey]._meta.description}</span>
+            <span className="text-muted-foreground text-sm italic px-3 py-1 rounded bg-muted">
+              {pages[pageKey]._meta.description}
+            </span>
           )}
 
           {/* Page action buttons */}
-          <div className="flex gap-2 ml-4">
-            <button
-              onClick={() => onAddPage?.()}
-              className="px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors"
-              title={t('preview.pageActions.add')}
-            >
-              ➕ {t('preview.pageActions.add')}
-            </button>
-            <button
+          <div className="flex gap-2 flex-wrap">
+            <Button type="button" variant="default" onClick={() => onAddPage?.()} size="sm">
+              <Plus className="h-4 w-4 mr-2" /> {t('preview.pageActions.add')}
+            </Button>
+            <Button
+              type="button"
+              variant="secondary"
               onClick={() => onEditPageMeta?.(currentPage)}
-              className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
-              title={t('preview.pageActions.editMeta')}
+              size="sm"
             >
-              ✏️ {t('preview.pageActions.editMeta')}
-            </button>
-            <button
+              <Edit className="h-4 w-4 mr-2" /> {t('preview.pageActions.editMeta')}
+            </Button>
+            <Button
+              type="button"
               onClick={() => {
-                if (window.confirm(t('preview.pageActions.deleteConfirm'))) {
-                  onDeletePage?.(currentPage)
-                }
+                setDeleteConfirmOpen(true)
               }}
               disabled={Object.keys(pages).length <= 1}
-              className="px-3 py-2 bg-red-600 hover:bg-red-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors"
-              title={t('preview.pageActions.delete')}
+              variant="destructive"
+              size="sm"
             >
-              🗑️ {t('preview.pageActions.delete')}
-            </button>
+              <Trash2 className="h-4 w-4 mr-2" /> {t('preview.pageActions.delete')}
+            </Button>
           </div>
         </div>
       )}
 
-      <div className="flex items-center justify-center gap-8 p-8 bg-gray-900 rounded-2xl">
+      {/* Device preview container - Enhanced with glassmorphism */}
+      <div className="flex items-center justify-center gap-8 p-10 rounded-lg bg-muted border">
         {/* Left side - Knobs and Button */}
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-8">
           {/* Top left knob - volumeDisplay */}
-          <button
+          <Button
+            type="button"
             onClick={() => {
               if (onEditComponent && allComponents?.volumeDisplay) {
                 onEditComponent('volumeDisplay', currentPage)
               }
             }}
-            className="flex flex-col items-center hover:opacity-80 transition-opacity"
+            variant="ghost"
+            className="h-auto w-auto p-0 flex flex-col items-center gap-3"
           >
-            <div className="w-16 h-16 rounded-full bg-gray-800 border-4 border-gray-700 flex items-center justify-center shadow-lg">
-              <div className="w-2 h-6 bg-gray-600 rounded-full"></div>
+            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-card to-muted border-4 border-foreground/10 ring-1 ring-foreground/10 flex items-center justify-center shadow-md">
+              <div className="w-2 h-8 rounded-full bg-foreground/30"></div>
             </div>
-            <span className="text-xs text-gray-400 mt-2">{t('preview.physicalButtons.vol')}</span>
-          </button>
+            <span className="text-xs text-muted-foreground font-medium">
+              {t('preview.physicalButtons.vol')}
+            </span>
+          </Button>
 
           {/* Center left knob - mediaDisplay */}
-          <button
+          <Button
+            type="button"
             onClick={() => {
               if (onEditComponent && allComponents?.mediaDisplay) {
                 onEditComponent('mediaDisplay', currentPage)
               }
             }}
-            className="flex flex-col items-center hover:opacity-80 transition-opacity"
+            variant="ghost"
+            className="h-auto w-auto p-0 flex flex-col items-center gap-3"
           >
-            <div className="w-16 h-16 rounded-full bg-gray-800 border-4 border-gray-700 flex items-center justify-center shadow-lg">
-              <div className="w-2 h-6 bg-gray-600 rounded-full"></div>
+            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-card to-muted border-4 border-foreground/10 ring-1 ring-foreground/10 flex items-center justify-center shadow-md">
+              <div className="w-2 h-8 rounded-full bg-foreground/30"></div>
             </div>
-            <span className="text-xs text-gray-400 mt-2">{t('preview.physicalButtons.page')}</span>
-          </button>
+            <span className="text-xs text-muted-foreground font-medium">
+              {t('preview.physicalButtons.page')}
+            </span>
+          </Button>
 
           {/* Physical button - ID 0 (bottom left) */}
-          <button
+          <Button
+            type="button"
             onClick={() => {
               if (onEditComponent && allComponents?.button0) {
                 onEditComponent('button0', currentPage)
               }
             }}
-            className="flex flex-col items-center mt-4 hover:opacity-80 transition-opacity"
+            variant="ghost"
+            className="h-auto w-auto p-0 flex flex-col items-center gap-3 mt-4"
           >
             <div
-              className="w-10 h-10 rounded-full shadow-lg flex items-center justify-center"
+              className="w-12 h-12 rounded-full shadow-xl flex items-center justify-center"
               style={{
                 backgroundColor:
                   (allComponents?.button0 as Component)?.options?.ledColor || '#FFFFFF',
               }}
             >
               <div
-                className="w-8 h-8 rounded-full"
+                className="w-9 h-9 rounded-full"
                 style={{
                   backgroundColor: adjustBrightness(
                     (allComponents?.button0 as Component)?.options?.ledColor || '#FFFFFF',
@@ -450,15 +495,15 @@ export function LoupedeckPreview({
                 }}
               ></div>
             </div>
-            <span className="text-xs text-gray-400 mt-2">
+            <span className="text-xs text-muted-foreground font-medium">
               {t('preview.physicalButtons.btn', { id: 0 })}
             </span>
-          </button>
+          </Button>
         </div>
 
-        {/* Center screen */}
-        <div className="relative">
-          <div className="bg-black p-4 rounded-lg shadow-2xl border-4 border-gray-800">
+        {/* Center screen - Enhanced with glow */}
+        <div className="relative group">
+          <div className="bg-card p-6 rounded-lg shadow border border-border">
             {/* 常時ドラッグ&ドロップ可能なHTMLグリッド */}
             <DndContext
               sensors={sensors}
@@ -467,11 +512,10 @@ export function LoupedeckPreview({
               collisionDetection={closestCenter}
             >
               <div
-                className="relative"
+                className="relative bg-muted/60 ring-1 ring-border shadow-inner"
                 style={{
                   width: screenWidth,
                   height: screenHeight,
-                  backgroundColor: '#0a0a0a',
                 }}
               >
                 {/* グリッドセル (ドロップ可能) - 空のセルのみドロップ可能に */}
@@ -552,32 +596,37 @@ export function LoupedeckPreview({
               </DragOverlay>
             </DndContext>
           </div>
-          <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-xs text-gray-500">
-            {t('preview.screenSize', { width: screenWidth, height: screenHeight })}
-            <span className="ml-2 text-blue-400">{t('app.devicePreview.dragHint')}</span>
+          <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 text-xs text-muted-foreground font-medium">
+            <span className="text-primary">
+              {t('preview.screenSize', { width: screenWidth, height: screenHeight })}
+            </span>
+            <span className="mx-2">•</span>
+            <span className="text-secondary">{t('app.devicePreview.dragHint')}</span>
           </div>
         </div>
 
-        {/* Right side - Physical Buttons */}
-        <div className="flex flex-col gap-6 justify-center">
+        {/* Right side - Physical Buttons - Enhanced */}
+        <div className="flex flex-col gap-8 justify-center">
           {/* Physical button - ID 1 */}
-          <button
+          <Button
+            type="button"
             onClick={() => {
               if (onEditComponent && allComponents?.button1) {
                 onEditComponent('button1', currentPage)
               }
             }}
-            className="flex flex-col items-center hover:opacity-80 transition-opacity"
+            variant="ghost"
+            className="h-auto w-auto p-0 flex flex-col items-center gap-3"
           >
             <div
-              className="w-10 h-10 rounded-full shadow-lg flex items-center justify-center"
+              className="w-12 h-12 rounded-full shadow-xl flex items-center justify-center"
               style={{
                 backgroundColor:
                   (allComponents?.button1 as Component)?.options?.ledColor || '#FF0000',
               }}
             >
               <div
-                className="w-8 h-8 rounded-full"
+                className="w-9 h-9 rounded-full"
                 style={{
                   backgroundColor: adjustBrightness(
                     (allComponents?.button1 as Component)?.options?.ledColor || '#FF0000',
@@ -586,29 +635,31 @@ export function LoupedeckPreview({
                 }}
               ></div>
             </div>
-            <span className="text-xs text-gray-400 mt-2">
+            <span className="text-xs text-muted-foreground font-medium">
               {t('preview.physicalButtons.btn', { id: 1 })}
             </span>
-          </button>
+          </Button>
 
           {/* Physical button - ID 2 */}
-          <button
+          <Button
+            type="button"
             onClick={() => {
               if (onEditComponent && allComponents?.button2) {
                 onEditComponent('button2', currentPage)
               }
             }}
-            className="flex flex-col items-center hover:opacity-80 transition-opacity"
+            variant="ghost"
+            className="h-auto w-auto p-0 flex flex-col items-center gap-3"
           >
             <div
-              className="w-10 h-10 rounded-full shadow-lg flex items-center justify-center"
+              className="w-12 h-12 rounded-full shadow-xl flex items-center justify-center"
               style={{
                 backgroundColor:
                   (allComponents?.button2 as Component)?.options?.ledColor || '#00FF00',
               }}
             >
               <div
-                className="w-8 h-8 rounded-full"
+                className="w-9 h-9 rounded-full"
                 style={{
                   backgroundColor: adjustBrightness(
                     (allComponents?.button2 as Component)?.options?.ledColor || '#00FF00',
@@ -617,29 +668,31 @@ export function LoupedeckPreview({
                 }}
               ></div>
             </div>
-            <span className="text-xs text-gray-400 mt-2">
+            <span className="text-xs text-muted-foreground font-medium">
               {t('preview.physicalButtons.btn', { id: 2 })}
             </span>
-          </button>
+          </Button>
 
           {/* Physical button - ID 3 */}
-          <button
+          <Button
+            type="button"
             onClick={() => {
               if (onEditComponent && allComponents?.button3) {
                 onEditComponent('button3', currentPage)
               }
             }}
-            className="flex flex-col items-center hover:opacity-80 transition-opacity"
+            variant="ghost"
+            className="h-auto w-auto p-0 flex flex-col items-center gap-3"
           >
             <div
-              className="w-10 h-10 rounded-full shadow-lg flex items-center justify-center"
+              className="w-12 h-12 rounded-full shadow-xl flex items-center justify-center"
               style={{
                 backgroundColor:
                   (allComponents?.button3 as Component)?.options?.ledColor || '#0000FF',
               }}
             >
               <div
-                className="w-8 h-8 rounded-full"
+                className="w-9 h-9 rounded-full"
                 style={{
                   backgroundColor: adjustBrightness(
                     (allComponents?.button3 as Component)?.options?.ledColor || '#0000FF',
@@ -648,12 +701,36 @@ export function LoupedeckPreview({
                 }}
               ></div>
             </div>
-            <span className="text-xs text-gray-400 mt-2">
+            <span className="text-xs text-muted-foreground font-medium">
               {t('preview.physicalButtons.btn', { id: 3 })}
             </span>
-          </button>
+          </Button>
         </div>
       </div>
+
+      {pages && (
+        <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>{t('common.delete')}</AlertDialogTitle>
+              <AlertDialogDescription>
+                {t('preview.pageActions.deleteConfirm')}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => {
+                  onDeletePage?.(currentPage)
+                  setDeleteConfirmOpen(false)
+                }}
+              >
+                {t('common.delete')}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
     </div>
   )
 }

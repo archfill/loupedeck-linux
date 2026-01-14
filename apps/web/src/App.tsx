@@ -1,13 +1,41 @@
-import { useState } from 'react'
+import { lazy, Suspense, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { AlertTriangle, Check, Loader2, Plus, Sliders, XCircle } from 'lucide-react'
 import { LoupedeckPreview } from './components/LoupedeckPreview'
-import { ComponentEditor } from './components/ComponentEditor'
-import { PageMetaEditor } from './components/PageMetaEditor'
 import { LanguageSwitcher } from './components/LanguageSwitcher'
+import { ThemeToggle } from './components/theme-toggle'
 import { useConfig } from './hooks/useConfig'
 import { useConfigSync } from './hooks/useConfigSync'
 import { usePageApi } from './hooks/usePageApi'
 import type { ComponentConfig, PageMeta } from './types/config'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
+
+const ComponentEditor = lazy(async () => {
+  const module = await import('./components/ComponentEditor')
+  return { default: module.ComponentEditor }
+})
+
+const PageMetaEditor = lazy(async () => {
+  const module = await import('./components/PageMetaEditor')
+  return { default: module.PageMetaEditor }
+})
+
+const DialogFallback = () => (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80">
+    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+  </div>
+)
 
 function App() {
   const { t } = useTranslation()
@@ -26,6 +54,14 @@ function App() {
   const [pageMetaEditorState, setPageMetaEditorState] = useState<{
     pageNum: number
     meta: PageMeta
+  } | null>(null)
+  const [pendingDeleteComponent, setPendingDeleteComponent] = useState<{
+    name: string
+    pageNum: number
+  } | null>(null)
+  const [alertDialog, setAlertDialog] = useState<{
+    title: string
+    description?: string
   } | null>(null)
   const {
     editedConfig,
@@ -130,8 +166,12 @@ function App() {
     queueImmediateSave(newConfig.pages)
   }
 
-  const handleDeleteComponent = (componentName: string, pageNum: number) => {
-    if (!editedConfig || !confirm(t('app.alerts.deleteConfirm', { name: componentName }))) return
+  const showAlert = (message: string) => {
+    setAlertDialog({ title: t('common.error'), description: message })
+  }
+
+  const removeComponent = (componentName: string, pageNum: number) => {
+    if (!editedConfig) return
 
     const newConfig = JSON.parse(JSON.stringify(editedConfig))
     const pageKey = String(pageNum)
@@ -142,6 +182,10 @@ function App() {
 
     setEditedConfig(newConfig)
     queueImmediateSave(newConfig.pages)
+  }
+
+  const requestDeleteComponent = (componentName: string, pageNum: number) => {
+    setPendingDeleteComponent({ name: componentName, pageNum })
   }
 
   const handleAddComponent = (pageNum: number) => {
@@ -173,7 +217,7 @@ function App() {
     }
 
     if (!foundPosition) {
-      alert(t('app.alerts.gridFull'))
+      showAlert(t('app.alerts.gridFull'))
       return
     }
 
@@ -213,7 +257,7 @@ function App() {
       window.location.reload()
     } catch (err) {
       console.error('Failed to add page:', err)
-      alert(err instanceof Error ? err.message : t('common.error'))
+      showAlert(err instanceof Error ? err.message : t('common.error'))
     }
   }
 
@@ -224,7 +268,7 @@ function App() {
       window.location.reload()
     } catch (err) {
       console.error('Failed to delete page:', err)
-      alert(err instanceof Error ? err.message : t('common.error'))
+      showAlert(err instanceof Error ? err.message : t('common.error'))
     }
   }
 
@@ -246,18 +290,20 @@ function App() {
       window.location.reload()
     } catch (err) {
       console.error('Failed to update page meta:', err)
-      alert(err instanceof Error ? err.message : t('common.error'))
+      showAlert(err instanceof Error ? err.message : t('common.error'))
     }
   }
 
-  // handleSaveAllは削除（リアルタイム自動保存に移行）
-
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-950 text-white flex items-center justify-center">
+      <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
-          <p>{t('common.loading')}</p>
+          <div className="loading-dots justify-center mb-6">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+          <p className="text-muted-foreground font-medium">{t('common.loading')}</p>
         </div>
       </div>
     )
@@ -265,67 +311,89 @@ function App() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-950 text-white flex items-center justify-center">
-        <div className="text-center text-red-400">
-          <p className="text-xl mb-2">❌ {t('common.error')}</p>
-          <p>{error instanceof Error ? error.message : t('common.error')}</p>
-          <p className="mt-4 text-sm text-gray-400">{t('app.alerts.apiError')}</p>
+      <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
+        <div className="text-center text-destructive">
+          <p className="text-2xl mb-3 flex items-center justify-center gap-2">
+            <AlertTriangle className="h-6 w-6 text-destructive" aria-hidden="true" />
+            {t('common.error')}
+          </p>
+          <p className="text-muted-foreground mb-4">
+            {error instanceof Error ? error.message : t('common.error')}
+          </p>
+          <p className="text-sm text-muted-foreground">{t('app.alerts.apiError')}</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white p-8">
-      <div className="max-w-7xl mx-auto">
-        <header className="mb-8 flex justify-between items-start">
-          <div>
-            <h1 className="text-4xl font-bold mb-2">🎛️ {t('app.title')}</h1>
-            <p className="text-gray-400">{t('app.subtitle')}</p>
-          </div>
-          <div className="flex gap-3 items-center">
-            <LanguageSwitcher />
-            {saveStatus !== 'idle' && (
-              <div className="flex items-center gap-2 text-sm">
-                {saveStatus === 'saving' && (
-                  <>
-                    <span className="animate-spin">⏳</span>
-                    <span className="text-yellow-400">{t('app.saveStatus.saving')}</span>
-                  </>
-                )}
-                {saveStatus === 'success' && (
-                  <>
-                    <span>✓</span>
-                    <span className="text-green-400">{t('app.saveStatus.saved')}</span>
-                  </>
-                )}
-                {saveStatus === 'error' && (
-                  <>
-                    <span>✗</span>
-                    <span className="text-red-400">{t('app.saveStatus.error')}</span>
-                  </>
+    <div className="min-h-screen bg-background">
+      <div className="max-w-7xl mx-auto px-6 py-8 lg:px-8">
+        {/* Header */}
+        <header className="mb-12">
+          <div className="bg-card border border-border rounded-lg px-6 py-5 mb-6">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <div>
+                <h1 className="text-4xl lg:text-5xl font-bold mb-2 text-foreground">
+                  <Sliders className="mr-2 inline-block h-8 w-8 text-primary" aria-hidden="true" />
+                  {t('app.title')}
+                </h1>
+                <p className="text-muted-foreground text-sm lg:text-base">{t('app.subtitle')}</p>
+              </div>
+              <div className="flex gap-2 items-center">
+                <ThemeToggle />
+                <LanguageSwitcher />
+                {saveStatus !== 'idle' && (
+                  <div className="flex items-center gap-2 text-sm px-3 py-1.5 rounded-lg bg-muted border">
+                    {saveStatus === 'saving' && (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <span className="text-primary">{t('app.saveStatus.saving')}</span>
+                      </>
+                    )}
+                    {saveStatus === 'success' && (
+                      <>
+                        <Check className="h-4 w-4 text-primary" />
+                        <span className="text-primary font-medium">
+                          {t('app.saveStatus.saved')}
+                        </span>
+                      </>
+                    )}
+                    {saveStatus === 'error' && (
+                      <>
+                        <XCircle className="h-4 w-4 text-destructive" />
+                        <span className="text-destructive">{t('app.saveStatus.error')}</span>
+                      </>
+                    )}
+                  </div>
                 )}
               </div>
-            )}
+            </div>
           </div>
         </header>
 
-        {/* Save Status Toast - Fixed position, no layout shift */}
+        {/* Save Status Toast */}
         {saveMessage && (
-          <div
-            className={`fixed bottom-6 right-6 max-w-md p-4 rounded-lg border shadow-2xl z-50 animate-in fade-in slide-in-from-bottom-5 duration-300 ${
-              saveStatus === 'success'
-                ? 'bg-green-900/95 border-green-700 text-green-400'
-                : 'bg-red-900/95 border-red-700 text-red-400'
-            }`}
-          >
-            <div className="flex items-start gap-3">
-              <span className="text-2xl">{saveStatus === 'success' ? '✓' : '✗'}</span>
-              <div className="flex-1">
-                <p className="font-semibold">
-                  {saveStatus === 'success' ? t('common.success') : t('common.error')}
-                </p>
-                <p className="text-sm mt-1">{saveMessage}</p>
+          <div className="fixed bottom-6 right-6 max-w-md z-50">
+            <div
+              className={`p-4 rounded-lg border shadow ${
+                saveStatus === 'success'
+                  ? 'bg-muted text-foreground'
+                  : 'bg-destructive text-destructive-foreground'
+              }`}
+            >
+              <div className="flex items-start gap-3">
+                {saveStatus === 'success' ? (
+                  <Check className="h-6 w-6 mt-0.5" />
+                ) : (
+                  <XCircle className="h-6 w-6 mt-0.5" />
+                )}
+                <div className="flex-1">
+                  <p className="font-semibold text-sm">
+                    {saveStatus === 'success' ? t('common.success') : t('common.error')}
+                  </p>
+                  <p className="text-sm mt-1 opacity-90">{saveMessage}</p>
+                </div>
               </div>
             </div>
           </div>
@@ -333,116 +401,195 @@ function App() {
 
         {/* Device Info */}
         <section className="mb-8">
-          <h2 className="text-2xl font-semibold mb-4">{t('app.deviceInfo.title')}</h2>
-          <div className="bg-gray-900 rounded-lg p-6 border border-gray-800">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div>
-                <p className="text-gray-400 text-sm">{t('app.deviceInfo.type')}</p>
-                <p className="font-semibold">{config?.device?.type}</p>
+          <Card>
+            <CardContent className="p-6">
+              <h2 className="text-2xl font-bold mb-5">{t('app.deviceInfo.title')}</h2>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                <div className="space-y-1">
+                  <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
+                    {t('app.deviceInfo.type')}
+                  </p>
+                  <p className="font-mono text-lg font-medium">{config?.device?.type}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
+                    {t('app.deviceInfo.grid')}
+                  </p>
+                  <p className="font-mono text-lg font-medium">
+                    {config?.device?.grid?.columns} × {config?.device?.grid?.rows}
+                  </p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
+                    {t('app.deviceInfo.knobs')}
+                  </p>
+                  <p className="font-mono text-lg font-medium">{config?.device?.knobs?.length}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
+                    {t('app.deviceInfo.buttons')}
+                  </p>
+                  <p className="font-mono text-lg font-medium">{config?.device?.buttons?.length}</p>
+                </div>
               </div>
-              <div>
-                <p className="text-gray-400 text-sm">{t('app.deviceInfo.grid')}</p>
-                <p className="font-semibold">
-                  {config?.device?.grid?.columns} × {config?.device?.grid?.rows}
-                </p>
-              </div>
-              <div>
-                <p className="text-gray-400 text-sm">{t('app.deviceInfo.knobs')}</p>
-                <p className="font-semibold">{config?.device?.knobs?.length}</p>
-              </div>
-              <div>
-                <p className="text-gray-400 text-sm">{t('app.deviceInfo.buttons')}</p>
-                <p className="font-semibold">{config?.device?.buttons?.length}</p>
-              </div>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         </section>
 
         {/* Device Preview */}
         <section className="mb-8">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-2xl font-semibold">{t('app.devicePreview.title')}</h2>
-            <button
-              onClick={() => handleAddComponent(1)}
-              className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold transition-colors flex items-center gap-2"
-            >
-              ➕ {t('app.devicePreview.addButton')}
-            </button>
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-5 gap-3">
+            <div>
+              <h2 className="text-2xl font-bold">{t('app.devicePreview.title')}</h2>
+              <p className="text-sm text-muted-foreground mt-1">
+                Drag & drop to reorganize • Click to edit
+              </p>
+            </div>
+            <Button onClick={() => handleAddComponent(1)}>
+              <Plus className="h-4 w-4" aria-hidden="true" />
+              {t('app.devicePreview.addButton')}
+            </Button>
           </div>
-          <div className="bg-gray-900 rounded-lg p-6 border border-gray-800">
-            <LoupedeckPreview
-              components={config?.components}
-              pages={editedConfig?.pages || config?.pages}
-              device={config?.device}
-              onPositionChange={handlePositionChange}
-              onSwapComponents={handleSwapComponents}
-              onEditComponent={(componentName, pageNum) => {
-                const pageKey = String(pageNum)
-                const page = (editedConfig?.pages || config?.pages)?.[pageKey]
-                if (!page) return
+          <Card>
+            <CardContent className="p-6">
+              <LoupedeckPreview
+                components={config?.components}
+                pages={editedConfig?.pages || config?.pages}
+                device={config?.device}
+                onPositionChange={handlePositionChange}
+                onSwapComponents={handleSwapComponents}
+                onEditComponent={(componentName, pageNum) => {
+                  const pageKey = String(pageNum)
+                  const page = (editedConfig?.pages || config?.pages)?.[pageKey]
+                  if (!page) return
 
-                const component = page[componentName] as ComponentConfig
-                if (component) {
-                  setSelectedComponent({
-                    name: componentName,
-                    component,
-                    pageNum,
-                  })
-                }
-              }}
-              onAddPage={handleAddPage}
-              onDeletePage={handleDeletePage}
-              onEditPageMeta={handleEditPageMeta}
-            />
-          </div>
+                  const component = page[componentName] as ComponentConfig
+                  if (component) {
+                    setSelectedComponent({
+                      name: componentName,
+                      component,
+                      pageNum,
+                    })
+                  }
+                }}
+                onAddPage={handleAddPage}
+                onDeletePage={handleDeletePage}
+                onEditPageMeta={handleEditPageMeta}
+              />
+            </CardContent>
+          </Card>
         </section>
 
-        {/* Constants */}
+        {/* System Constants */}
         <section>
-          <h2 className="text-2xl font-semibold mb-4">{t('app.systemConstants.title')}</h2>
-          <div className="bg-gray-900 rounded-lg p-6 border border-gray-800">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {config?.constants &&
-                Object.entries(config.constants).map(([key, value]) => (
-                  <div
-                    key={key}
-                    className="flex justify-between items-center py-2 border-b border-gray-800 last:border-0"
-                  >
-                    <span className="text-gray-400">{key}</span>
-                    <span className="font-mono text-sm">
-                      {typeof value === 'object' ? JSON.stringify(value) : String(value)}
-                    </span>
-                  </div>
-                ))}
-            </div>
-          </div>
+          <h2 className="text-2xl font-bold mb-5">{t('app.systemConstants.title')}</h2>
+          <Card>
+            <CardContent className="p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {config?.constants &&
+                  Object.entries(config.constants).map(([key, value]) => (
+                    <div
+                      key={key}
+                      className="flex justify-between items-center py-3 px-4 rounded-lg bg-muted border"
+                    >
+                      <span className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
+                        {key}
+                      </span>
+                      <span className="font-mono text-sm text-foreground">
+                        {typeof value === 'object' ? JSON.stringify(value) : String(value)}
+                      </span>
+                    </div>
+                  ))}
+              </div>
+            </CardContent>
+          </Card>
         </section>
       </div>
 
       {/* Component Editor Modal */}
       {selectedComponent && (
-        <ComponentEditor
-          component={selectedComponent.component}
-          name={selectedComponent.name}
-          pageNum={selectedComponent.pageNum}
-          onClose={() => setSelectedComponent(null)}
-          onSave={handleComponentSave}
-          onDelete={() => {
-            handleDeleteComponent(selectedComponent.name, selectedComponent.pageNum)
-            setSelectedComponent(null)
-          }}
-        />
+        <Suspense fallback={<DialogFallback />}>
+          <ComponentEditor
+            component={selectedComponent.component}
+            name={selectedComponent.name}
+            pageNum={selectedComponent.pageNum}
+            onClose={() => setSelectedComponent(null)}
+            onSave={handleComponentSave}
+            onDelete={() => {
+              requestDeleteComponent(selectedComponent.name, selectedComponent.pageNum)
+              setSelectedComponent(null)
+            }}
+          />
+        </Suspense>
       )}
 
       {/* Page Meta Editor Modal */}
       {pageMetaEditorState && (
-        <PageMetaEditor
-          pageNum={pageMetaEditorState.pageNum}
-          initialMeta={pageMetaEditorState.meta}
-          onClose={() => setPageMetaEditorState(null)}
-          onSave={handleSavePageMeta}
-        />
+        <Suspense fallback={<DialogFallback />}>
+          <PageMetaEditor
+            pageNum={pageMetaEditorState.pageNum}
+            initialMeta={pageMetaEditorState.meta}
+            onClose={() => setPageMetaEditorState(null)}
+            onSave={handleSavePageMeta}
+          />
+        </Suspense>
       )}
+
+      <AlertDialog
+        open={!!pendingDeleteComponent}
+        onOpenChange={(open) => {
+          if (!open) {
+            setPendingDeleteComponent(null)
+          }
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('common.delete')}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {pendingDeleteComponent
+                ? t('app.alerts.deleteConfirm', { name: pendingDeleteComponent.name })
+                : null}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (pendingDeleteComponent) {
+                  removeComponent(pendingDeleteComponent.name, pendingDeleteComponent.pageNum)
+                }
+                setPendingDeleteComponent(null)
+              }}
+            >
+              {t('common.delete')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog
+        open={!!alertDialog}
+        onOpenChange={(open) => {
+          if (!open) {
+            setAlertDialog(null)
+          }
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{alertDialog?.title}</AlertDialogTitle>
+            {alertDialog?.description ? (
+              <AlertDialogDescription>{alertDialog.description}</AlertDialogDescription>
+            ) : null}
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setAlertDialog(null)}>
+              {t('common.close')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
