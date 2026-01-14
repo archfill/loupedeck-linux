@@ -10,6 +10,7 @@ interface GridComponent {
   col?: number
   row?: number
   label?: string
+  fullScreen?: boolean
   draw: (ctx: CanvasRenderingContext2D, cellCoord: CellCoord) => void
   handleTouch?: (touchedCol: number, touchedRow: number) => Promise<boolean> | boolean
 }
@@ -50,8 +51,7 @@ export class GridLayout extends Screen {
     const components = this.pages.get(page)!
     components.push(component)
 
-    // 位置情報を持つコンポーネントの場合、マップに登録（複数対応）
-    if (component.col !== undefined && component.row !== undefined) {
+    if (!component.fullScreen && component.col !== undefined && component.row !== undefined) {
       const key = `${component.col}_${component.row}`
       const pageMap = this.pageMaps.get(page)!
       const existing = pageMap.get(key) || []
@@ -98,12 +98,17 @@ export class GridLayout extends Screen {
     // 現在のページのコンポーネントを取得
     const components = this.pages.get(this.currentPage) || []
 
-    // 各コンポーネントを描画
     components.forEach((component) => {
-      if (component.col !== undefined && component.row !== undefined) {
-        // 単一セルコンポーネント（Button、Clockなど）
+      if (!component.fullScreen && component.col !== undefined && component.row !== undefined) {
         const cellCoord = this.getCellCoordinates(component.col, component.row)
         component.draw(ctx, cellCoord)
+      }
+    })
+
+    components.forEach((component) => {
+      if (component.fullScreen) {
+        const screenCoord = this.getScreenCoordinates()
+        component.draw(ctx, screenCoord)
       }
     })
   }
@@ -115,6 +120,20 @@ export class GridLayout extends Screen {
    * @returns いずれかのコンポーネントが処理したか
    */
   async handleTouch(touchedCol: number, touchedRow: number): Promise<boolean> {
+    const pageComponents = this.pages.get(this.currentPage) || []
+    for (let i = pageComponents.length - 1; i >= 0; i--) {
+      const component = pageComponents[i]
+      if (!component?.fullScreen) {
+        continue
+      }
+      if (typeof component.handleTouch === 'function') {
+        const handled = await component.handleTouch(touchedCol, touchedRow)
+        if (handled) {
+          return true
+        }
+      }
+    }
+
     const key = `${touchedCol}_${touchedRow}`
     const pageMap = this.pageMaps.get(this.currentPage)
     const components = pageMap?.get(key)

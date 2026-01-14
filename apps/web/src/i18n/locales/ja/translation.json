@@ -39,6 +39,14 @@
       "apiError": "APIサーバーがポート9876で実行されていることを確認してください"
     }
   },
+  "settings": {
+    "title": "設定",
+    "description": "グローバル設定を変更します",
+    "notifications": {
+      "label": "通知オーバーレイ",
+      "description": "デバイスにデスクトップ通知を表示します"
+    }
+  },
   "editor": {
     "title": "コンポーネント編集",
     "icon": {

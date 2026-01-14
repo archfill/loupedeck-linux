@@ -141,6 +141,20 @@
           "iconColor": "#FF88AA"
         }
       },
+      "notificationDisplay": {
+        "type": "notificationDisplay",
+        "position": {
+          "col": 4,
+          "row": 0
+        },
+        "options": {
+          "cellBgColor": "#1a1a2e",
+          "cellBorderColor": "#6a4a8a",
+          "appNameColor": "#AA88FF",
+          "titleColor": "#FFFFFF",
+          "bodyColor": "#CCCCCC"
+        }
+      },
       "button0": {
         "type": "button",
         "position": {

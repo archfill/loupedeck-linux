@@ -39,6 +39,14 @@
       "apiError": "Make sure the API server is running on port 9876"
     }
   },
+  "settings": {
+    "title": "Settings",
+    "description": "Update global preferences",
+    "notifications": {
+      "label": "Notification overlay",
+      "description": "Show desktop notifications on the device"
+    }
+  },
   "editor": {
     "title": "Edit Component",
     "icon": {

@@ -100,6 +100,20 @@ const MediaDisplayComponentSchema = z.object({
   options: MediaDisplayOptionsSchema,
 })
 
+const NotificationDisplayOptionsSchema = z.object({
+  cellBgColor: z.string(),
+  cellBorderColor: z.string(),
+  appNameColor: z.string(),
+  titleColor: z.string(),
+  bodyColor: z.string(),
+})
+
+const NotificationDisplayComponentSchema = z.object({
+  type: z.literal('notificationDisplay'),
+  position: PositionSchema,
+  options: NotificationDisplayOptionsSchema,
+})
+
 /** Layout component schema (for page 2 workspace buttons) */
 const LayoutComponentSchema = z.object({
   type: z.literal('layout'),
@@ -115,6 +129,7 @@ const ComponentSchema = z.discriminatedUnion('type', [
   ButtonComponentSchema,
   VolumeDisplayComponentSchema,
   MediaDisplayComponentSchema,
+  NotificationDisplayComponentSchema,
   LayoutComponentSchema,
 ])
 
@@ -156,6 +171,9 @@ export type VolumeDisplayComponent = z.infer<typeof VolumeDisplayComponentSchema
 
 export type MediaDisplayOptions = z.infer<typeof MediaDisplayOptionsSchema>
 export type MediaDisplayComponent = z.infer<typeof MediaDisplayComponentSchema>
+
+export type NotificationDisplayOptions = z.infer<typeof NotificationDisplayOptionsSchema>
+export type NotificationDisplayComponent = z.infer<typeof NotificationDisplayComponentSchema>
 
 export type LayoutComponent = z.infer<typeof LayoutComponentSchema>
 

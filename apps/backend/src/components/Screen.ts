@@ -76,6 +76,15 @@ export class Screen {
     }
   }
 
+  getScreenCoordinates(): CellCoord {
+    return {
+      x: 0,
+      y: 0,
+      width: this.screenWidth,
+      height: this.screenHeight,
+    }
+  }
+
   /**
    * 背景をクリア
    * @param ctx - Canvas描画コンテキスト

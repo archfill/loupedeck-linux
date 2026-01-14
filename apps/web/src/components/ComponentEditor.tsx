@@ -145,7 +145,7 @@ export function ComponentEditor({
 
     // iconが設定された場合、iconImageをクリア（排他制御）
     if (path.join('.') === 'options.icon') {
-      let optionsCurrent = (newComponent.options as Record<string, unknown>) || {}
+      const optionsCurrent = (newComponent.options as Record<string, unknown>) || {}
       delete optionsCurrent.iconImage
       newComponent.options = optionsCurrent
       setEditedComponent(newComponent as ComponentConfig)
@@ -153,7 +153,7 @@ export function ComponentEditor({
 
     // iconImageが設定された場合、iconをクリア（排他制御）
     if (path.join('.') === 'options.iconImage') {
-      let optionsCurrent = (newComponent.options as Record<string, unknown>) || {}
+      const optionsCurrent = (newComponent.options as Record<string, unknown>) || {}
       delete optionsCurrent.icon
       newComponent.options = optionsCurrent
       setEditedComponent(newComponent as ComponentConfig)

@@ -8,6 +8,7 @@ import { Clock } from '../components/Clock.ts'
 import { Button } from '../components/Button.ts'
 import { VolumeDisplay } from '../components/VolumeDisplay.ts'
 import { MediaDisplay } from '../components/MediaDisplay.ts'
+import { NotificationDisplay } from '../components/NotificationDisplay.ts'
 import { MediaPlayPauseButton } from '../components/MediaPlayPauseButton.ts'
 import { IconResolver } from './iconResolver.ts'
 import type {
@@ -16,6 +17,7 @@ import type {
   ButtonComponent,
   VolumeDisplayComponent,
   MediaDisplayComponent,
+  NotificationDisplayComponent,
 } from '../config/configLoader.ts'
 import type { VibrationUtil } from './vibration.ts'
 import type { AppLauncher } from './appLauncher.ts'
@@ -35,7 +37,13 @@ export interface ComponentDependencies {
 /**
  * 生成可能なコンポーネントの型
  */
-export type GeneratedComponent = Clock | Button | VolumeDisplay | MediaDisplay | MediaPlayPauseButton
+export type GeneratedComponent =
+  | Clock
+  | Button
+  | VolumeDisplay
+  | MediaDisplay
+  | NotificationDisplay
+  | MediaPlayPauseButton
 
 /**
  * 型ガード: ButtonComponent かどうか
@@ -63,6 +71,10 @@ function isVolumeDisplayComponent(config: Component): config is VolumeDisplayCom
  */
 function isMediaDisplayComponent(config: Component): config is MediaDisplayComponent {
   return config.type === 'mediaDisplay'
+}
+
+function isNotificationDisplayComponent(config: Component): config is NotificationDisplayComponent {
+  return config.type === 'notificationDisplay'
 }
 
 /**
@@ -95,7 +107,7 @@ export function createComponent(
 
     // 通常のButton
     // iconがある場合はIconResolverを使用しない（NerdFont等）
-    const iconImage = options.icon ? undefined : IconResolver.resolve(appName)
+    const iconImage = options.icon ? undefined : IconResolver.resolve(appName ?? componentName)
 
     return new Button(position.col, position.row, {
       ...options,
@@ -124,6 +136,14 @@ export function createComponent(
   if (isMediaDisplayComponent(config)) {
     const { position, options } = config
     return new MediaDisplay(position.col, position.row, mediaControl, {
+      ...options,
+      vibration,
+    })
+  }
+
+  if (isNotificationDisplayComponent(config)) {
+    const { position, options } = config
+    return new NotificationDisplay(position.col, position.row, {
       ...options,
       vibration,
     })

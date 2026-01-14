@@ -13,7 +13,7 @@
     "dev": "LOG_LEVEL=debug tsx watch main.ts",
     "dev:info": "LOG_LEVEL=info tsx watch main.ts",
     "dev:no-led": "LOG_LEVEL=debug SKIP_LED=true tsx watch main.ts",
-    "build": "esbuild main.ts --bundle --platform=node --format=esm --outfile=dist/main.js --sourcemap --external:canvas --external:express --external:loupedeck --external:pino --external:pino-pretty --external:chokidar --external:cors --external:zod",
+    "build": "esbuild main.ts --bundle --platform=node --format=esm --outfile=dist/main.js --sourcemap --external:canvas --external:express --external:loupedeck --external:pino --external:pino-pretty --external:chokidar --external:cors --external:zod --external:x11 --external:dbus-next",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix"
@@ -22,6 +22,7 @@
     "canvas": "^3.2.0",
     "chokidar": "^4.0.3",
     "cors": "^2.8.5",
+    "dbus-next": "^0.10.2",
     "express": "^5.1.0",
     "loupedeck": "^7.0.3",
     "pino": "^10.0.0",

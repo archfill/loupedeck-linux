@@ -260,7 +260,7 @@ export function LoupedeckPreview({
   const pageKey = String(currentPage)
   const allComponents = pages && pages[pageKey] ? pages[pageKey] : components
 
-  // 全てのコンポーネントを表示（_meta、volumeDisplay、mediaDisplay、物理ボタンは除外）
+  // 全てのコンポーネントを表示（_meta、volumeDisplay、mediaDisplay、notificationDisplay、物理ボタンは除外）
   const displayComponents: Record<string, Component> = useMemo(() => {
     const result: Record<string, Component> = {}
     if (allComponents) {
@@ -269,6 +269,7 @@ export function LoupedeckPreview({
           key !== '_meta' &&
           key !== 'volumeDisplay' &&
           key !== 'mediaDisplay' &&
+          key !== 'notificationDisplay' &&
           value &&
           typeof value === 'object' &&
           'position' in value &&

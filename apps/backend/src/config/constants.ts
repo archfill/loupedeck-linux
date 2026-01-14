@@ -17,6 +17,11 @@ export type KnobId = (typeof KNOB_IDS)[keyof typeof KNOB_IDS]
 // UI更新
 export const AUTO_UPDATE_INTERVAL_MS = 1000 as const // 自動更新インターバル（ミリ秒）
 
+// 通知表示
+export const NOTIFICATION_DISPLAY_TIMEOUT_MS = 5000 as const // 通知表示の自動非表示時間（ミリ秒）
+export const NOTIFICATION_MAX_TITLE_LENGTH = 20 as const // タイトルの最大文字数
+export const NOTIFICATION_MAX_BODY_LENGTH = 40 as const // 本文の最大文字数
+
 // 振動パターン名
 export const VIBRATION_PATTERNS = {
   TAP: 'tap',

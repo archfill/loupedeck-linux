@@ -21,6 +21,8 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 
+import { GlobalSettingsDialog } from './components/GlobalSettingsDialog'
+
 const ComponentEditor = lazy(async () => {
   const module = await import('./components/ComponentEditor')
   return { default: module.ComponentEditor }
@@ -71,6 +73,13 @@ function App() {
     queueImmediateSave,
     queueDebouncedSave,
   } = useConfigSync({ config })
+
+  const handleGlobalSettingsSave = (pages: any) => {
+    if (!editedConfig) return
+    const newConfig = { ...editedConfig, pages }
+    setEditedConfig(newConfig)
+    queueImmediateSave(pages)
+  }
 
   const handleComponentSave = (updatedComponent: ComponentConfig) => {
     if (!selectedComponent || !editedConfig) return
@@ -341,58 +350,46 @@ function App() {
                 <p className="text-muted-foreground text-sm lg:text-base">{t('app.subtitle')}</p>
               </div>
               <div className="flex gap-2 items-center">
+                <GlobalSettingsDialog
+                  config={editedConfig || config || null}
+                  onSave={handleGlobalSettingsSave}
+                />
                 <ThemeToggle />
                 <LanguageSwitcher />
-                {saveStatus !== 'idle' && (
-                  <div className="flex items-center gap-2 text-sm px-3 py-1.5 rounded-lg bg-muted border">
-                    {saveStatus === 'saving' && (
-                      <>
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        <span className="text-primary">{t('app.saveStatus.saving')}</span>
-                      </>
-                    )}
-                    {saveStatus === 'success' && (
-                      <>
-                        <Check className="h-4 w-4 text-primary" />
-                        <span className="text-primary font-medium">
-                          {t('app.saveStatus.saved')}
-                        </span>
-                      </>
-                    )}
-                    {saveStatus === 'error' && (
-                      <>
-                        <XCircle className="h-4 w-4 text-destructive" />
-                        <span className="text-destructive">{t('app.saveStatus.error')}</span>
-                      </>
-                    )}
-                  </div>
-                )}
               </div>
             </div>
           </div>
         </header>
 
         {/* Save Status Toast */}
-        {saveMessage && (
+        {saveStatus !== 'idle' && (
           <div className="fixed bottom-6 right-6 max-w-md z-50">
             <div
               className={`p-4 rounded-lg border shadow ${
-                saveStatus === 'success'
+                saveStatus === 'saving'
                   ? 'bg-muted text-foreground'
-                  : 'bg-destructive text-destructive-foreground'
+                  : saveStatus === 'success'
+                    ? 'bg-muted text-foreground'
+                    : 'bg-destructive text-destructive-foreground'
               }`}
             >
               <div className="flex items-start gap-3">
-                {saveStatus === 'success' ? (
+                {saveStatus === 'saving' ? (
+                  <Loader2 className="h-6 w-6 mt-0.5 animate-spin" />
+                ) : saveStatus === 'success' ? (
                   <Check className="h-6 w-6 mt-0.5" />
                 ) : (
                   <XCircle className="h-6 w-6 mt-0.5" />
                 )}
                 <div className="flex-1">
                   <p className="font-semibold text-sm">
-                    {saveStatus === 'success' ? t('common.success') : t('common.error')}
+                    {saveStatus === 'saving'
+                      ? t('app.saveStatus.saving')
+                      : saveStatus === 'success'
+                        ? t('common.success')
+                        : t('common.error')}
                   </p>
-                  <p className="text-sm mt-1 opacity-90">{saveMessage}</p>
+                  {saveMessage && <p className="text-sm mt-1 opacity-90">{saveMessage}</p>}
                 </div>
               </div>
             </div>

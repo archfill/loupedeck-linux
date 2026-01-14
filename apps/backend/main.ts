@@ -7,7 +7,9 @@ import { HyprlandControl } from './src/utils/hyprlandControl.ts'
 import { VolumeHandler } from './src/handlers/VolumeHandler.ts'
 import { PageHandler } from './src/handlers/PageHandler.ts'
 import { PhysicalButtonHandler } from './src/handlers/PhysicalButtonHandler.ts'
+import { NotificationHandler } from './src/handlers/NotificationHandler.ts'
 import { AppLauncher } from './src/utils/appLauncher.ts'
+import { NotificationListener } from './src/utils/notificationListener.ts'
 import { logger } from './src/utils/logger.ts'
 import { AUTO_UPDATE_INTERVAL_MS } from './src/config/constants.ts'
 import { ApiServer } from './src/server/api.ts'
@@ -27,6 +29,7 @@ import {
 } from './src/utils/componentFactory.ts'
 import type { VolumeDisplay } from './src/components/VolumeDisplay.ts'
 import type { MediaDisplay } from './src/components/MediaDisplay.ts'
+import type { NotificationDisplay } from './src/components/NotificationDisplay.ts'
 import type { MediaPlayPauseButton } from './src/components/MediaPlayPauseButton.ts'
 
 /**
@@ -42,6 +45,7 @@ async function buildComponents(
   workspaceButtons: WorkspaceButton[]
   volumeDisplay: VolumeDisplay | undefined
   mediaDisplay: MediaDisplay | undefined
+  notificationDisplay: NotificationDisplay | undefined
   physicalButtonConfigs: Map<number, Record<string, unknown>>
 }> {
   // キャッシュをクリアして最新の設定を読み込む
@@ -101,6 +105,9 @@ async function buildComponents(
   // 特殊なコンポーネントの参照を取得
   const volumeDisplay = componentsMap.get('volumeDisplay') as VolumeDisplay | undefined
   const mediaDisplay = componentsMap.get('mediaDisplay') as MediaDisplay | undefined
+  const notificationDisplay = componentsMap.get('notificationDisplay') as
+    | NotificationDisplay
+    | undefined
 
   logger.info('配置完了:')
   logger.info('\n【ページ1: アプリケーション】')
@@ -121,6 +128,7 @@ async function buildComponents(
     workspaceButtons,
     volumeDisplay,
     mediaDisplay,
+    notificationDisplay,
     physicalButtonConfigs,
   }
 }
@@ -180,8 +188,14 @@ async function main() {
     }
 
     // コンポーネントを生成してレイアウトに追加
-    let { componentsMap, workspaceButtons, volumeDisplay, mediaDisplay, physicalButtonConfigs } =
-      await buildComponents(layout, deps, hyprlandControl, vibration)
+    let {
+      componentsMap,
+      workspaceButtons,
+      volumeDisplay,
+      mediaDisplay,
+      notificationDisplay,
+      physicalButtonConfigs,
+    } = await buildComponents(layout, deps, hyprlandControl, vibration)
 
     // 物理ボタンのLED色を設定（デバイス初期化を待つ）
     // 環境変数 SKIP_LED=true でスキップ可能
@@ -204,6 +218,19 @@ async function main() {
 
     if (!volumeDisplay || !mediaDisplay) {
       logger.warn('⚠️ volumeDisplay または mediaDisplay が見つかりません')
+    }
+
+    const notificationListener = new NotificationListener()
+    let notificationHandler: NotificationHandler | null = null
+    if (notificationDisplay) {
+      notificationHandler = new NotificationHandler(
+        notificationListener,
+        notificationDisplay,
+        layout
+      )
+      await notificationHandler.start()
+    } else {
+      logger.warn('⚠️ notificationDisplay が見つかりません')
     }
 
     logger.info('\n【ページ2: ワークスペース切替】')
@@ -294,6 +321,11 @@ async function main() {
         // 古いコンポーネントのクリーンアップ
         if (volumeDisplay) volumeDisplay.cleanup()
         if (mediaDisplay) mediaDisplay.cleanup()
+        if (notificationDisplay) notificationDisplay.cleanup()
+        if (notificationHandler) {
+          await notificationHandler.stop()
+          notificationHandler = null
+        }
         if (mediaIconUpdateInterval) {
           clearInterval(mediaIconUpdateInterval)
         }
@@ -304,11 +336,15 @@ async function main() {
         workspaceButtons = result.workspaceButtons
         volumeDisplay = result.volumeDisplay
         mediaDisplay = result.mediaDisplay
+        notificationDisplay = result.notificationDisplay
         const physicalButtonConfigs = result.physicalButtonConfigs
 
         // 物理ボタンのLED色を更新
         const config = loadConfig()
         const ledColors = extractLedColors(config)
+        if (!loupedeckDevice) {
+          throw new Error('デバイスが接続されていません')
+        }
         await loupedeckDevice.setButtonColors(ledColors)
         logger.info('✓ 物理ボタンのLED色を更新しました')
 
@@ -325,6 +361,15 @@ async function main() {
 
         // メディアアイコン更新を再開
         mediaIconUpdateInterval = setInterval(updateMediaIcon, 2000)
+
+        if (notificationDisplay) {
+          notificationHandler = new NotificationHandler(
+            notificationListener,
+            notificationDisplay,
+            layout
+          )
+          await notificationHandler.start()
+        }
 
         logger.info('✓ 設定の再読み込みが完了しました')
       } catch (error) {
@@ -357,6 +402,15 @@ async function main() {
       if (mediaDisplay) {
         mediaDisplay.cleanup()
         logger.debug('MediaDisplayをクリーンアップしました')
+      }
+
+      if (notificationDisplay) {
+        notificationDisplay.cleanup()
+        logger.debug('NotificationDisplayをクリーンアップしました')
+      }
+
+      if (notificationHandler) {
+        await notificationHandler.stop()
       }
 
       // APIサーバーを停止

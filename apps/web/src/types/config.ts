@@ -19,6 +19,15 @@ export interface ComponentOptions {
   hoverBgColor?: string
   vibrationPattern?: string
   ledColor?: string
+  cellBgColor?: string
+  cellBorderColor?: string
+  barFillColor?: string
+  titleColor?: string
+  artistColor?: string
+  statusColor?: string
+  iconColor?: string
+  appNameColor?: string
+  bodyColor?: string
 }
 
 export interface ComponentConfig {
