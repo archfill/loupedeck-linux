@@ -185,6 +185,14 @@ pnpm run service:install
 - GUI environment variables are inherited from your session
 - Backend serves both API and Web UI on http://localhost:9876
 
+> **Hyprland users**: You must export environment variables to the systemd user session. Add the following to your `hyprland.conf` (before other `exec-once` entries):
+>
+> ```
+> exec-once = dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP XDG_DATA_DIRS HYPRLAND_INSTANCE_SIGNATURE PATH
+> ```
+>
+> GNOME and KDE Plasma do this automatically, but Hyprland does not. Without this, the service will fail to detect icons and Hyprland-specific features (e.g., workspace switching via `hyprctl`).
+
 ### Manage Service
 
 ```bash

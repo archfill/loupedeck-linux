@@ -185,6 +185,14 @@ pnpm run service:install
 - GUI環境変数はセッションから継承
 - バックエンドがAPIとWeb UIの両方を配信（http://localhost:9876）
 
+> **Hyprlandユーザー向け**: 環境変数をsystemdユーザーセッションにエクスポートする必要があります。`hyprland.conf`の他の`exec-once`より前に以下を追加してください：
+>
+> ```
+> exec-once = dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP XDG_DATA_DIRS HYPRLAND_INSTANCE_SIGNATURE PATH
+> ```
+>
+> GNOMEやKDE Plasmaはこれを自動的に行いますが、Hyprlandでは手動設定が必要です。この設定がないと、アイコンの検出やHyprland固有の機能（`hyprctl`によるワークスペース切替など）が動作しません。
+
 ### サービスの管理
 
 ```bash
