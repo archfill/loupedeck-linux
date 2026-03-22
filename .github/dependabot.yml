@@ -5,10 +5,42 @@ updates:
     schedule:
       interval: 'weekly'
     groups:
-      dev-dependencies:
-        dependency-type: 'development'
-      production-dependencies:
-        dependency-type: 'production'
+      # Patch/minor updates are safe to batch
+      minor-and-patch:
+        update-types:
+          - 'minor'
+          - 'patch'
+      # Major updates grouped by related packages
+      eslint-major:
+        patterns:
+          - 'eslint'
+          - 'eslint-*'
+          - '@eslint/*'
+          - 'typescript-eslint'
+          - 'prettier'
+          - 'eslint-plugin-*'
+        update-types:
+          - 'major'
+      vite-major:
+        patterns:
+          - 'vite'
+          - '@vitejs/*'
+        update-types:
+          - 'major'
+      tailwind-major:
+        patterns:
+          - 'tailwindcss'
+          - '@tailwindcss/*'
+        update-types:
+          - 'major'
+      react-major:
+        patterns:
+          - 'react'
+          - 'react-dom'
+          - '@types/react'
+          - '@types/react-dom'
+        update-types:
+          - 'major'
     labels:
       - 'dependencies'
 
