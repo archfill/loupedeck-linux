@@ -256,10 +256,10 @@ export class LoupedeckDevice {
 
       // 全画面をクリア（黒色で塗りつぶし）
       const screens: Array<'left' | 'center' | 'right'> = ['center']
-      if (this.device.screens.left) {
+      if (this.device.displays?.left) {
         screens.push('left')
       }
-      if (this.device.screens.right) {
+      if (this.device.displays?.right) {
         screens.push('right')
       }
 
