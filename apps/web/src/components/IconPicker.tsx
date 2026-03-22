@@ -37,7 +37,7 @@ export function IconPicker({ onSelect, currentIcon, onClose }: IconPickerProps) 
       cats.push({ id: key, name: value.name })
     })
     return cats
-  }, [])
+  }, [t])
 
   // 検索とカテゴリフィルタリング
   const filteredIcons = useMemo(() => {

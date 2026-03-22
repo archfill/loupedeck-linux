@@ -15,6 +15,7 @@ GET /api/health
 ```
 
 **Response**:
+
 ```json
 {
   "status": "ok",
@@ -31,6 +32,7 @@ GET /api/config
 Returns complete configuration including components, constants, and device info.
 
 **Response**:
+
 ```json
 {
   "components": { ... },
@@ -48,6 +50,7 @@ GET /api/config/components
 Returns component configuration only.
 
 **Response**:
+
 ```json
 {
   "pages": [
@@ -78,6 +81,7 @@ GET /api/config/constants
 ```
 
 **Response**:
+
 ```json
 {
   "GRID_COLUMNS": 5,
@@ -99,6 +103,7 @@ GET /api/device
 ```
 
 **Response**:
+
 ```json
 {
   "type": "Loupedeck Live S",
@@ -121,6 +126,7 @@ POST /api/config/reload
 Reloads configuration from `config/config.json` without restart.
 
 **Response**:
+
 ```json
 {
   "status": "ok",
@@ -139,6 +145,7 @@ const config = await response.json()
 ```
 
 Vite proxy configuration (`apps/web/vite.config.ts`):
+
 ```typescript
 server: {
   port: 5173,
@@ -163,6 +170,7 @@ All endpoints return errors in this format:
 ```
 
 Common error codes:
+
 - `CONFIG_NOT_FOUND` - Configuration file missing
 - `DEVICE_NOT_CONNECTED` - No device connected
 - `INVALID_REQUEST` - Malformed request

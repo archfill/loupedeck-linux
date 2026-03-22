@@ -38,14 +38,6 @@
     // Type definitions
     "types": ["node"]
   },
-  "include": [
-    "src/**/*",
-    "main.ts",
-    "main.js",
-    "src/types/**/*.d.ts"
-  ],
-  "exclude": [
-    "node_modules",
-    "dist"
-  ]
+  "include": ["src/**/*", "main.ts", "main.js", "src/types/**/*.d.ts"],
+  "exclude": ["node_modules", "dist"]
 }

@@ -7,7 +7,7 @@ import { ThemeToggle } from './components/theme-toggle'
 import { useConfig } from './hooks/useConfig'
 import { useConfigSync } from './hooks/useConfigSync'
 import { usePageApi } from './hooks/usePageApi'
-import type { ComponentConfig, PageMeta } from './types/config'
+import type { ComponentConfig, PageMeta, PagesConfig } from './types/config'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import {
@@ -74,7 +74,7 @@ function App() {
     queueDebouncedSave,
   } = useConfigSync({ config })
 
-  const handleGlobalSettingsSave = (pages: any) => {
+  const handleGlobalSettingsSave = (pages: PagesConfig) => {
     if (!editedConfig) return
     const newConfig = { ...editedConfig, pages }
     setEditedConfig(newConfig)

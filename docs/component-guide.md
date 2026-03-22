@@ -84,10 +84,10 @@ layout.addComponent(myComponent)
 
 ### Required Properties
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `col` | number | Grid column position |
-| `row` | number | Grid row position |
+| Property | Type   | Description          |
+| -------- | ------ | -------------------- |
+| `col`    | number | Grid column position |
+| `row`    | number | Grid row position    |
 
 ### Required Methods
 
@@ -96,6 +96,7 @@ layout.addComponent(myComponent)
 Renders the component to canvas.
 
 **Parameters**:
+
 - `ctx`: CanvasRenderingContext2D
 - `cellCoord`: `{ x, y, width, height }` - Pixel coordinates
 
@@ -104,6 +105,7 @@ Renders the component to canvas.
 Handles touch events.
 
 **Parameters**:
+
 - `col`: Touched grid column
 - `row`: Touched grid row
 
@@ -132,6 +134,7 @@ cleanup(): void {
 App launcher button with icon and label.
 
 **Options**:
+
 - `label` - Text label
 - `iconSize` - Icon dimensions
 - `backgroundColor` - Background color
@@ -146,6 +149,7 @@ App launcher button with icon and label.
 Digital clock display with time and date.
 
 **Options**:
+
 - `backgroundColor` - Background color
 - `textColor` - Text color
 - `showSeconds` - Show seconds
@@ -158,6 +162,7 @@ Digital clock display with time and date.
 Volume indicator with progress bar (overlay component).
 
 **Features**:
+
 - Shows/hides temporarily via `showTemporarily()`
 - Progress bar visualization
 - Speaker icon based on volume level
@@ -170,6 +175,7 @@ Volume indicator with progress bar (overlay component).
 Media player info display (overlay component).
 
 **Features**:
+
 - Track title and artist
 - Playback status
 - Auto-hides after timeout
@@ -221,15 +227,16 @@ const iconPath = await resolver.resolve('firefox')
 
 Available patterns in `apps/backend/src/config/constants.ts`:
 
-| Pattern | Description | Duration |
-|---------|-------------|----------|
-| `tap` | Short button press | 30ms |
-| `success` | Confirmation | 50, 80, 50ms |
-| `error` | Error feedback | 200ms |
-| `warning` | Warning | Variable |
-| `connect` | Device connected | Variable |
+| Pattern   | Description        | Duration     |
+| --------- | ------------------ | ------------ |
+| `tap`     | Short button press | 30ms         |
+| `success` | Confirmation       | 50, 80, 50ms |
+| `error`   | Error feedback     | 200ms        |
+| `warning` | Warning            | Variable     |
+| `connect` | Device connected   | Variable     |
 
 Usage:
+
 ```typescript
 await this.vibration?.vibratePattern('tap')
 ```
@@ -239,11 +246,13 @@ await this.vibration?.vibratePattern('tap')
 For components that appear temporarily over others:
 
 1. Add a `visible` property:
+
 ```typescript
 private visible = false
 ```
 
 2. Implement `showTemporarily()`:
+
 ```typescript
 private timeout: NodeJS.Timeout | null = null
 
@@ -257,6 +266,7 @@ showTemporarily(duration = 2000): void {
 ```
 
 3. Check visibility in `draw()`:
+
 ```typescript
 draw(ctx, cellCoord): void {
   if (!this.visible) return
@@ -265,6 +275,7 @@ draw(ctx, cellCoord): void {
 ```
 
 4. Register after base components:
+
 ```typescript
 // Clock renders first, VolumeDisplay overlays when visible
 layout.addComponents([clock, volumeDisplay])

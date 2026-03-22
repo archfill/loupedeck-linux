@@ -55,6 +55,7 @@ This application controls Loupedeck devices on Linux using a component-based arc
 **Location**: `apps/backend/src/device/LoupedeckDevice.ts`
 
 Wraps the `loupedeck` library and provides:
+
 - Device discovery and connection
 - Event handling (touch, buttons, knobs, disconnect)
 - Vibration feedback coordination
@@ -62,11 +63,13 @@ Wraps the `loupedeck` library and provides:
 - LED button color control
 
 **Key methods**:
+
 - `setButtonColor(buttonId, color)` - Set single LED
 - `setButtonColors(colorMap)` - Set multiple LEDs
 - `setupExitHandlers(callback)` - Register cleanup handlers
 
 **Touch coordinate conversion** (line ~120):
+
 ```
 marginX = (screenWidth - totalWidth) / 2
 col = floor((x - marginX) / keySize)
@@ -78,6 +81,7 @@ row = floor(y / keySize)
 **Location**: `apps/backend/src/components/Screen.ts`
 
 Base class for screen layouts:
+
 - Grid calculations (`marginX`, `keySize`, columns/rows)
 - `getCellCoordinates(col, row)` for component positioning
 - Canvas drawing via `device.drawScreen('center', callback)`
@@ -87,6 +91,7 @@ Base class for screen layouts:
 **Location**: `apps/backend/src/components/GridLayout.ts`
 
 Extends `Screen` to manage multiple components:
+
 - `componentMap` (Map with `${col}_${row}` keys) for touch routing
 - Component drawing and event delegation
 - `startAutoUpdate(interval)` for periodic redraws
@@ -98,12 +103,12 @@ Extends `Screen` to manage multiple components:
 
 Coordinate between device events and system utilities:
 
-| Handler | Knob | Function |
-|---------|------|----------|
-| VolumeHandler | knobTL | Volume control, mute toggle |
-| MediaHandler | knobCL | Next/previous track |
-| PageHandler | knobBL | Page navigation |
-| WorkspaceHandler | - | Hyprland workspace switching |
+| Handler          | Knob   | Function                     |
+| ---------------- | ------ | ---------------------------- |
+| VolumeHandler    | knobTL | Volume control, mute toggle  |
+| MediaHandler     | knobCL | Next/previous track          |
+| PageHandler      | knobBL | Page navigation              |
+| WorkspaceHandler | -      | Hyprland workspace switching |
 
 ## Event Flow
 
@@ -144,6 +149,7 @@ GridLayout.update()
 **Location**: `apps/backend/config/config.json`
 
 JSON configuration loaded at runtime, defines:
+
 - Pages and their components
 - Button configurations (position, command, icon)
 - Clock settings

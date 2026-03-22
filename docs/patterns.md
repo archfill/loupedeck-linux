@@ -72,8 +72,8 @@ const volume = await volumeControl.getVolume()
 await volumeControl.setVolume(50)
 
 // Adjust relative
-await volumeControl.adjustVolume(5)   // +5%
-await volumeControl.adjustVolume(-5)  // -5%
+await volumeControl.adjustVolume(5) // +5%
+await volumeControl.adjustVolume(-5) // -5%
 
 // Mute toggle
 const isMuted = await volumeControl.toggleMute()
@@ -84,7 +84,7 @@ const isMuted = await volumeControl.toggleMute()
 ```typescript
 loupedeckDevice.on('rotate', async ({ id, delta }) => {
   if (id === 'knobTL') {
-    const step = delta * 5  // 5% per step
+    const step = delta * 5 // 5% per step
     await volumeControl.adjustVolume(step)
     volumeDisplay.showTemporarily()
     await layout.update()
@@ -188,18 +188,18 @@ exec('firefox', (error) => {
 ### Set Individual Button
 
 ```typescript
-await loupedeckDevice.setButtonColor(0, '#FF0000')  // Red
-await loupedeckDevice.setButtonColor(1, '#00FF00')  // Green
+await loupedeckDevice.setButtonColor(0, '#FF0000') // Red
+await loupedeckDevice.setButtonColor(1, '#00FF00') // Green
 ```
 
 ### Set Multiple Buttons
 
 ```typescript
 await loupedeckDevice.setButtonColors({
-  0: '#FFFFFF',  // White
-  1: '#FF0000',  // Red
-  2: '#00FF00',  // Green
-  3: '#0000FF',  // Blue
+  0: '#FFFFFF', // White
+  1: '#FF0000', // Red
+  2: '#00FF00', // Green
+  3: '#0000FF', // Blue
 })
 ```
 
@@ -221,8 +221,8 @@ export const BUTTON_LED_COLORS = {
 Knob IDs are device-specific strings:
 
 | Device | Top-Left | Center-Left | Bottom-Left |
-|--------|----------|-------------|-------------|
-| Live S | `knobTL` | `knobCL` | `knobBL` |
+| ------ | -------- | ----------- | ----------- |
+| Live S | `knobTL` | `knobCL`    | `knobBL`    |
 
 Discover your device's knob IDs:
 

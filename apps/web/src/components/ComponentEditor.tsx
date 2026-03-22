@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Info, Trash2 } from 'lucide-react'
 import type { ComponentConfig } from '../types/config'
@@ -73,7 +73,9 @@ function NerdFontIconSelector({ currentIcon, onSelect }: NerdFontIconSelectorPro
 
       {/* IconPicker Modal */}
       {showPicker && (
-        <Suspense fallback={<div className="text-sm text-muted-foreground">{t('common.loading')}</div>}>
+        <Suspense
+          fallback={<div className="text-sm text-muted-foreground">{t('common.loading')}</div>}
+        >
           <IconPicker
             currentIcon={currentIcon}
             onSelect={(icon) => {
@@ -170,22 +172,25 @@ export function ComponentEditor({
     }
   }
 
-  const getField = (path: string[]): any => {
-    let current: Record<string, unknown> | undefined = editedComponent
-    for (const key of path) {
-      if (current && typeof current === 'object' && key in current) {
-        const next = current[key]
-        if (next && typeof next === 'object') {
-          current = next as Record<string, unknown>
+  const getField = useCallback(
+    (path: string[]): unknown => {
+      let current: Record<string, unknown> | undefined = editedComponent
+      for (const key of path) {
+        if (current && typeof current === 'object' && key in current) {
+          const next = current[key]
+          if (next && typeof next === 'object') {
+            current = next as Record<string, unknown>
+          } else {
+            return next
+          }
         } else {
-          return next
+          return undefined
         }
-      } else {
-        return undefined
       }
-    }
-    return current
-  }
+      return current
+    },
+    [editedComponent]
+  )
 
   // iconTypeが未設定の場合、既存のフィールドから推測
   const getIconType = useMemo(() => {
@@ -194,7 +199,7 @@ export function ComponentEditor({
     if (getField(['options', 'icon'])) return 'nerdfont'
     if (getField(['options', 'iconImage'])) return 'image'
     return 'none'
-  }, [editedComponent])
+  }, [getField])
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
