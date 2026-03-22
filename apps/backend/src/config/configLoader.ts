@@ -6,15 +6,9 @@
 
 import { z } from 'zod'
 import { readFileSync } from 'fs'
-import { resolve } from 'path'
 import { watch, type FSWatcher } from 'chokidar'
 import { logger } from '../utils/logger.js'
-import {
-  getUserConfigPath,
-  getDefaultConfigPath,
-  configExists,
-  copyDefaultToUser,
-} from '../utils/xdgPaths.js'
+import { getUserConfigPath, configExists, copyDefaultToUser } from '../utils/xdgPaths.js'
 
 // ========================================
 // Zod Schemas
@@ -133,12 +127,6 @@ const ComponentSchema = z.discriminatedUnion('type', [
   LayoutComponentSchema,
 ])
 
-/** Page metadata schema */
-const PageMetaSchema = z.object({
-  title: z.string(),
-  description: z.string(),
-})
-
 /** Page schema - フラット構造（_metaとコンポーネントが同じレベル） */
 const PageSchema = z.record(
   z.string(),
@@ -178,7 +166,7 @@ export type NotificationDisplayComponent = z.infer<typeof NotificationDisplayCom
 export type LayoutComponent = z.infer<typeof LayoutComponentSchema>
 
 export type Component = z.infer<typeof ComponentSchema>
-export type PageMeta = z.infer<typeof PageMetaSchema>
+export type PageMeta = { title: string; description: string }
 export type Page = Record<string, PageMeta | Component>
 export type Config = z.infer<typeof ConfigSchema>
 
@@ -230,10 +218,10 @@ export function loadConfig(configPath?: string): Config {
   } catch (error) {
     if (error instanceof z.ZodError) {
       logger.error('Configuration validation failed:')
-      const errors = (error as any).errors
+      const errors = (error as z.ZodError).errors
       logger.error(`Errors type: ${typeof errors}, is array: ${Array.isArray(errors)}`)
       if (errors && Array.isArray(errors)) {
-        errors.forEach((err: any) => {
+        errors.forEach((err: z.ZodIssue) => {
           logger.error(`  - ${err.path?.join('.') || 'unknown'}: ${err.message}`)
         })
       } else {

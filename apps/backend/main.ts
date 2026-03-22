@@ -1,4 +1,5 @@
 import { LoupedeckDevice } from './src/device/LoupedeckDevice.ts'
+import type { VibrationUtil } from './src/utils/vibration.ts'
 import { GridLayout } from './src/components/GridLayout.ts'
 import { WorkspaceButton } from './src/components/WorkspaceButton.ts'
 import { VolumeControl } from './src/utils/volumeControl.ts'
@@ -31,6 +32,7 @@ import type { VolumeDisplay } from './src/components/VolumeDisplay.ts'
 import type { MediaDisplay } from './src/components/MediaDisplay.ts'
 import type { NotificationDisplay } from './src/components/NotificationDisplay.ts'
 import type { MediaPlayPauseButton } from './src/components/MediaPlayPauseButton.ts'
+import type { Button } from './src/components/Button.ts'
 
 /**
  * コンポーネントを生成してレイアウトに追加する関数
@@ -39,7 +41,7 @@ async function buildComponents(
   layout: GridLayout,
   deps: ComponentDependencies,
   hyprlandControl: HyprlandControl,
-  vibration: any
+  vibration: VibrationUtil | null
 ): Promise<{
   componentsMap: Map<string, GeneratedComponent>
   workspaceButtons: WorkspaceButton[]
@@ -188,14 +190,10 @@ async function main() {
     }
 
     // コンポーネントを生成してレイアウトに追加
-    let {
-      componentsMap,
-      workspaceButtons,
-      volumeDisplay,
-      mediaDisplay,
-      notificationDisplay,
-      physicalButtonConfigs,
-    } = await buildComponents(layout, deps, hyprlandControl, vibration)
+    const initialBuildResult = await buildComponents(layout, deps, hyprlandControl, vibration)
+    let { componentsMap, workspaceButtons, volumeDisplay, mediaDisplay, notificationDisplay } =
+      initialBuildResult
+    const { physicalButtonConfigs } = initialBuildResult
 
     // 物理ボタンのLED色を設定（デバイス初期化を待つ）
     // 環境変数 SKIP_LED=true でスキップ可能
@@ -271,7 +269,7 @@ async function main() {
       layout,
       workspaceButtons,
       vibration,
-      physicalButtonConfigs as Map<number, any>
+      physicalButtonConfigs as Map<number, Button>
     )
 
     // メディアハンドラーを作成（現在は未使用）
@@ -337,7 +335,10 @@ async function main() {
         volumeDisplay = result.volumeDisplay
         mediaDisplay = result.mediaDisplay
         notificationDisplay = result.notificationDisplay
-        const physicalButtonConfigs = result.physicalButtonConfigs
+        const physicalButtonConfigs: Map<number, Button> = result.physicalButtonConfigs as Map<
+          number,
+          Button
+        >
 
         // 物理ボタンのLED色を更新
         const config = loadConfig()
@@ -356,7 +357,7 @@ async function main() {
           layout,
           workspaceButtons,
           vibration,
-          physicalButtonConfigs as Map<number, any>
+          physicalButtonConfigs as Map<number, Button>
         )
 
         // メディアアイコン更新を再開

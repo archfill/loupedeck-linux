@@ -66,7 +66,7 @@ export class ApiServer {
       const pages = convertToPageConfig(config)
 
       // pagesを_meta付きの形式に変換
-      const pagesWithMeta: Record<number, any> = {}
+      const pagesWithMeta: Record<number, Record<string, unknown>> = {}
       Object.entries(pages).forEach(([pageNum, pageConfig]) => {
         pagesWithMeta[Number(pageNum)] = {
           _meta: pageConfig.meta,
@@ -343,7 +343,7 @@ export class ApiServer {
         }
 
         // ページを削除
-        const { [pageNum]: deletedPage, ...remainingPages } = pages
+        const { [pageNum]: _deletedPage, ...remainingPages } = pages
         const updatedConfig = { ...config, pages: remainingPages }
 
         // Zodでバリデーション

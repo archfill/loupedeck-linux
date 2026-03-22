@@ -27,7 +27,7 @@ export class HyprlandControl {
       } else {
         logger.warn('Hyprlandが検出されませんでした')
       }
-    } catch (error) {
+    } catch (_error) {
       this.isHyprland = false
       logger.warn('Hyprlandが検出されませんでした（hyprctlコマンドが見つかりません）')
     }

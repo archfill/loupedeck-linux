@@ -284,7 +284,7 @@ export class LoupedeckDevice {
    * デバイスがコマンドを受け付けられるようになるまで待機
    * 主に再起動時のUSBデバイス解放待ちに使用
    */
-  private async waitForDeviceReady(maxAttempts = 10): Promise<void> {
+  private async waitForDeviceReady(_maxAttempts = 10): Promise<void> {
     if (!this.device) {
       return
     }
@@ -305,7 +305,7 @@ export class LoupedeckDevice {
         logger.debug(`デバイスが使用可能になりました（待機 ${waitAttempt}回目）`)
         deviceReadyFound = true
         break
-      } catch (error: unknown) {
+      } catch (_error: unknown) {
         if (waitAttempt === 30) {
           logger.warn('前回のプロセス終了待機がタイムアウトしました（処理継続）')
         } else {
