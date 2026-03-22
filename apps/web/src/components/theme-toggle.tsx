@@ -9,7 +9,7 @@ export function ThemeToggle() {
 
   // hydration mismatchを防ぐため、マウント後にのみ表示
   useEffect(() => {
-    setMounted(true)
+    requestAnimationFrame(() => setMounted(true))
   }, [])
 
   if (!mounted) {
