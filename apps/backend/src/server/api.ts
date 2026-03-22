@@ -5,6 +5,7 @@ import { fileURLToPath } from 'url'
 import { writeFileSync, renameSync, existsSync, rmSync } from 'fs'
 import type { Server } from 'http'
 import { logger } from '../utils/logger.js'
+import type { ConnectionState } from '../device/LoupedeckDevice.ts'
 import {
   clearConfigCache,
   ConfigSchema,
@@ -32,9 +33,11 @@ export class ApiServer {
   private port: number
   private app: Application
   private server: Server | null
+  private getDeviceConnectionState?: () => ConnectionState
 
-  constructor(port: number = 9876) {
+  constructor(port: number = 9876, getDeviceConnectionState?: () => ConnectionState) {
     this.port = port
+    this.getDeviceConnectionState = getDeviceConnectionState
     this.app = express()
     this.server = null
     this.setupMiddleware()
@@ -56,7 +59,14 @@ export class ApiServer {
   private setupRoutes(): void {
     // ヘルスチェック
     this.app.get('/api/health', (_req: Request, res: Response) => {
-      res.json({ status: 'ok', timestamp: new Date().toISOString() })
+      res.json({
+        status: 'ok',
+        device: {
+          connected: this.getDeviceConnectionState?.() === 'connected',
+          state: this.getDeviceConnectionState?.() ?? 'unknown',
+        },
+        timestamp: new Date().toISOString(),
+      })
     })
 
     // 全設定取得

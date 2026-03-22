@@ -3,6 +3,8 @@ import { discover, type LoupedeckDevice as LoupedeckDeviceType } from 'loupedeck
 import { logger } from '../utils/logger.ts'
 import { VibrationUtil } from '../utils/vibration.ts'
 
+export type ConnectionState = 'disconnected' | 'connected' | 'reconnecting'
+
 interface TouchEvent {
   x: number
   y: number
@@ -24,6 +26,9 @@ interface TouchCallback {
 export class LoupedeckDevice {
   private device: LoupedeckDeviceType | null
   private vibration: VibrationUtil | null
+  private connectionState: ConnectionState = 'disconnected'
+  private disconnectCallback?: () => Promise<void>
+  private reconnectCallback?: () => Promise<void>
 
   constructor() {
     this.device = null
@@ -64,6 +69,8 @@ export class LoupedeckDevice {
       // デバイスがコマンドを受け付けられるようになるまで待機
       await this.waitForDeviceReady()
 
+      this.connectionState = 'connected'
+
       return this.device
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : String(error)
@@ -84,9 +91,15 @@ export class LoupedeckDevice {
       logger.info('✓ デバイスが接続されました')
     })
 
-    this.device.on('disconnect', () => {
+    this.device.on('disconnect', async () => {
       logger.warn('✗ デバイスが切断されました')
-      process.exit(0)
+      this.connectionState = 'reconnecting'
+      this.device = null
+      this.vibration = null
+      if (this.disconnectCallback) {
+        await this.disconnectCallback()
+      }
+      this.attemptReconnect()
     })
 
     // すべてのイベントをデバッグログに出力
@@ -229,6 +242,7 @@ export class LoupedeckDevice {
       this.device = null
       this.vibration = null
     }
+    this.connectionState = 'disconnected'
   }
 
   /**
@@ -451,6 +465,63 @@ export class LoupedeckDevice {
     // 新しいハンドラーを登録
     process.on('SIGINT', () => exitHandler('SIGINT'))
     process.on('SIGTERM', () => exitHandler('SIGTERM'))
+  }
+
+  /**
+   * デバイスへの再接続を試みる（指数バックオフ）
+   */
+  private async attemptReconnect(): Promise<void> {
+    const MAX_ATTEMPTS = 20
+    const BASE_DELAY_MS = 3000
+    const MAX_DELAY_MS = 30000
+
+    for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+      const delay = Math.min(BASE_DELAY_MS * Math.pow(2, attempt - 1), MAX_DELAY_MS)
+      logger.info(`🔄 デバイス再接続を試行中... (${attempt}/${MAX_ATTEMPTS}, ${delay / 1000}秒後)`)
+      await new Promise((resolve) => setTimeout(resolve, delay))
+
+      try {
+        this.device = await discover()
+        this.connectionState = 'connected'
+        logger.info('✓ デバイスに再接続しました!')
+        logger.info(`  タイプ: ${this.device.type}`)
+
+        this.vibration = new VibrationUtil(this.device)
+        this.setupDefaultEventHandlers()
+        await this.vibration.vibratePattern('connect')
+
+        if (this.reconnectCallback) {
+          await this.reconnectCallback()
+        }
+        return
+      } catch (_error: unknown) {
+        logger.warn(`再接続試行 ${attempt}/${MAX_ATTEMPTS} 失敗`)
+      }
+    }
+
+    logger.error('✗ 再接続に失敗しました。プロセスを終了します。')
+    process.exit(1)
+  }
+
+  /**
+   * デバイス切断時のコールバックを登録
+   */
+  onDeviceDisconnect(callback: () => Promise<void>): void {
+    this.disconnectCallback = callback
+  }
+
+  /**
+   * デバイス再接続時のコールバックを登録
+   */
+  onDeviceReconnect(callback: () => Promise<void>): void {
+    this.reconnectCallback = callback
+  }
+
+  /**
+   * 現在の接続状態を取得
+   */
+  getConnectionState(): ConnectionState {
+    return this.connectionState
   }
 
   /**

@@ -12,7 +12,7 @@ Environment=NODE_ENV=production
 Environment=LOG_LEVEL=info
 Environment=LOUPEDECK_PROJECT_ROOT={{PROJECT_DIR}}
 ExecStart={{PNPM_PATH}} --filter @loupedeck-linux/backend run start:prod
-Restart=on-failure
+Restart=always
 RestartSec=10
 StandardOutput=journal
 StandardError=journal
