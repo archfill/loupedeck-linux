@@ -22,6 +22,7 @@
     "build:all": "pnpm run build && pnpm run build:web",
     "preview:web": "pnpm --filter web run preview",
     "clean": "rm -rf apps/backend/dist",
+    "test": "vitest run",
     "lint": "pnpm run -r lint",
     "lint:fix": "pnpm run -r lint:fix",
     "format": "prettier --write \"**/*.{ts,tsx,js,json,md}\"",
@@ -47,7 +48,8 @@
     "prettier": "^3.8.1",
     "tsx": "^4.20.6",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.57.1"
+    "typescript-eslint": "^8.57.1",
+    "vitest": "^4.1.0"
   },
   "volta": {
     "node": "22.20.0",

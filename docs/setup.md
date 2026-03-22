@@ -24,7 +24,7 @@
 ## 要件
 
 - Node.js 20以降
-- npm または yarn
+- pnpm 9以降
 
 ## 重要な注意事項
 
@@ -46,17 +46,17 @@ Linuxで使用する場合は、ファームウェアバージョン0.2.23への
 
 このスクリプトは以下を自動的に実行します：
 
-1. Node.js/npmの確認
+1. Node.js/pnpmの確認
 2. 必要なツール（lsusb）のインストール
 3. Loupedeckデバイスの検出
 4. udevルールの作成と適用
 5. シリアルポートのアクセス権限設定
-6. npm依存関係のインストール
+6. pnpm依存関係のインストール
 
 インストール完了後、以下のコマンドでデバイスの動作を確認できます：
 
 ```bash
-node test.js
+node apps/backend/tests/test.js
 ```
 
 **注意**: グループ権限の変更が適用されるため、新しいターミナルを開くか、再ログインが必要な場合があります。
@@ -144,18 +144,12 @@ sudo usermod -a -G uucp $USER
 groups
 ```
 
-### 6. loupedeckライブラリのインストール
+### 6. 依存関係のインストール
 
-プロジェクトディレクトリで以下を実行：
-
-```bash
-npm install loupedeck
-```
-
-グラフィックスを描画する場合は、追加で`canvas`モジュールが必要です：
+プロジェクトルートで以下を実行します。`loupedeck`や`canvas`はすでにワークスペース依存関係として定義されているため、個別インストールは不要です：
 
 ```bash
-npm install canvas
+pnpm install
 ```
 
 ## 基本的な使用例
@@ -230,6 +224,21 @@ await device.vibrate([100, 200, 100])
 ### ファームウェアバージョンの確認
 
 デバイスのファームウェアバージョンが0.2.26の場合、Linuxでは動作しません。0.2.23以前のバージョンにダウングレードしてください。
+
+## systemdサービスとして登録する
+
+バックグラウンドで自動起動させたい場合、systemdユーザーサービスとして登録できます。
+
+```bash
+pnpm run service:install
+```
+
+このコマンドは`scripts/manage-systemd-service.sh install`を実行し、以下を自動で行います：
+
+- `~/.config/systemd/user/loupedeck.service`の生成
+- `systemctl --user enable --now loupedeck`によるサービスの有効化・即時起動
+
+サービスの状態確認・停止・アンインストールは同スクリプトの各サブコマンドで行います。詳細は`./scripts/manage-systemd-service.sh --help`を参照してください。
 
 ## 参考リンク
 

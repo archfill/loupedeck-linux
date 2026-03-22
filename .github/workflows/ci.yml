@@ -44,5 +44,8 @@ jobs:
       - name: Format check
         run: pnpm run format:check
 
+      - name: Test
+        run: pnpm run test
+
       - name: Build
         run: pnpm --filter @loupedeck-linux/backend run build
