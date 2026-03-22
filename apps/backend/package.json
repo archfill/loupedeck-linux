@@ -30,12 +30,12 @@
     "zod": "^4.1.12"
   },
   "devDependencies": {
-    "@eslint/js": "^9.37.0",
+    "@eslint/js": "^10.0.1",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",
-    "@types/node": "^24.7.2",
+    "@types/node": "^25.5.0",
     "eslint-config-prettier": "^10.1.8",
-    "eslint-plugin-prettier": "^5.5.4",
-    "typescript-eslint": "^8.46.1"
+    "eslint-plugin-prettier": "^5.5.5",
+    "typescript-eslint": "^8.57.1"
   }
 }
