@@ -19,7 +19,7 @@
     "lint:fix": "eslint . --fix"
   },
   "dependencies": {
-    "canvas": "^3.2.2",
+    "canvas": "^3.2.3",
     "chokidar": "^5.0.0",
     "cors": "^2.8.6",
     "dbus-next": "^0.10.2",
@@ -36,6 +36,6 @@
     "@types/node": "^24.7.2",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.5",
-    "typescript-eslint": "^8.57.1"
+    "typescript-eslint": "^8.58.1"
   }
 }
