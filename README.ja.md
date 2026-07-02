@@ -228,6 +228,16 @@ pnpm run service:uninstall # 削除
 - 開発: http://localhost:5173
 - API: http://localhost:9876/api/config
 
+### デスクトップアプリ化の方針
+
+現在の実装では、バックエンド API と Web UI を `127.0.0.1:9876` で配信しています。
+この固定ローカル Web ポートを使う構成は暫定です。
+
+長期的には、ユーザー向け UI を Tauri ベースのデスクトップアプリへ移行し、
+固定 HTTP ポートをローカル IPC などの portless な通信方式へ置き換える方針です。
+
+移行が完了するまでは、ブラウザ版 Web UI と systemd user service は引き続きサポートします。
+
 ## ⚙️ 設定
 
 ランタイム設定は `apps/backend/config/config.json` で管理されます。

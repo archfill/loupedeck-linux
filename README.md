@@ -228,6 +228,18 @@ Row2: [ ]        [ ]        [ ]         [ ]           [ ]
 - Development: http://localhost:5173
 - API: http://localhost:9876/api/config
 
+### Desktop App Direction
+
+The current implementation serves the backend API and Web UI on `127.0.0.1:9876`.
+This fixed local web port is a temporary architecture.
+
+The long-term direction is to move the user-facing UI to a Tauri-based desktop
+application and replace the fixed HTTP port with local IPC or an equivalent
+portless communication mechanism.
+
+Until that migration is complete, the browser Web UI and systemd user service
+remain supported.
+
 ## ⚙️ Configuration
 
 Runtime configuration is managed in `apps/backend/config/config.json`.
