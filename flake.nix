@@ -38,6 +38,11 @@
 
             env = {
               GIO_MODULE_DIR = "${pkgs.glib-networking}/lib/gio/modules";
+              LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath [
+                pkgs.gtk3
+                (pkgs.lib.getLib pkgs.libayatana-appindicator)
+                pkgs.webkitgtk_4_1
+              ];
             };
           };
         }

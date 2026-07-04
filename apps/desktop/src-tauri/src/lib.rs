@@ -1,7 +1,9 @@
 use serde_json::{json, Value};
 use std::env;
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
+use tauri::menu::{Menu, MenuItem};
+use tauri::tray::TrayIconBuilder;
 use tauri::Manager;
 use thiserror::Error;
 
@@ -154,13 +156,91 @@ fn update_page_meta(page_num: String, title: String, description: String) -> Des
     write_config_value(&config)
 }
 
+fn show_settings_window(app: &tauri::AppHandle) {
+    if let Some(window) = app.get_webview_window("main") {
+        let _ = window.show();
+        let _ = window.unminimize();
+        let _ = window.set_focus();
+    }
+}
+
+#[cfg(target_os = "linux")]
+fn appindicator_runtime_available() -> bool {
+    const LIB_NAMES: &[&str] = &[
+        "libayatana-appindicator3.so.1",
+        "libayatana-appindicator3.so",
+        "libappindicator3.so.1",
+        "libappindicator3.so",
+    ];
+    const COMMON_LIB_DIRS: &[&str] = &[
+        "/usr/lib",
+        "/usr/lib64",
+        "/usr/lib/x86_64-linux-gnu",
+        "/lib",
+        "/lib64",
+        "/lib/x86_64-linux-gnu",
+    ];
+
+    let env_dirs = env::var_os("LD_LIBRARY_PATH")
+        .into_iter()
+        .flat_map(|paths| env::split_paths(&paths).collect::<Vec<_>>());
+    let common_dirs = COMMON_LIB_DIRS.iter().map(PathBuf::from);
+
+    env_dirs.chain(common_dirs).any(|dir| {
+        LIB_NAMES
+            .iter()
+            .any(|name| Path::new(&dir).join(name).exists())
+    })
+}
+
+#[cfg(not(target_os = "linux"))]
+fn appindicator_runtime_available() -> bool {
+    true
+}
+
+fn setup_tray(app: &tauri::App) -> tauri::Result<()> {
+    if !appindicator_runtime_available() {
+        eprintln!("AppIndicator runtime library was not found; tray icon is disabled.");
+        return Ok(());
+    }
+
+    let open_settings =
+        MenuItem::with_id(app, "open_settings", "Open Settings", true, None::<&str>)?;
+    let quit = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
+    let menu = Menu::with_items(app, &[&open_settings, &quit])?;
+
+    TrayIconBuilder::new()
+        .icon(
+            app.default_window_icon()
+                .expect("missing default window icon")
+                .clone(),
+        )
+        .menu(&menu)
+        .show_menu_on_left_click(true)
+        .on_menu_event(|app, event| match event.id().as_ref() {
+            "open_settings" => show_settings_window(app),
+            "quit" => app.exit(0),
+            _ => {}
+        })
+        .build(app)?;
+
+    Ok(())
+}
+
 pub fn run() {
     tauri::Builder::default()
         .setup(|app| {
             if let Some(window) = app.get_webview_window("main") {
                 let _ = window.set_title("Loupedeck Linux");
             }
+            setup_tray(app)?;
             Ok(())
+        })
+        .on_window_event(|window, event| {
+            if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+                let _ = window.hide();
+                api.prevent_close();
+            }
         })
         .invoke_handler(tauri::generate_handler![
             get_config,
