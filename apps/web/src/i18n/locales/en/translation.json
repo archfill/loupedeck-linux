@@ -36,7 +36,7 @@
     "alerts": {
       "deleteConfirm": "Delete {{name}}?",
       "gridFull": "Grid is full. No empty space available.",
-      "apiError": "Make sure the API server is running on port 9876"
+      "apiError": "Make sure the desktop app can access the local configuration service"
     }
   },
   "settings": {

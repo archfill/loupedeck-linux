@@ -1,12 +1,9 @@
 import { useQuery } from '@tanstack/react-query'
 import type { Config } from '../types/config'
+import { backendClient } from '../lib/backendClient'
 
 const fetchConfig = async (): Promise<Config> => {
-  const response = await fetch('/api/config')
-  if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`)
-  }
-  return response.json()
+  return backendClient.getConfig()
 }
 
 export const useConfig = () => {

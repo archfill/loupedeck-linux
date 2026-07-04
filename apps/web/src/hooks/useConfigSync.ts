@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { Dispatch, SetStateAction } from 'react'
 import type { Config, PagesConfig, SaveStatus } from '../types/config'
+import { backendClient } from '../lib/backendClient'
 
 type UseConfigSyncOptions = {
   config?: Config
   debounceMs?: number
-  endpoint?: string
 }
 
 type UseConfigSyncResult = {
@@ -24,7 +24,6 @@ const AUTO_RESET_MS = 5000
 export const useConfigSync = ({
   config,
   debounceMs = DEFAULT_DEBOUNCE_MS,
-  endpoint = '/api/config',
 }: UseConfigSyncOptions): UseConfigSyncResult => {
   const [editedConfig, setEditedConfig] = useState<Config | null>(null)
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle')
@@ -66,22 +65,9 @@ export const useConfigSync = ({
     }, AUTO_RESET_MS)
   }, [])
 
-  const postSnapshot = useCallback(
-    async (pages: PagesConfig) => {
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(pages),
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to save configuration')
-      }
-    },
-    [endpoint]
-  )
+  const postSnapshot = useCallback(async (pages: PagesConfig) => {
+    await backendClient.savePages(pages)
+  }, [])
 
   const enqueueSave = useCallback(
     (pages: PagesConfig | undefined | null) => {

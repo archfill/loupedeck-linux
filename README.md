@@ -10,7 +10,7 @@
 
 [English](./README.md) | [日本語](./README.ja.md)
 
-An open-source device controller application for Loupedeck devices on Linux with an intuitive Web UI for configuration.
+An open-source desktop controller application for Loupedeck devices on Linux with an intuitive configuration UI.
 
 ## 🌟 Features
 
@@ -19,7 +19,7 @@ An open-source device controller application for Loupedeck devices on Linux with
 - 💡 **LED Control**: Customize physical button colors
 - 🎚️ **Knob Control**: Intuitive volume and media control
 - 🚀 **Application Launcher**: Launch your favorite apps with one tap
-- 🌐 **Web UI**: Modern configuration interface (React + Vite + TailwindCSS v4)
+- 🖥️ **Desktop UI**: Modern Tauri configuration interface (React + Vite + TailwindCSS v4)
 - ⚡ **Hot Reload**: Instantly apply configuration changes
 
 ## 📁 Project Structure
@@ -33,6 +33,7 @@ loupedeck-linux/
 │   │   ├── main.ts       # Entry point
 │   │   ├── src/          # Source code
 │   │   └── config/       # Runtime configuration
+│   ├── desktop/           # Tauri desktop shell
 │   └── web/              # Frontend (React + Vite)
 ├── docs/                  # Detailed documentation
 ├── scripts/               # Management scripts
@@ -93,22 +94,33 @@ cd loupedeck-linux
 # Install dependencies
 pnpm install
 
-# Start backend + Web UI
-pnpm run dev:all
+# Start the desktop app in the optional Nix dev shell
+nix develop -c pnpm run dev
 ```
 
-Open http://localhost:5173 in your browser to access the Web UI.
+The settings UI runs in a Tauri desktop window. The app does not start the old
+backend HTTP server on `127.0.0.1:9876`.
 
 ## 🔧 Detailed Setup
 
 ### Install System Packages
 
+For Nix users, the optional dev shell is the recommended setup because Tauri
+needs native Linux libraries such as WebKitGTK, DBus, and appindicator:
+
+```bash
+nix develop
+```
+
+For non-Nix environments, install Node.js, pnpm, Rust/Cargo, WebKitGTK 4.1,
+DBus, GTK3, appindicator, and pkg-config with your system package manager.
+
 ```bash
 # Arch Linux
-sudo pacman -S nodejs pnpm libusb pamixer playerctl wtype
+sudo pacman -S nodejs pnpm rust webkit2gtk-4.1 dbus gtk3 libayatana-appindicator pkgconf libusb pamixer playerctl wtype
 
 # Ubuntu/Debian
-sudo apt install nodejs npm libusb-1.0-0-dev pamixer playerctl wtype
+sudo apt install nodejs npm libwebkit2gtk-4.1-dev libdbus-1-dev libgtk-3-dev libayatana-appindicator3-dev pkg-config libusb-1.0-0-dev pamixer playerctl wtype
 npm install -g pnpm
 ```
 
@@ -135,73 +147,37 @@ cd loupedeck-linux
 # Install dependencies
 pnpm install
 
-# Make scripts executable
-chmod +x scripts/*.sh
+# Start the desktop app
+nix develop -c pnpm run dev
 ```
 
 ## 💻 Development
 
 ```bash
-# Start backend only
-pnpm run dev
+# Tauri desktop app
+nix develop -c pnpm run dev
 
-# Start Web UI only
-pnpm run dev:web
-
-# Start both
-pnpm run dev:all
+# Web UI type check
+pnpm --filter web exec tsc --noEmit
 ```
 
 ### Other Commands
 
 ```bash
-pnpm start              # Start in production mode
-pnpm run build:web      # Build Web UI
+pnpm run build      # Build desktop app
+pnpm run web:build  # Build React UI only
 pnpm run lint           # Run linter
 pnpm run format         # Run formatter
 ```
 
-## 🚀 Production Auto-start
-
-### Install systemd Service
-
-**Requirements**: pnpm must be in your system PATH
+## 🚀 Desktop Build
 
 ```bash
-# Install pnpm globally if needed
-npm install -g pnpm
-
-# Build Web UI (required for production)
-pnpm run build:web
-
-# Install the service
-pnpm run service:install
+nix develop -c pnpm run build
 ```
 
-**Behavior**:
-
-- Automatically starts on login
-- Automatically stops on logout
-- GUI environment variables are inherited from your session
-- Backend serves both API and Web UI on http://localhost:9876
-
-> **Hyprland users**: You must export environment variables to the systemd user session. Add the following to your `hyprland.conf` (before other `exec-once` entries):
->
-> ```
-> exec-once = dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP XDG_DATA_DIRS HYPRLAND_INSTANCE_SIGNATURE PATH
-> ```
->
-> GNOME and KDE Plasma do this automatically, but Hyprland does not. Without this, the service will fail to detect icons and Hyprland-specific features (e.g., workspace switching via `hyprctl`).
-
-### Manage Service
-
-```bash
-pnpm run service:status    # Check status
-pnpm run service:stop      # Stop service
-pnpm run service:restart   # Restart service
-pnpm run service:logs      # View logs
-pnpm run service:uninstall # Remove service
-```
+The production desktop binary embeds the built React UI and does not require a
+local Web UI port.
 
 ## 📖 Usage
 
@@ -223,37 +199,29 @@ Row2: [ ]        [ ]        [ ]         [ ]           [ ]
 | knobTL (top)    | Volume adjustment   | Mute toggle |
 | knobCL (center) | Previous/Next track | Play/Pause  |
 
-### Web UI
+### Desktop UI
 
-- Development: http://localhost:5173
-- API: http://localhost:9876/api/config
-
-### Desktop App Direction
-
-The current implementation serves the backend API and Web UI on `127.0.0.1:9876`.
-This fixed local web port is a temporary architecture.
-
-The long-term direction is to move the user-facing UI to a Tauri-based desktop
-application and replace the fixed HTTP port with local IPC or an equivalent
-portless communication mechanism.
-
-Until that migration is complete, the browser Web UI and systemd user service
-remain supported.
+- Development: Tauri WebView backed by Vite
+- Production: Tauri binary with embedded React assets
+- Configuration transport: Tauri IPC, not a fixed localhost HTTP port
 
 ## ⚙️ Configuration
 
-Runtime configuration is managed in `apps/backend/config/config.json`.
+Runtime configuration is managed in `~/.config/loupedeck-linux/config.json`.
 Changes are applied immediately via hot reload.
 
-## API Endpoints
+## Desktop IPC Commands
 
-| Endpoint                     | Description        |
-| ---------------------------- | ------------------ |
-| `GET /api/health`            | Health check       |
-| `GET /api/config`            | Full configuration |
-| `GET /api/config/components` | Component config   |
-| `GET /api/config/constants`  | System constants   |
-| `GET /api/device`            | Device information |
+The settings UI talks to the Tauri shell through local IPC instead of a fixed
+HTTP port.
+
+| Command            | Description              |
+| ------------------ | ------------------------ |
+| `get_config`       | Full configuration       |
+| `save_pages`       | Save page configuration  |
+| `create_page`      | Create a new page        |
+| `delete_page`      | Delete a page            |
+| `update_page_meta` | Update page metadata     |
 
 ## 📚 Documentation
 
@@ -261,7 +229,7 @@ Detailed documentation is available in the `docs/` directory:
 
 - [architecture.md](docs/architecture.md) - Architecture details
 - [component-guide.md](docs/component-guide.md) - Component creation guide
-- [api-reference.md](docs/api-reference.md) - API reference
+- [api-reference.md](docs/api-reference.md) - Legacy HTTP API reference
 - [patterns.md](docs/patterns.md) - Common patterns
 - [setup.md](docs/setup.md) - Detailed device setup
 
@@ -288,7 +256,7 @@ sudo chmod 666 /dev/bus/usb/xxx/yyy
 pnpm run kill
 
 # Reconnect device and restart
-pnpm run dev:all
+nix develop -c pnpm run dev
 ```
 
 ### Other Issues
@@ -319,7 +287,7 @@ This project uses the following amazing libraries:
 
 - [foxxyz/loupedeck](https://github.com/foxxyz/loupedeck) - Loupedeck device control library (MIT)
 - [node-canvas](https://github.com/Automattic/node-canvas) - Canvas API for Node.js (MIT)
-- [Express](https://expressjs.com/) - Web server framework (MIT)
+- [Tauri](https://tauri.app/) - Desktop application framework (MIT/Apache-2.0)
 - [React](https://react.dev/) - UI library (MIT)
 - [Vite](https://vitejs.dev/) - Build tool (MIT)
 - [TailwindCSS](https://tailwindcss.com/) - CSS framework (MIT)

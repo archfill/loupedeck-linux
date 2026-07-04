@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Plus, Edit, Trash2 } from 'lucide-react'
+import { backendClient } from '../lib/backendClient'
 import {
   DndContext,
   useDraggable,
@@ -126,6 +127,7 @@ function DraggableComponent({
     : {}
 
   const options = component.options || {}
+  const resolvedIconUrl = resolvedIcons[name] ? backendClient.iconFileUrl(resolvedIcons[name]) : null
 
   const handleClick = (e: React.MouseEvent) => {
     // ドラッグ中でない場合のみクリックイベントを発火
@@ -171,9 +173,9 @@ function DraggableComponent({
           }}
         />
       )}
-      {!options.iconImage && options.iconType === 'auto' && resolvedIcons[name] && (
+      {!options.iconImage && options.iconType === 'auto' && resolvedIconUrl && (
         <img
-          src={`/api/icon/file?path=${encodeURIComponent(resolvedIcons[name])}`}
+          src={resolvedIconUrl}
           alt="icon"
           style={{ width: options.iconSize || 48, height: options.iconSize || 48 }}
           className="object-contain"
@@ -295,15 +297,10 @@ export function LoupedeckPreview({
         )
         if (component.options?.iconType === 'auto' && component.appName) {
           try {
-            const res = await fetch(`/api/icon/resolve/${component.appName}`)
-            if (res.ok) {
-              const data = (await res.json()) as { appName: string; iconPath: string }
-              if (data.iconPath) {
-                results[name] = data.iconPath
-                console.log(`>>> Resolved ${name}: ${data.iconPath}`)
-              }
-            } else {
-              console.error(`>>> Failed to resolve ${name}: HTTP ${res.status}`)
+            const data = await backendClient.resolveIcon(component.appName)
+            if (data?.iconPath) {
+              results[name] = data.iconPath
+              console.log(`>>> Resolved ${name}: ${data.iconPath}`)
             }
           } catch (e) {
             console.error(`Failed to resolve icon for ${name}:`, e)

@@ -192,10 +192,37 @@ export function ComponentEditor({
     [editedComponent]
   )
 
+  const getStringField = useCallback(
+    (path: string[]): string => {
+      const value = getField(path)
+      return typeof value === 'string' ? value : ''
+    },
+    [getField]
+  )
+
+  const getNumberField = useCallback(
+    (path: string[], fallback: number): number => {
+      const value = getField(path)
+      return typeof value === 'number' ? value : fallback
+    },
+    [getField]
+  )
+
+  const getDisplayField = useCallback(
+    (path: string[]): string => {
+      const value = getField(path)
+      if (typeof value === 'string' || typeof value === 'number') {
+        return String(value)
+      }
+      return ''
+    },
+    [getField]
+  )
+
   // iconTypeが未設定の場合、既存のフィールドから推測
   const getIconType = useMemo(() => {
     const iconType = getField(['options', 'iconType'])
-    if (iconType) return iconType
+    if (typeof iconType === 'string') return iconType
     if (getField(['options', 'icon'])) return 'nerdfont'
     if (getField(['options', 'iconImage'])) return 'image'
     return 'none'
@@ -251,7 +278,7 @@ export function ComponentEditor({
               {/* Conditional Fields */}
               {getIconType === 'nerdfont' && (
                 <NerdFontIconSelector
-                  currentIcon={getField(['options', 'icon'])}
+                  currentIcon={getStringField(['options', 'icon'])}
                   onSelect={(icon) => updateField(['options', 'icon'], icon)}
                 />
               )}
@@ -264,16 +291,16 @@ export function ComponentEditor({
                   </Label>
                   <Input
                     type="text"
-                    value={getField(['appName']) || ''}
+                    value={getStringField(['appName'])}
                     onChange={(e) => updateField(['appName'], e.target.value)}
                     className="font-mono"
                     placeholder={t('editor.icon.placeholder')}
                   />
                   <p className="text-xs text-muted-foreground">
                     {t('editor.icon.appNameDescription')}
-                    {getField(['appName']) && (
+                    {getStringField(['appName']) && (
                       <span className="text-primary ml-2">
-                        {t('editor.icon.current', { appName: getField(['appName']) })}
+                        {t('editor.icon.current', { appName: getStringField(['appName']) })}
                       </span>
                     )}
                   </p>
@@ -283,7 +310,7 @@ export function ComponentEditor({
               {getIconType === 'image' && (
                 <Input
                   type="text"
-                  value={getField(['options', 'iconImage']) || ''}
+                  value={getStringField(['options', 'iconImage'])}
                   onChange={(e) => updateField(['options', 'iconImage'], e.target.value)}
                   className="font-mono"
                   placeholder="/path/to/icon.png"
@@ -293,20 +320,20 @@ export function ComponentEditor({
           )}
 
           {/* Label - 物理ボタン以外で表示 */}
-          {!isPhysicalButton && getField(['options', 'label']) !== undefined && (
+          {!isPhysicalButton && getField(['options', 'label']) !== undefined ? (
             <div className="space-y-2">
               <Label className="text-base font-semibold text-foreground">{t('editor.label')}</Label>
               <Input
                 type="text"
-                value={getField(['options', 'label']) || ''}
+                value={getStringField(['options', 'label'])}
                 onChange={(e) => updateField(['options', 'label'], e.target.value)}
                 className=""
               />
             </div>
-          )}
+          ) : null}
 
           {/* Background Color - 物理ボタン以外で表示 */}
-          {!isPhysicalButton && getField(['options', 'bgColor']) !== undefined && (
+          {!isPhysicalButton && getField(['options', 'bgColor']) !== undefined ? (
             <div className="space-y-2">
               <Label className="text-base font-semibold text-foreground">
                 {t('editor.colors.background')}
@@ -314,23 +341,23 @@ export function ComponentEditor({
               <div className="flex gap-3">
                 <Input
                   type="color"
-                  value={getField(['options', 'bgColor']) || '#000000'}
+                  value={getStringField(['options', 'bgColor']) || '#000000'}
                   onChange={(e) => updateField(['options', 'bgColor'], e.target.value)}
                   className="w-16 h-10 p-1 cursor-pointer"
                 />
                 <Input
                   type="text"
-                  value={getField(['options', 'bgColor']) || ''}
+                  value={getStringField(['options', 'bgColor'])}
                   onChange={(e) => updateField(['options', 'bgColor'], e.target.value)}
                   className="flex-1 font-mono"
                   placeholder="#RRGGBB"
                 />
               </div>
             </div>
-          )}
+          ) : null}
 
           {/* Text Color - 物理ボタン以外で表示 */}
-          {!isPhysicalButton && getField(['options', 'textColor']) !== undefined && (
+          {!isPhysicalButton && getField(['options', 'textColor']) !== undefined ? (
             <div className="space-y-2">
               <Label className="text-base font-semibold text-foreground">
                 {t('editor.colors.text')}
@@ -338,23 +365,23 @@ export function ComponentEditor({
               <div className="flex gap-3">
                 <Input
                   type="color"
-                  value={getField(['options', 'textColor']) || '#FFFFFF'}
+                  value={getStringField(['options', 'textColor']) || '#FFFFFF'}
                   onChange={(e) => updateField(['options', 'textColor'], e.target.value)}
                   className="w-16 h-10 p-1 cursor-pointer"
                 />
                 <Input
                   type="text"
-                  value={getField(['options', 'textColor']) || ''}
+                  value={getStringField(['options', 'textColor'])}
                   onChange={(e) => updateField(['options', 'textColor'], e.target.value)}
                   className="flex-1 font-mono"
                   placeholder="#RRGGBB"
                 />
               </div>
             </div>
-          )}
+          ) : null}
 
           {/* LED Color - Enhanced */}
-          {getField(['options', 'ledColor']) !== undefined && (
+          {getField(['options', 'ledColor']) !== undefined ? (
             <div className="space-y-2">
               <Label className="text-base font-semibold text-foreground">
                 {t('editor.colors.led')}
@@ -362,72 +389,72 @@ export function ComponentEditor({
               <div className="flex gap-3">
                 <Input
                   type="color"
-                  value={getField(['options', 'ledColor']) || '#000000'}
+                  value={getStringField(['options', 'ledColor']) || '#000000'}
                   onChange={(e) => updateField(['options', 'ledColor'], e.target.value)}
                   className="w-16 h-10 p-1 cursor-pointer"
                 />
                 <Input
                   type="text"
-                  value={getField(['options', 'ledColor']) || ''}
+                  value={getStringField(['options', 'ledColor'])}
                   onChange={(e) => updateField(['options', 'ledColor'], e.target.value)}
                   className="flex-1 font-mono"
                   placeholder="#RRGGBB"
                 />
               </div>
             </div>
-          )}
+          ) : null}
 
           {/* Command */}
-          {getField(['command']) !== undefined && (
+          {getField(['command']) !== undefined ? (
             <div className="space-y-2">
               <Label className="text-base font-semibold text-foreground">
                 {t('editor.command')}
               </Label>
               <Input
                 type="text"
-                value={getField(['command']) || ''}
+                value={getStringField(['command'])}
                 onChange={(e) => updateField(['command'], e.target.value)}
                 className="font-mono"
                 placeholder="command to execute"
               />
             </div>
-          )}
+          ) : null}
 
           {/* Icon Size */}
-          {getField(['options', 'iconSize']) !== undefined && (
+          {getField(['options', 'iconSize']) !== undefined ? (
             <div className="space-y-2">
               <Label className="text-base font-semibold">
-                {t('editor.iconSize', { size: getField(['options', 'iconSize']) })}
+                {t('editor.iconSize', { size: getNumberField(['options', 'iconSize'], 48) })}
               </Label>
               <Input
                 type="range"
                 min="24"
                 max="72"
                 step="4"
-                value={getField(['options', 'iconSize']) || 48}
+                value={getNumberField(['options', 'iconSize'], 48)}
                 onChange={(e) => updateField(['options', 'iconSize'], Number(e.target.value))}
                 className="w-full accent-primary"
               />
             </div>
-          )}
+          ) : null}
 
           {/* Position (Read-only for now) */}
-          {getField(['position']) && (
+          {getField(['position']) ? (
             <div className="space-y-2">
               <Label className="text-base font-semibold text-foreground">
                 {t('editor.position.label')}
               </Label>
               <div className="flex gap-4">
                 <div className="flex-1 rounded-md border bg-muted px-4 py-2 text-muted-foreground font-mono text-sm">
-                  {t('editor.position.col')}: {getField(['position', 'col'])}
+                  {t('editor.position.col')}: {getDisplayField(['position', 'col'])}
                 </div>
                 <div className="flex-1 rounded-md border bg-muted px-4 py-2 text-muted-foreground font-mono text-sm">
-                  {t('editor.position.row')}: {getField(['position', 'row'])}
+                  {t('editor.position.row')}: {getDisplayField(['position', 'row'])}
                 </div>
               </div>
               <p className="text-xs text-muted-foreground">{t('editor.position.comingSoon')}</p>
             </div>
-          )}
+          ) : null}
         </div>
 
         <Separator className="my-4" />

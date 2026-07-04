@@ -225,20 +225,20 @@ await device.vibrate([100, 200, 100])
 
 デバイスのファームウェアバージョンが0.2.26の場合、Linuxでは動作しません。0.2.23以前のバージョンにダウングレードしてください。
 
-## systemdサービスとして登録する
+## デスクトップアプリとして起動する
 
-バックグラウンドで自動起動させたい場合、systemdユーザーサービスとして登録できます。
+現在の主導線は Tauri デスクトップアプリです。設定 UI は固定 localhost
+ポートではなく、Tauri IPC でローカル設定を読み書きします。
 
 ```bash
-pnpm run service:install
+nix develop -c pnpm run dev
 ```
 
-このコマンドは`scripts/manage-systemd-service.sh install`を実行し、以下を自動で行います：
+production binary を作る場合は次を実行します。
 
-- `~/.config/systemd/user/loupedeck.service`の生成
-- `systemctl --user enable --now loupedeck`によるサービスの有効化・即時起動
-
-サービスの状態確認・停止・アンインストールは同スクリプトの各サブコマンドで行います。詳細は`./scripts/manage-systemd-service.sh --help`を参照してください。
+```bash
+nix develop -c pnpm run build
+```
 
 ## 参考リンク
 

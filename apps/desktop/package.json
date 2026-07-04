@@ -1,0 +1,13 @@
+{
+  "name": "@loupedeck-linux/desktop",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "WEBKIT_DISABLE_DMABUF_RENDERER=1 tauri dev",
+    "build": "tauri build"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.11.4"
+  }
+}
