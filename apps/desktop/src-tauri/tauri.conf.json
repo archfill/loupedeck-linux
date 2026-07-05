@@ -4,10 +4,10 @@
   "version": "0.0.1",
   "identifier": "com.archfill.loupedeck-linux",
   "build": {
-    "beforeDevCommand": "pnpm --filter web run dev",
+    "beforeDevCommand": "pnpm --filter @loupedeck-linux/frontend run dev",
     "devUrl": "http://localhost:5173",
-    "beforeBuildCommand": "pnpm --filter web run build",
-    "frontendDist": "../../web/dist"
+    "beforeBuildCommand": "pnpm --filter @loupedeck-linux/frontend run build && pnpm --filter @loupedeck-linux/sidecar run build",
+    "frontendDist": "../frontend/dist"
   },
   "app": {
     "windows": [

@@ -13,24 +13,28 @@
     "build": "pnpm run desktop:build",
     "desktop:dev": "pnpm --filter @loupedeck-linux/desktop run dev",
     "desktop:build": "pnpm --filter @loupedeck-linux/desktop run build",
-    "backend:start": "pnpm --filter @loupedeck-linux/backend run start",
-    "backend:start:debug": "pnpm --filter @loupedeck-linux/backend run start:debug",
-    "backend:start:prod": "pnpm --filter @loupedeck-linux/backend run start:prod",
-    "backend:dev": "pnpm --filter @loupedeck-linux/backend run dev",
-    "backend:dev:info": "pnpm --filter @loupedeck-linux/backend run dev:info",
-    "backend:dev:no-led": "pnpm --filter @loupedeck-linux/backend run dev:no-led",
-    "backend:build": "pnpm --filter @loupedeck-linux/backend run build",
-    "web:dev": "pnpm --filter web run dev",
-    "web:build": "pnpm --filter web run build",
-    "web:preview": "pnpm --filter web run preview",
-    "clean": "rm -rf apps/backend/dist apps/web/dist",
+    "sidecar:start": "pnpm --filter @loupedeck-linux/sidecar run start",
+    "sidecar:start:debug": "pnpm --filter @loupedeck-linux/sidecar run start:debug",
+    "sidecar:start:prod": "pnpm --filter @loupedeck-linux/sidecar run start:prod",
+    "sidecar:dev": "pnpm --filter @loupedeck-linux/sidecar run dev",
+    "sidecar:dev:info": "pnpm --filter @loupedeck-linux/sidecar run dev:info",
+    "sidecar:dev:no-led": "pnpm --filter @loupedeck-linux/sidecar run dev:no-led",
+    "sidecar:dev:sidecar": "pnpm --filter @loupedeck-linux/sidecar run dev:sidecar",
+    "sidecar:sidecar": "pnpm --filter @loupedeck-linux/sidecar run sidecar",
+    "sidecar:build": "pnpm --filter @loupedeck-linux/sidecar run build",
+    "frontend:dev": "pnpm --filter @loupedeck-linux/frontend run dev",
+    "frontend:build": "pnpm --filter @loupedeck-linux/frontend run build",
+    "frontend:preview": "pnpm --filter @loupedeck-linux/frontend run preview",
+    "clean": "rm -rf apps/desktop/sidecar/dist apps/desktop/frontend/dist",
     "test": "vitest run",
     "lint": "pnpm run -r lint",
     "lint:fix": "pnpm run -r lint:fix",
     "format": "prettier --write \"**/*.{ts,tsx,js,json,md}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,json,md}\"",
     "typecheck": "pnpm run -r typecheck",
-    "kill": "./scripts/kill-loupedeck.sh"
+    "kill": "./scripts/kill-loupedeck.sh",
+    "device:doctor": "./scripts/device-doctor.sh",
+    "device:setup:udev": "./scripts/setup-udev.sh"
   },
   "devDependencies": {
     "concurrently": "^9.2.1",
@@ -47,8 +51,5 @@
   "volta": {
     "node": "22.20.0",
     "npm": "11.4.2"
-  },
-  "dependencies": {
-    "next-themes": "^0.4.6"
   }
 }

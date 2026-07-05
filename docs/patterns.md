@@ -6,7 +6,7 @@ Handlers coordinate between device events and system utilities.
 
 ### Creating a Handler
 
-**Location**: `apps/backend/src/handlers/`
+**Location**: `apps/desktop/sidecar/src/handlers/`
 
 ```typescript
 import { KNOB_IDS, VIBRATION_PATTERNS } from '../config/constants.ts'
@@ -42,7 +42,7 @@ export class MyFeatureHandler {
 
 ### Registering a Handler
 
-In `apps/backend/main.ts`:
+In `apps/desktop/sidecar/main.ts`:
 
 ```typescript
 const myHandler = new MyFeatureHandler(control, display, layout, vibration)
@@ -205,7 +205,7 @@ await loupedeckDevice.setButtonColors({
 
 ### Default Colors
 
-Defined in `apps/backend/src/config/constants.ts`:
+Defined in `apps/desktop/sidecar/src/config/constants.ts`:
 
 ```typescript
 export const BUTTON_LED_COLORS = {
@@ -227,7 +227,7 @@ Knob IDs are device-specific strings:
 Discover your device's knob IDs:
 
 ```bash
-node apps/backend/tests/test-knobs.js
+node apps/desktop/sidecar/tests/test-knobs.js
 ```
 
 ## Graceful Shutdown
@@ -271,7 +271,7 @@ class MyComponent {
 
 ## Hot Reload Configuration
 
-Configuration changes in `apps/backend/config/config.json` are watched:
+Configuration changes in `apps/desktop/sidecar/config/config.json` are watched:
 
 ```typescript
 import { watchConfig } from './src/config/configLoader.ts'

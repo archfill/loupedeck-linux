@@ -17,11 +17,11 @@ apps/desktop
   tray/window lifecycle
   Rust commands exposed through invoke()
 
-apps/web
+apps/desktop/frontend
   React settings UI reused inside the Tauri WebView
   no direct localhost API dependency
 
-apps/backend
+apps/desktop/sidecar
   device-control core and future sidecar candidate
   HTTP transport removed once the desktop path is stable
 ```
@@ -48,7 +48,7 @@ desktop dev script sets it by default.
 ## First Vertical Slice
 
 1. Add `apps/desktop` as a Tauri v2 app.
-2. Load the existing React UI from `apps/web`.
+2. Load the existing React UI from `apps/desktop/frontend`.
 3. Replace config read/write calls with Tauri commands when running under Tauri.
 4. Keep enough browser fallback during development to compare behavior.
 5. Verify that `pnpm run dev` opens the settings UI without starting the

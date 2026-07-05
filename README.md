@@ -29,12 +29,10 @@ Monorepo using pnpm workspaces:
 ```
 loupedeck-linux/
 ├── apps/
-│   ├── backend/           # Backend (@loupedeck-linux/backend)
-│   │   ├── main.ts       # Entry point
-│   │   ├── src/          # Source code
-│   │   └── config/       # Runtime configuration
-│   ├── desktop/           # Tauri desktop shell
-│   └── web/              # Frontend (React + Vite)
+│   └── desktop/           # Tauri desktop application
+│       ├── frontend/      # React + Vite UI
+│       ├── sidecar/       # Node Loupedeck runtime
+│       └── src-tauri/     # Rust/Tauri shell
 ├── docs/                  # Detailed documentation
 ├── scripts/               # Management scripts
 ├── package.json          # Root configuration
@@ -48,31 +46,32 @@ loupedeck-linux/
 - Linux (tested on Arch Linux)
 - Node.js 20+
 - pnpm 9+
+- Rust/Cargo for Tauri development
 - Loupedeck Live S (other devices untested)
 
 ### System Packages
 
 ```bash
 # Arch Linux
-sudo pacman -S nodejs pnpm libusb
+sudo pacman -S nodejs pnpm rust webkit2gtk-4.1 dbus gtk3 libayatana-appindicator pkgconf libusb
 
 # Ubuntu/Debian
-sudo apt install nodejs npm libusb-1.0-0-dev
+sudo apt install nodejs npm libwebkit2gtk-4.1-dev libdbus-1-dev libgtk-3-dev libayatana-appindicator3-dev pkg-config libusb-1.0-0-dev
 npm install -g pnpm
 ```
 
 ### udev Rules
 
-Set up permissions for Loupedeck device:
+Set up permissions for the Loupedeck device:
 
 ```bash
-sudo tee /etc/udev/rules.d/50-loupedeck.rules > /dev/null <<EOF
-SUBSYSTEM=="usb", ATTR{idVendor}=="2ec2", ATTR{idProduct}=="0004", MODE="0666"
-EOF
-
-sudo udevadm control --reload-rules
-sudo udevadm trigger
+pnpm run device:setup:udev
+pnpm run device:doctor
 ```
+
+On NixOS, `device:setup:udev` prints a `nixosModules.default` import example
+for managing udev permissions through your system configuration instead of
+writing `/etc/udev/rules.d` directly.
 
 ### Optional Dependencies
 
@@ -93,6 +92,10 @@ cd loupedeck-linux
 
 # Install dependencies
 pnpm install
+
+# Install udev rules and verify the connected device
+pnpm run device:setup:udev
+pnpm run device:doctor
 
 # Start the desktop app in the optional Nix dev shell
 nix develop -c pnpm run dev
@@ -126,15 +129,16 @@ npm install -g pnpm
 
 ### Configure udev Rules
 
-Set up permissions for Loupedeck device:
+Set up permissions for the Loupedeck device:
 
 ```bash
-sudo tee /etc/udev/rules.d/50-loupedeck.rules > /dev/null <<EOF
-SUBSYSTEM=="usb", ATTR{idVendor}=="2ec2", ATTR{idProduct}=="0004", MODE="0666"
-EOF
+pnpm run device:setup:udev
+```
 
-sudo udevadm control --reload-rules
-sudo udevadm trigger
+Reconnect the device after installing the rule, then run:
+
+```bash
+pnpm run device:doctor
 ```
 
 ### Install Application
@@ -147,6 +151,9 @@ cd loupedeck-linux
 # Install dependencies
 pnpm install
 
+# Device setup check
+pnpm run device:doctor
+
 # Start the desktop app
 nix develop -c pnpm run dev
 ```
@@ -158,16 +165,17 @@ nix develop -c pnpm run dev
 nix develop -c pnpm run dev
 
 # Web UI type check
-pnpm --filter web exec tsc --noEmit
+pnpm --filter @loupedeck-linux/frontend exec tsc --noEmit
 ```
 
 ### Other Commands
 
 ```bash
 pnpm run build      # Build desktop app
-pnpm run web:build  # Build React UI only
+pnpm run frontend:build  # Build React UI only
 pnpm run lint           # Run linter
 pnpm run format         # Run formatter
+pnpm run device:doctor  # Check device, udev, and native dependencies
 ```
 
 ## 🚀 Desktop Build
@@ -215,13 +223,13 @@ Changes are applied immediately via hot reload.
 The settings UI talks to the Tauri shell through local IPC instead of a fixed
 HTTP port.
 
-| Command            | Description              |
-| ------------------ | ------------------------ |
-| `get_config`       | Full configuration       |
-| `save_pages`       | Save page configuration  |
-| `create_page`      | Create a new page        |
-| `delete_page`      | Delete a page            |
-| `update_page_meta` | Update page metadata     |
+| Command            | Description             |
+| ------------------ | ----------------------- |
+| `get_config`       | Full configuration      |
+| `save_pages`       | Save page configuration |
+| `create_page`      | Create a new page       |
+| `delete_page`      | Delete a page           |
+| `update_page_meta` | Update page metadata    |
 
 ## 📚 Documentation
 
@@ -242,11 +250,8 @@ Detailed documentation is available in the `docs/` directory:
 3. Reconnect the device
 
 ```bash
-# Check device
-lsusb | grep Loupedeck
-
-# Check permissions
-sudo chmod 666 /dev/bus/usb/xxx/yyy
+pnpm run device:doctor
+pnpm run device:setup:udev
 ```
 
 ### Application Won't Start

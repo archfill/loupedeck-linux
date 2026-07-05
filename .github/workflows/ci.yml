@@ -48,4 +48,4 @@ jobs:
         run: pnpm run test
 
       - name: Build
-        run: pnpm --filter @loupedeck-linux/backend run build
+        run: pnpm --filter @loupedeck-linux/sidecar run build

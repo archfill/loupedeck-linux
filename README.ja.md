@@ -29,12 +29,10 @@ pnpm workspacesを使用したモノレポ構成です：
 ```
 loupedeck-linux/
 ├── apps/
-│   ├── backend/           # バックエンド (@loupedeck-linux/backend)
-│   │   ├── main.ts       # エントリーポイント
-│   │   ├── src/          # ソースコード
-│   │   └── config/       # ランタイム設定
-│   ├── desktop/           # Tauri desktop shell
-│   └── web/              # フロントエンド (React + Vite)
+│   └── desktop/           # Tauri デスクトップアプリ
+│       ├── frontend/      # React + Vite UI
+│       ├── sidecar/       # Node Loupedeck runtime
+│       └── src-tauri/     # Rust/Tauri shell
 ├── docs/                  # 詳細ドキュメント
 ├── scripts/               # 管理スクリプト
 ├── package.json          # ルート設定
@@ -48,16 +46,17 @@ loupedeck-linux/
 - Linux（Arch Linuxで動作確認済み）
 - Node.js 20以上
 - pnpm 9以上
+- Tauri 開発用の Rust/Cargo
 - Loupedeck Live S（その他のデバイスは動作未確認）
 
 ### システムパッケージ
 
 ```bash
 # Arch Linux
-sudo pacman -S nodejs pnpm libusb
+sudo pacman -S nodejs pnpm rust webkit2gtk-4.1 dbus gtk3 libayatana-appindicator pkgconf libusb
 
 # Ubuntu/Debian
-sudo apt install nodejs npm libusb-1.0-0-dev
+sudo apt install nodejs npm libwebkit2gtk-4.1-dev libdbus-1-dev libgtk-3-dev libayatana-appindicator3-dev pkg-config libusb-1.0-0-dev
 npm install -g pnpm
 ```
 
@@ -66,13 +65,12 @@ npm install -g pnpm
 Loupedeckデバイスへのアクセス権限を設定：
 
 ```bash
-sudo tee /etc/udev/rules.d/50-loupedeck.rules > /dev/null <<EOF
-SUBSYSTEM=="usb", ATTR{idVendor}=="2ec2", ATTR{idProduct}=="0004", MODE="0666"
-EOF
-
-sudo udevadm control --reload-rules
-sudo udevadm trigger
+pnpm run device:setup:udev
+pnpm run device:doctor
 ```
+
+NixOS では `/etc/udev/rules.d` へ直接書き込まず、`device:setup:udev` が表示する
+`nixosModules.default` の import 例を NixOS 設定に追加してください。
 
 ### オプション依存パッケージ
 
@@ -93,6 +91,10 @@ cd loupedeck-linux
 
 # 依存関係をインストール
 pnpm install
+
+# udev ルールを入れて実機接続を確認
+pnpm run device:setup:udev
+pnpm run device:doctor
 
 # optional Nix dev shell でデスクトップアプリを起動
 nix develop -c pnpm run dev
@@ -130,12 +132,13 @@ npm install -g pnpm
 Loupedeckデバイスへのアクセス権限を設定：
 
 ```bash
-sudo tee /etc/udev/rules.d/50-loupedeck.rules > /dev/null <<EOF
-SUBSYSTEM=="usb", ATTR{idVendor}=="2ec2", ATTR{idProduct}=="0004", MODE="0666"
-EOF
+pnpm run device:setup:udev
+```
 
-sudo udevadm control --reload-rules
-sudo udevadm trigger
+ルールを入れたらデバイスを抜き差しし、診断を実行します。
+
+```bash
+pnpm run device:doctor
 ```
 
 ### アプリケーションのインストール
@@ -148,6 +151,9 @@ cd loupedeck-linux
 # 依存関係をインストール
 pnpm install
 
+# 実機セットアップ確認
+pnpm run device:doctor
+
 # デスクトップアプリを起動
 nix develop -c pnpm run dev
 ```
@@ -159,16 +165,17 @@ nix develop -c pnpm run dev
 nix develop -c pnpm run dev
 
 # Web UI の型チェック
-pnpm --filter web exec tsc --noEmit
+pnpm --filter @loupedeck-linux/frontend exec tsc --noEmit
 ```
 
 ### その他のコマンド
 
 ```bash
 pnpm run build      # デスクトップアプリをビルド
-pnpm run web:build  # React UIのみビルド
+pnpm run frontend:build  # React UIのみビルド
 pnpm run lint           # リンター実行
 pnpm run format         # フォーマッター実行
+pnpm run device:doctor  # 実機、udev、native dependency の診断
 ```
 
 ## 🚀 デスクトップビルド
@@ -242,11 +249,8 @@ production desktop binary は build 済み React UI を内包し、ローカル 
 3. デバイスを抜き差し
 
 ```bash
-# デバイス確認
-lsusb | grep Loupedeck
-
-# 権限確認
-sudo chmod 666 /dev/bus/usb/xxx/yyy
+pnpm run device:doctor
+pnpm run device:setup:udev
 ```
 
 ### アプリケーションが起動しない
