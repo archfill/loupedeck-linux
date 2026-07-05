@@ -1,0 +1,76 @@
+name: Bug Report
+description: Report a problem with the desktop app, device access, packaging, or setup
+title: 'bug: '
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug. Please include enough environment and device details to reproduce the issue.
+  - type: input
+    id: version
+    attributes:
+      label: App version
+      description: Release version, tag, commit, or package source.
+      placeholder: 'v0.1.0 / main@<sha> / nix run github:archfill/loupedeck-linux'
+    validations:
+      required: true
+  - type: dropdown
+    id: install-method
+    attributes:
+      label: Install method
+      options:
+        - AppImage
+        - Nix flake
+        - NixOS module
+        - Development checkout
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: os
+    attributes:
+      label: Linux distribution / desktop
+      placeholder: 'Arch Linux + Hyprland / NixOS + GNOME / Ubuntu + KDE'
+    validations:
+      required: true
+  - type: input
+    id: device
+    attributes:
+      label: Device
+      placeholder: 'Loupedeck Live S'
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: What happened?
+      description: Describe the problem and what you expected instead.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Connect device
+        2. Start app
+        3. Open settings
+        4. ...
+    validations:
+      required: true
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Diagnostics
+      description: Paste relevant output from `pnpm run device:doctor`, AppImage logs, or terminal output. Remove secrets and private paths first.
+      render: text
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checks
+      options:
+        - label: I reconnected the device after changing udev rules.
+        - label: I confirmed official Loupedeck software is not using the device.
+        - label: I removed secrets and private information from logs.

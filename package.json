@@ -35,6 +35,7 @@
     "format:check": "prettier --check \"**/*.{ts,tsx,js,json,md}\"",
     "typecheck": "pnpm run -r typecheck",
     "version:sync": "node scripts/sync-version.mjs",
+    "release:notes": "node scripts/generate-release-notes.mjs",
     "kill": "./scripts/kill-loupedeck.sh",
     "device:doctor": "./scripts/device-doctor.sh",
     "device:setup:udev": "./scripts/setup-udev.sh"
