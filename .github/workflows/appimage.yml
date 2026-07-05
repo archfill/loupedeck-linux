@@ -93,7 +93,7 @@ jobs:
         run: find apps/desktop/src-tauri/target/release/bundle/appimage -maxdepth 1 -type f -name '*.AppImage' -print -exec ls -lh {} \;
 
       - name: Upload AppImage
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: loupedeck-linux-appimage
           path: apps/desktop/src-tauri/target/release/bundle/appimage/*.AppImage
