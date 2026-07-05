@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Loupedeckプロセスを強制終了するスクリプト
 # npm run devが正常に停止しなかった場合に使用

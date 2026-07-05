@@ -93,24 +93,39 @@ if has_command lsusb; then
         fi
       fi
 
-      serial_path=""
+      serial_paths=()
       if [ -d /dev/serial/by-id ]; then
-        serial_path=$(find /dev/serial/by-id -maxdepth 1 -type l -name 'usb-Loupedeck_*' | head -n 1)
+        while IFS= read -r serial_path; do
+          serial_paths+=("$(readlink -f "$serial_path")")
+        done < <(find /dev/serial/by-id -maxdepth 1 -type l -name 'usb-Loupedeck_*' | sort)
       fi
-      if [ -n "$serial_path" ]; then
-        serial_target=$(readlink -f "$serial_path")
-        ok "serial device link exists: $serial_path -> $serial_target"
-        ls -l "$serial_target"
-        if [ -r "$serial_target" ] && [ -w "$serial_target" ]; then
-          ok "current user can read/write the serial device node"
-          serial_access_ok=true
-        else
-          warn "current user cannot read/write the serial device node"
-          printf '  The Loupedeck library opens the tty device, not only /dev/bus/usb.\n'
-          printf '  On NixOS, rebuild with programs.loupedeck-linux.enable = true, then reconnect the device.\n'
-        fi
+
+      for serial_path in /dev/ttyACM*; do
+        [ -e "$serial_path" ] || continue
+        serial_paths+=("$serial_path")
+      done
+
+      if [ "${#serial_paths[@]}" -gt 0 ]; then
+        seen_serial_paths=""
+        for serial_target in "${serial_paths[@]}"; do
+          case " $seen_serial_paths " in
+            *" $serial_target "*) continue ;;
+          esac
+          seen_serial_paths="${seen_serial_paths} ${serial_target}"
+
+          ok "serial device node exists: $serial_target"
+          ls -l "$serial_target"
+          if [ -r "$serial_target" ] && [ -w "$serial_target" ]; then
+            ok "current user can read/write the serial device node"
+            serial_access_ok=true
+          else
+            warn "current user cannot read/write the serial device node"
+            printf '  The Loupedeck library opens the tty device, not only /dev/bus/usb.\n'
+            printf '  On NixOS, rebuild with programs.loupedeck-linux.enable = true, then reconnect the device.\n'
+          fi
+        done
       else
-        warn "Loupedeck serial device link was not found under /dev/serial/by-id"
+        warn "Loupedeck serial device node was not found under /dev/serial/by-id or /dev/ttyACM*"
       fi
     else
       warn "Loupedeck Live S was not found by lsusb (${VENDOR_ID}:0004 or ${VENDOR_ID}:0006)"

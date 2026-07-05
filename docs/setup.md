@@ -89,6 +89,11 @@ On NixOS, keep device setup in your NixOS configuration instead of managing
 }
 ```
 
+After rebuilding, reconnect the device and run `pnpm run device:doctor`.
+Without the module, NixOS may expose the serial node as `root:dialout` with
+`0660` permissions, which causes `Permission denied, cannot open /dev/ttyACM*`
+unless the active seat receives `uaccess` permission.
+
 If you are not using flakes, import the module file directly:
 
 ```nix
@@ -170,6 +175,11 @@ pnpm run device:setup:udev
 
 Then reconnect the device. On some desktops, a full logout/login may be needed
 for seat permissions to refresh.
+
+On NixOS, apply the NixOS module and rebuild instead of writing the rule
+directly. `dialout` group ownership alone is not enough unless your user is in
+that group; the module uses `TAG+="uaccess"` so the active desktop session can
+open both the USB node and the tty node.
 
 ### Tauri Build Fails With pkg-config Errors
 

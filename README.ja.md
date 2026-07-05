@@ -70,7 +70,10 @@ pnpm run device:doctor
 ```
 
 NixOS では `/etc/udev/rules.d` へ直接書き込まず、`device:setup:udev` が表示する
-`nixosModules.default` の import 例を NixOS 設定に追加してください。
+`nixosModules.default` の import 例を NixOS 設定に追加してください。rebuild 後に
+デバイスを抜き差しして `pnpm run device:doctor` を実行します。未設定だと tty node が
+`root:dialout 0660` のままになり、`Permission denied, cannot open /dev/ttyACM*`
+になることがあります。
 
 ### オプション依存パッケージ
 

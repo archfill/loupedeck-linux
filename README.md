@@ -71,7 +71,9 @@ pnpm run device:doctor
 
 On NixOS, `device:setup:udev` prints a `nixosModules.default` import example
 for managing udev permissions through your system configuration instead of
-writing `/etc/udev/rules.d` directly.
+writing `/etc/udev/rules.d` directly. Rebuild, reconnect the device, and run
+`pnpm run device:doctor`; otherwise the tty node may stay `root:dialout 0660`
+and fail with `Permission denied, cannot open /dev/ttyACM*`.
 
 ### Optional Dependencies
 
