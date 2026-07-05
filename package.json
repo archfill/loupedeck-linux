@@ -13,6 +13,8 @@
     "build": "pnpm run desktop:build",
     "desktop:dev": "pnpm --filter @loupedeck-linux/desktop run dev",
     "desktop:build": "pnpm --filter @loupedeck-linux/desktop run build",
+    "desktop:build:appimage": "pnpm --filter @loupedeck-linux/desktop run build:appimage",
+    "build:appimage": "pnpm run desktop:build:appimage",
     "sidecar:start": "pnpm --filter @loupedeck-linux/sidecar run start",
     "sidecar:start:debug": "pnpm --filter @loupedeck-linux/sidecar run start:debug",
     "sidecar:start:prod": "pnpm --filter @loupedeck-linux/sidecar run start:prod",

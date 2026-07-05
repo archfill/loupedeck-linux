@@ -191,6 +191,23 @@ nix develop -c pnpm run build
 The production desktop binary embeds the built React UI. It does not require a
 fixed web UI port.
 
+AppImage build on a non-Nix Linux environment with the native Tauri packages
+installed:
+
+```bash
+pnpm run build:appimage
+```
+
+The AppImage is written to
+`apps/desktop/src-tauri/target/release/bundle/appimage/`. It bundles the Tauri
+shell, built React assets, sidecar JavaScript, runtime `node_modules`, and the
+Node.js runtime used during the build. USB access is not bundled; install the
+udev rule with `pnpm run device:setup:udev`.
+
+On NixOS, prefer the Nix package for local use. AppImage generation is validated
+in the Ubuntu-based GitHub Actions workflow because Tauri's AppImage bundler
+expects standard distribution library paths.
+
 ## Troubleshooting
 
 ### Device Is Not Detected
