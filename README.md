@@ -103,8 +103,8 @@ pnpm run device:doctor
 nix develop -c pnpm run dev
 ```
 
-The settings UI runs in a Tauri desktop window. The app does not start the old
-backend HTTP server on `127.0.0.1:9876`.
+The settings UI runs in a Tauri desktop window and communicates with the app
+through local IPC. It does not open a fixed localhost HTTP port.
 
 ## 🔧 Detailed Setup
 

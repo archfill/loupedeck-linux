@@ -1,8 +1,9 @@
 # Loupedeck Live S setup
 
 This guide covers the real-device setup for the current Tauri desktop app.
-The settings UI no longer requires the old fixed localhost web port. Device
-control runs as a local sidecar process managed by the desktop app.
+The settings UI communicates with the app through local IPC and does not open a
+fixed localhost web port. Device control runs as a local sidecar process managed
+by the desktop app.
 
 ## Supported Device
 

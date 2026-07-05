@@ -103,8 +103,8 @@ pnpm run device:doctor
 nix develop -c pnpm run dev
 ```
 
-設定画面は Tauri のデスクトップウィンドウで開きます。旧 backend HTTP server
-（`127.0.0.1:9876`）は起動しません。
+設定画面は Tauri のデスクトップウィンドウで開き、アプリとは local IPC で通信します。
+固定の localhost HTTP port は開きません。
 
 ## 🔧 詳細セットアップ
 
