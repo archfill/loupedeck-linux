@@ -8,7 +8,7 @@
   node-gyp,
   nodejs_22,
   pkg-config,
-  pnpm_10,
+  pnpm_11,
   pnpmConfigHook,
   python3,
   wrapGAppsHook3,
@@ -67,7 +67,7 @@ rustPlatform.buildRustPackage (finalAttrs: {
   pnpmDeps = fetchPnpmDeps {
     inherit (finalAttrs) pname version;
     src = pnpmDepsSrc;
-    pnpm = pnpm_10;
+    pnpm = pnpm_11;
     fetcherVersion = 4;
     pnpmWorkspaces = [
       "@loupedeck-linux/sidecar"
@@ -78,12 +78,12 @@ rustPlatform.buildRustPackage (finalAttrs: {
       "--force"
       "--prod=false"
     ];
-    hash = "sha256-suj5e7vceFS4R6FOLwEphCrPJoh7bqPz5ASyxnhTmLQ=";
+    hash = "sha256-ZxwacLb0ubJEgNNRGtYgdlqOotnm2fsv4oLdqtU/Gnw=";
   };
 
   cargoRoot = "apps/desktop/src-tauri";
   buildAndTestSubdir = finalAttrs.cargoRoot;
-  cargoHash = "sha256-H8oGCYci8Rj4ocmQ6oWXnpiJ2IYCw3Oouszyu7aAHSU=";
+  cargoHash = "sha256-PMoI9OHSrO3coelwoDx6cmHhmH8lKjxma/jqrNgLZC4=";
 
   nativeBuildInputs = [
     cargo-tauri.hook
@@ -91,7 +91,7 @@ rustPlatform.buildRustPackage (finalAttrs: {
     node-gyp
     nodejs_22
     pkg-config
-    pnpm_10
+    pnpm_11
     pnpmConfigHook
     python3
     wrapGAppsHook3

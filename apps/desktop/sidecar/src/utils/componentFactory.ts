@@ -38,12 +38,7 @@ export interface ComponentDependencies {
  * 生成可能なコンポーネントの型
  */
 export type GeneratedComponent =
-  | Clock
-  | Button
-  | VolumeDisplay
-  | MediaDisplay
-  | NotificationDisplay
-  | MediaPlayPauseButton
+  Clock | Button | VolumeDisplay | MediaDisplay | NotificationDisplay | MediaPlayPauseButton
 
 /**
  * 型ガード: ButtonComponent かどうか
