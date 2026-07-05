@@ -2,8 +2,11 @@ packages:
   - 'apps/*'
   - 'apps/desktop/*'
 
-onlyBuiltDependencies:
-  - '@serialport/bindings-cpp'
-  - '@tailwindcss/oxide'
-  - 'canvas'
-  - 'esbuild'
+trustLockfile: true
+
+allowBuilds:
+  '@serialport/bindings-cpp': true
+  '@tailwindcss/oxide': true
+  'canvas': true
+  'esbuild': true
+  'usocket': true

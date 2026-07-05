@@ -227,7 +227,7 @@ export function loadConfig(configPath?: string): Config {
       } else {
         logger.error(`Error object: ${JSON.stringify(error, null, 2)}`)
       }
-      throw new Error('Invalid configuration file')
+      throw new Error('Invalid configuration file', { cause: error })
     }
 
     if (error instanceof Error) {

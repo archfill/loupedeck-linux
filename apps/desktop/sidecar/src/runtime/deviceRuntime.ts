@@ -114,8 +114,7 @@ async function buildComponents(
   const volumeDisplay = componentsMap.get('volumeDisplay') as VolumeDisplay | undefined
   const mediaDisplay = componentsMap.get('mediaDisplay') as MediaDisplay | undefined
   const notificationDisplay = componentsMap.get('notificationDisplay') as
-    | NotificationDisplay
-    | undefined
+    NotificationDisplay | undefined
 
   logger.info('配置完了:')
   logger.info('\n【ページ1: アプリケーション】')
@@ -322,8 +321,7 @@ export function createDeviceRuntime(): DeviceRuntime {
         // メディア再生/一時停止ボタンのアイコン更新を開始（2秒ごと）
         const updateMediaIcon = () => {
           const mediaPlayPauseButton = componentsMap.get('mediaPlayPauseButton') as
-            | MediaPlayPauseButton
-            | undefined
+            MediaPlayPauseButton | undefined
           if (mediaPlayPauseButton && currentLayout) {
             mediaPlayPauseButton.updateIcon().then(() => currentLayout!.update())
           }
