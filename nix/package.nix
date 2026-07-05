@@ -32,6 +32,19 @@
   webkitgtk_4_1,
 }:
 
+let
+  pnpmDepsSrc = lib.fileset.toSource {
+    root = ../.;
+    fileset = lib.fileset.unions [
+      ../package.json
+      ../pnpm-lock.yaml
+      ../pnpm-workspace.yaml
+      ../apps/desktop/package.json
+      ../apps/desktop/frontend/package.json
+      ../apps/desktop/sidecar/package.json
+    ];
+  };
+in
 rustPlatform.buildRustPackage (finalAttrs: {
   pname = "loupedeck-linux";
   version = "0.0.1";
@@ -52,7 +65,8 @@ rustPlatform.buildRustPackage (finalAttrs: {
   };
 
   pnpmDeps = fetchPnpmDeps {
-    inherit (finalAttrs) pname version src;
+    inherit (finalAttrs) pname version;
+    src = pnpmDepsSrc;
     pnpm = pnpm_10;
     fetcherVersion = 4;
     pnpmWorkspaces = [
@@ -64,7 +78,7 @@ rustPlatform.buildRustPackage (finalAttrs: {
       "--force"
       "--prod=false"
     ];
-    hash = "sha256-qpTCIVfVJsjMTKpvEqizGmh66FW5r18ClBazYompXkY=";
+    hash = "sha256-suj5e7vceFS4R6FOLwEphCrPJoh7bqPz5ASyxnhTmLQ=";
   };
 
   cargoRoot = "apps/desktop/src-tauri";
