@@ -40,6 +40,9 @@ loupedeck-tray.desktop
 # User configuration (managed by XDG)
 config/config.json
 
+# Local agent/tool settings
+.claude/settings.local.json
+
 # Cache directories
 .cache/
 

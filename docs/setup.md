@@ -60,13 +60,13 @@ loupedeck-linux/
 Arch Linux:
 
 ```bash
-sudo pacman -S nodejs pnpm rust webkit2gtk-4.1 dbus gtk3 libayatana-appindicator pkgconf libusb pamixer playerctl wtype usbutils
+sudo pacman -S nodejs pnpm rust webkit2gtk-4.1 dbus gtk3 libayatana-appindicator pkgconf libusb pamixer playerctl usbutils
 ```
 
 Ubuntu/Debian:
 
 ```bash
-sudo apt install nodejs npm libwebkit2gtk-4.1-dev libdbus-1-dev libgtk-3-dev libayatana-appindicator3-dev pkg-config libusb-1.0-0-dev pamixer playerctl wtype usbutils
+sudo apt install nodejs npm libwebkit2gtk-4.1-dev libdbus-1-dev libgtk-3-dev libayatana-appindicator3-dev pkg-config libusb-1.0-0-dev pamixer playerctl usbutils
 npm install -g pnpm
 ```
 
@@ -74,7 +74,6 @@ Optional runtime utilities:
 
 - `pamixer`: PulseAudio volume control
 - `playerctl`: media controls
-- `wtype`: Wayland keyboard automation used by some example commands
 
 ## Device Permissions
 

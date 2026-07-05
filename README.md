@@ -26,6 +26,20 @@ localhost web port.
 Other Loupedeck devices supported by the upstream `foxxyz/loupedeck` library are
 currently untested in this app.
 
+## Portability Status
+
+Generic Linux desktop support is still in progress. The app currently targets
+Loupedeck Live S, and some bundled default actions are examples that only work
+when the matching desktop tools are installed, such as Firefox, Thunderbird,
+`playerctl`, `wpctl`, `grim`, and `wl-copy`. The built-in workspace page is also
+still tied to Hyprland behavior and may not work on other desktops or window
+managers yet.
+
+Personal helper scripts and local agent settings are intentionally not part of
+the supported setup. If an action does not work on your system today, edit
+`~/.config/loupedeck-linux/config.json` from the settings UI and replace it with
+a command available on your desktop.
+
 ## Install / Run
 
 ### AppImage

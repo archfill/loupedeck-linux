@@ -53,7 +53,6 @@ in
       ++ lib.optionals cfg.runtimeUtilities.enable [
         pkgs.pamixer
         pkgs.playerctl
-        pkgs.wtype
       ];
   };
 }

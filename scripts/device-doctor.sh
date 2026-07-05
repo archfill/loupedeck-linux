@@ -163,7 +163,6 @@ echo ""
 echo "Runtime utilities"
 check_command pamixer "Optional: needed for PulseAudio volume controls"
 check_command playerctl "Optional: needed for media controls"
-check_command wtype "Optional: needed for Wayland keyboard automation"
 
 echo ""
 echo "Suggested verification"

@@ -24,6 +24,18 @@ Linux 向けの Loupedeck デバイスコントローラーです。Tauri デス
 
 upstream の `foxxyz/loupedeck` が対応する他デバイスは、このアプリでは未検証です。
 
+## 汎用化の状況
+
+汎用的な Linux desktop 対応は作業中です。現時点では Loupedeck Live S を対象にしており、
+同梱の初期アクションの一部は Firefox、Thunderbird、`playerctl`、`wpctl`、`grim`、
+`wl-copy` など、該当する desktop tool が入っている環境でだけ動くサンプルです。
+また、組み込みの workspace ページはまだ Hyprland の挙動に依存しており、他の desktop /
+window manager では動かない場合があります。
+
+個人用 helper script やローカル agent 設定は、サポート対象のセットアップには含めません。
+今動かないアクションがある場合は、設定 UI から `~/.config/loupedeck-linux/config.json` を更新し、
+その desktop で利用できるコマンドに差し替えてください。
+
 ## インストール / 起動
 
 ### AppImage
