@@ -1,7 +1,36 @@
 name: Nix Package
 
 on:
+  pull_request:
+    paths:
+      - .github/workflows/nix-package.yml
+      - apps/desktop/**
+      - flake.lock
+      - flake.nix
+      - nix/**
+      - package.json
+      - pnpm-lock.yaml
+      - pnpm-workspace.yaml
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/nix-package.yml
+      - apps/desktop/**
+      - flake.lock
+      - flake.nix
+      - nix/**
+      - package.json
+      - pnpm-lock.yaml
+      - pnpm-workspace.yaml
   workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nix-package-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   package:
