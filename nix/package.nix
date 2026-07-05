@@ -47,7 +47,7 @@ let
 in
 rustPlatform.buildRustPackage (finalAttrs: {
   pname = "loupedeck-linux";
-  version = "0.0.1";
+  version = "0.1.0";
 
   src = lib.cleanSourceWith {
     src = ../.;
@@ -83,7 +83,7 @@ rustPlatform.buildRustPackage (finalAttrs: {
 
   cargoRoot = "apps/desktop/src-tauri";
   buildAndTestSubdir = finalAttrs.cargoRoot;
-  cargoHash = "sha256-PMoI9OHSrO3coelwoDx6cmHhmH8lKjxma/jqrNgLZC4=";
+  cargoHash = "sha256-xG73KzISu5CbLHQ79gxBBy6qhfF/DUSnERyMJ3IyINc=";
 
   nativeBuildInputs = [
     cargo-tauri.hook

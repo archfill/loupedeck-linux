@@ -253,6 +253,12 @@ NixOS のローカル利用では Nix package を推奨します。Tauri の App
 標準的な distribution の library path を前提にするため、AppImage 生成は Ubuntu
 ベースの GitHub Actions workflow で検証します。
 
+### Release
+
+`v*` tag を push すると GitHub Actions で AppImage をビルドし、AppImage と
+SHA-256 checksum のみを GitHub Release にアップロードします。Nix ユーザー向けには
+release asset を用意せず、tag 済み flake を直接使う想定です。
+
 ## 📖 使い方
 
 ### デバイスレイアウト

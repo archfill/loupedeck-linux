@@ -1,6 +1,6 @@
 {
   "name": "loupedeck-linux",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "packageManager": "pnpm@11.10.0",
   "description": "Loupedeck Live S Linux controller desktop application",
   "license": "MIT",
@@ -34,6 +34,7 @@
     "format": "prettier --write \"**/*.{ts,tsx,js,json,md}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,json,md}\"",
     "typecheck": "pnpm run -r typecheck",
+    "version:sync": "node scripts/sync-version.mjs",
     "kill": "./scripts/kill-loupedeck.sh",
     "device:doctor": "./scripts/device-doctor.sh",
     "device:setup:udev": "./scripts/setup-udev.sh"

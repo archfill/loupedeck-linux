@@ -208,6 +208,10 @@ On NixOS, prefer the Nix package for local use. AppImage generation is validated
 in the Ubuntu-based GitHub Actions workflow because Tauri's AppImage bundler
 expects standard distribution library paths.
 
+Release tags matching `v*` build the AppImage in GitHub Actions and upload only
+the AppImage plus its SHA-256 checksum to the GitHub Release. Nix users should
+use the tagged flake directly instead of downloading a release asset.
+
 ## Troubleshooting
 
 ### Device Is Not Detected

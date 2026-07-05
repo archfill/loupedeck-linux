@@ -1,6 +1,6 @@
 [package]
 name = "loupedeck-linux-desktop"
-version = "0.0.1"
+version = "0.1.0"
 description = "Loupedeck Linux desktop shell"
 authors = ["archfill"]
 edition = "2021"
