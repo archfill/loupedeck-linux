@@ -9,37 +9,37 @@ This application controls Loupedeck devices on Linux using a component-based arc
 ```
 ┌─────────────────────────────────────────────────────────┐
 │                      Web UI (React)                     │
-│                    apps/web/src/                        │
+│                    apps/desktop/frontend/src/                        │
 └─────────────────────────┬───────────────────────────────┘
                           │ HTTP API
 ┌─────────────────────────▼───────────────────────────────┐
 │                    API Server                           │
-│              apps/backend/src/server/                   │
+│              apps/desktop/sidecar/src/server/                   │
 └─────────────────────────┬───────────────────────────────┘
                           │
 ┌─────────────────────────▼───────────────────────────────┐
 │                    Handlers                             │
 │    VolumeHandler, MediaHandler, PageHandler, etc.       │
-│              apps/backend/src/handlers/                 │
+│              apps/desktop/sidecar/src/handlers/                 │
 └───────────┬─────────────┴─────────────┬─────────────────┘
             │                           │
 ┌───────────▼───────────┐   ┌───────────▼───────────┐
 │      Components       │   │       Utilities       │
 │  Button, Clock, etc.  │   │ VolumeControl, etc.   │
-│ apps/backend/src/     │   │ apps/backend/src/     │
+│ apps/desktop/sidecar/src/     │   │ apps/desktop/sidecar/src/     │
 │      components/      │   │       utils/          │
 └───────────┬───────────┘   └───────────────────────┘
             │
 ┌───────────▼───────────────────────────────────────────┐
 │                    GridLayout                          │
 │          Component management, touch routing           │
-│        apps/backend/src/components/GridLayout.ts       │
+│        apps/desktop/sidecar/src/components/GridLayout.ts       │
 └───────────────────────┬───────────────────────────────┘
                         │
 ┌───────────────────────▼───────────────────────────────┐
 │                  LoupedeckDevice                       │
 │     Hardware abstraction, event handling, drawing      │
-│       apps/backend/src/device/LoupedeckDevice.ts       │
+│       apps/desktop/sidecar/src/device/LoupedeckDevice.ts       │
 └───────────────────────┬───────────────────────────────┘
                         │
 ┌───────────────────────▼───────────────────────────────┐
@@ -52,7 +52,7 @@ This application controls Loupedeck devices on Linux using a component-based arc
 
 ### LoupedeckDevice
 
-**Location**: `apps/backend/src/device/LoupedeckDevice.ts`
+**Location**: `apps/desktop/sidecar/src/device/LoupedeckDevice.ts`
 
 Wraps the `loupedeck` library and provides:
 
@@ -78,7 +78,7 @@ row = floor(y / keySize)
 
 ### Screen
 
-**Location**: `apps/backend/src/components/Screen.ts`
+**Location**: `apps/desktop/sidecar/src/components/Screen.ts`
 
 Base class for screen layouts:
 
@@ -88,7 +88,7 @@ Base class for screen layouts:
 
 ### GridLayout
 
-**Location**: `apps/backend/src/components/GridLayout.ts`
+**Location**: `apps/desktop/sidecar/src/components/GridLayout.ts`
 
 Extends `Screen` to manage multiple components:
 
@@ -99,7 +99,7 @@ Extends `Screen` to manage multiple components:
 
 ### Handlers
 
-**Location**: `apps/backend/src/handlers/`
+**Location**: `apps/desktop/sidecar/src/handlers/`
 
 Coordinate between device events and system utilities:
 
@@ -146,7 +146,7 @@ GridLayout.update()
 
 ### Runtime Config
 
-**Location**: `apps/backend/config/config.json`
+**Location**: `apps/desktop/sidecar/config/config.json`
 
 JSON configuration loaded at runtime, defines:
 
@@ -157,7 +157,7 @@ JSON configuration loaded at runtime, defines:
 
 ### Type Definitions
 
-**Location**: `apps/backend/src/config/`
+**Location**: `apps/desktop/sidecar/src/config/`
 
 - `constants.ts` - System constants, vibration patterns, LED colors
 - `configLoader.ts` - Zod schemas, config loading/validation

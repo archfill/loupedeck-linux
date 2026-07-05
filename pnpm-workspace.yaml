@@ -1,2 +1,9 @@
 packages:
-  - "apps/*"
+  - 'apps/*'
+  - 'apps/desktop/*'
+
+onlyBuiltDependencies:
+  - '@serialport/bindings-cpp'
+  - '@tailwindcss/oxide'
+  - 'canvas'
+  - 'esbuild'

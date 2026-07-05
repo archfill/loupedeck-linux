@@ -1,0 +1,68 @@
+name: Nix Package
+
+on:
+  pull_request:
+    paths:
+      - .github/workflows/nix-package.yml
+      - apps/desktop/**
+      - flake.lock
+      - flake.nix
+      - nix/**
+      - package.json
+      - pnpm-lock.yaml
+      - pnpm-workspace.yaml
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/nix-package.yml
+      - apps/desktop/**
+      - flake.lock
+      - flake.nix
+      - nix/**
+      - package.json
+      - pnpm-lock.yaml
+      - pnpm-workspace.yaml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nix-package-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  package:
+    name: Build default package
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Show initial disk usage
+        run: df -h
+
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/local/lib/android
+          sudo rm -rf /opt/hostedtoolcache/CodeQL
+          sudo rm -rf /usr/share/dotnet
+          df -h
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v31
+        with:
+          github_access_token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Show flake outputs
+        run: nix flake show --all-systems
+
+      - name: Build package
+        run: nix build .#packages.x86_64-linux.default --print-build-logs --show-trace
+
+      - name: Show final disk usage
+        if: always()
+        run: df -h

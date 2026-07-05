@@ -2,7 +2,7 @@
 
 ## Backend API Server
 
-**Location**: `apps/backend/src/server/api.ts`
+**Location**: `apps/desktop/sidecar/src/server/api.ts`
 **Port**: 9876
 **CORS**: Enabled for development
 
@@ -139,12 +139,12 @@ Reloads configuration from `config/config.json` without restart.
 The web UI fetches configuration from the backend API:
 
 ```typescript
-// apps/web/src/hooks/useConfig.ts
+// apps/desktop/frontend/src/hooks/useConfig.ts
 const response = await fetch('/api/config')
 const config = await response.json()
 ```
 
-Vite proxy configuration (`apps/web/vite.config.ts`):
+Vite proxy configuration (`apps/desktop/frontend/vite.config.ts`):
 
 ```typescript
 server: {

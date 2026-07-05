@@ -1,251 +1,262 @@
-# Loupedeck Live S セットアップガイド (Arch Linux)
+# Loupedeck Live S setup
 
-このガイドでは、Arch Linuxでfoxxyz/loupedeckを使用してLoupedeck Live Sを動作させる手順を説明します。
+This guide covers the real-device setup for the current Tauri desktop app.
+The settings UI no longer requires the old fixed localhost web port. Device
+control runs as a local sidecar process managed by the desktop app.
 
-## 概要
+## Supported Device
 
-**foxxyz/loupedeck**は、Loupedeck Live、Live S、CT、Razer Stream Controllerに対応した非公式Node.js APIです。
+- Loupedeck Live S: tested
+- Other devices supported by `foxxyz/loupedeck`: untested in this app
 
-### 機能
+Known USB IDs for Loupedeck Live S are:
 
-- ボタン押下、ノブ回転、タッチイベントの読み取り
-- ボタンの色設定
-- 画面の輝度調整
-- 振動制御
+```text
+2ec2:0004
+2ec2:0006
+```
 
-### 対応デバイス
+## Recommended Environment
 
-- Loupedeck Live
-- Loupedeck Live S
-- Loupedeck CT
-- Razer Stream Controller
-- Razer Stream Controller X
-
-## 要件
-
-- Node.js 20以降
-- pnpm 9以降
-
-## 重要な注意事項
-
-⚠️ **ファームウェアバージョン0.2.26はLinuxで動作しません**
-
-Linuxで使用する場合は、ファームウェアバージョン0.2.23へのダウングレードが推奨されています。詳細は[Issue #30](https://github.com/foxxyz/loupedeck/issues/30)を参照してください。
-
-⚠️ **公式Loupedeckソフトウェアとの競合**
-
-このライブラリを使用する際は、公式Loupedeckソフトウェアが動作していないことを確認してください。競合する可能性があります。
-
-## クイックスタート（自動インストール）
-
-すべてのセットアップを自動で実行する場合は、以下のコマンドを実行してください：
+Use the optional Nix dev shell when possible. It provides the native libraries
+required by Tauri, including WebKitGTK, GTK3, DBus, appindicator, and
+pkg-config.
 
 ```bash
-./install.sh
+nix develop
 ```
 
-このスクリプトは以下を自動的に実行します：
-
-1. Node.js/pnpmの確認
-2. 必要なツール（lsusb）のインストール
-3. Loupedeckデバイスの検出
-4. udevルールの作成と適用
-5. シリアルポートのアクセス権限設定
-6. pnpm依存関係のインストール
-
-インストール完了後、以下のコマンドでデバイスの動作を確認できます：
-
-```bash
-node apps/backend/tests/test.js
-```
-
-**注意**: グループ権限の変更が適用されるため、新しいターミナルを開くか、再ログインが必要な場合があります。
-
-## セットアップ手順（手動）
-
-手動でセットアップする場合は、以下の手順に従ってください。
-
-### 1. Node.jsとnpmのインストール
-
-```bash
-sudo pacman -S nodejs npm
-```
-
-### 2. USBデバイスIDの確認
-
-Loupedeckを接続し、USBデバイスのベンダーIDとプロダクトIDを確認します：
-
-```bash
-lsusb
-```
-
-出力例：
-
-```
-Bus 001 Device 005: ID 2ec2:0004 Loupedeck Loupedeck Live S
-```
-
-この例では：
-
-- **ベンダーID**: `2ec2`
-- **プロダクトID**: `0004`
-
-### 3. udevルールの作成
-
-udevルールを作成して、一般ユーザーがLoupedeckデバイスにアクセスできるようにします。
-
-```bash
-sudo nano /etc/udev/rules.d/99-loupedeck.rules
-```
-
-以下の内容を追加します（`xxxx`と`yyyy`は実際のベンダーIDとプロダクトIDに置き換えてください）：
-
-```
-# Loupedeck Live S
-SUBSYSTEM=="usb", ATTRS{idVendor}=="xxxx", ATTRS{idProduct}=="yyyy", MODE="0660", TAG+="uaccess"
-```
-
-**例（Loupedeck Live Sの場合）:**
-
-```
-SUBSYSTEM=="usb", ATTRS{idVendor}=="2ec2", ATTRS{idProduct}=="0004", MODE="0660", TAG+="uaccess"
-```
-
-**または、すべてのユーザーにアクセス権を与える場合:**
-
-```
-SUBSYSTEM=="usb", ATTRS{idVendor}=="2ec2", ATTRS{idProduct}=="0004", MODE="0666"
-```
-
-### 4. udevルールの適用
-
-作成したudevルールを適用します：
-
-```bash
-sudo udevadm control --reload-rules
-sudo udevadm trigger
-```
-
-デバイスを一度抜き差しするか、システムを再起動してください。
-
-### 5. シリアルポートのアクセス権限設定
-
-Loupedeckデバイスはシリアルポート（通常は`/dev/ttyACM0`）を使用します。アクセスするためにユーザーを`uucp`グループに追加します：
-
-```bash
-sudo usermod -a -G uucp $USER
-```
-
-変更を反映させるために、ログアウトして再ログインするか、新しいターミナルセッションを開いてください。
-
-現在のユーザーが`uucp`グループに所属しているか確認：
-
-```bash
-groups
-```
-
-### 6. 依存関係のインストール
-
-プロジェクトルートで以下を実行します。`loupedeck`や`canvas`はすでにワークスペース依存関係として定義されているため、個別インストールは不要です：
+Then install JavaScript dependencies:
 
 ```bash
 pnpm install
 ```
 
-## 基本的な使用例
+`mise` is also supported for language toolchains through `.mise.toml`, but it
+does not install system-native Tauri libraries. If you use `mise` without Nix,
+install the native packages listed below with your distribution package manager.
 
-### デバイスの検出とボタンイベントの取得
+## Non-Nix System Packages
 
-```javascript
-import { discover } from 'loupedeck'
-
-const device = await discover()
-
-// ボタン押下イベント
-device.on('down', ({ id }) => {
-  console.info(`Button pressed: ${id}`)
-})
-
-// ボタン解放イベント
-device.on('up', ({ id }) => {
-  console.info(`Button released: ${id}`)
-})
-
-// ノブ回転イベント
-device.on('rotate', ({ id, delta }) => {
-  console.info(`Knob ${id} rotated: ${delta}`)
-})
-
-// タッチイベント
-device.on('touchstart', ({ changedTouches }) => {
-  console.info(`Touch started:`, changedTouches)
-})
-```
-
-### ボタンの色を設定
-
-```javascript
-// ボタンの色を赤に設定
-await device.setButtonColor({ id: 0, color: 'red' })
-```
-
-### 画面の輝度を設定
-
-```javascript
-// 輝度を50%に設定
-await device.setBrightness(0.5)
-```
-
-### 振動を設定
-
-```javascript
-// 振動パターンを設定
-await device.vibrate([100, 200, 100])
-```
-
-## トラブルシューティング
-
-### デバイスが検出されない場合
-
-1. udevルールが正しく適用されているか確認：
-
-   ```bash
-   sudo udevadm test $(udevadm info -q path -n /dev/bus/usb/XXX/YYY)
-   ```
-
-2. デバイスのパーミッションを確認：
-
-   ```bash
-   ls -la /dev/bus/usb/XXX/YYY
-   ```
-
-3. 公式Loupedeckソフトウェアが動作していないか確認
-
-### ファームウェアバージョンの確認
-
-デバイスのファームウェアバージョンが0.2.26の場合、Linuxでは動作しません。0.2.23以前のバージョンにダウングレードしてください。
-
-## systemdサービスとして登録する
-
-バックグラウンドで自動起動させたい場合、systemdユーザーサービスとして登録できます。
+Arch Linux:
 
 ```bash
-pnpm run service:install
+sudo pacman -S nodejs pnpm rust webkit2gtk-4.1 dbus gtk3 libayatana-appindicator pkgconf libusb pamixer playerctl wtype usbutils
 ```
 
-このコマンドは`scripts/manage-systemd-service.sh install`を実行し、以下を自動で行います：
+Ubuntu/Debian:
 
-- `~/.config/systemd/user/loupedeck.service`の生成
-- `systemctl --user enable --now loupedeck`によるサービスの有効化・即時起動
+```bash
+sudo apt install nodejs npm libwebkit2gtk-4.1-dev libdbus-1-dev libgtk-3-dev libayatana-appindicator3-dev pkg-config libusb-1.0-0-dev pamixer playerctl wtype usbutils
+npm install -g pnpm
+```
 
-サービスの状態確認・停止・アンインストールは同スクリプトの各サブコマンドで行います。詳細は`./scripts/manage-systemd-service.sh --help`を参照してください。
+Optional runtime utilities:
 
-## 参考リンク
+- `pamixer`: PulseAudio volume control
+- `playerctl`: media controls
+- `wtype`: Wayland keyboard automation used by some example commands
 
-- [foxxyz/loupedeck GitHub リポジトリ](https://github.com/foxxyz/loupedeck)
-- [Arch Linux udev Wiki](https://wiki.archlinux.org/title/Udev)
-- [Node.js 公式サイト](https://nodejs.org/)
+## Device Permissions
 
-## ライセンス
+Install the udev rule:
 
-foxxyz/loupedeckライブラリは、元のプロジェクトのライセンスに従います。
+```bash
+pnpm run device:setup:udev
+```
+
+This writes:
+
+```udev
+SUBSYSTEM=="usb", ATTR{idVendor}=="2ec2", ATTR{idProduct}=="0004", MODE="0660", TAG+="uaccess"
+SUBSYSTEM=="tty", ATTRS{idVendor}=="2ec2", ATTRS{idProduct}=="0004", MODE="0660", TAG+="uaccess"
+SUBSYSTEM=="usb", ATTR{idVendor}=="2ec2", ATTR{idProduct}=="0006", MODE="0660", TAG+="uaccess"
+SUBSYSTEM=="tty", ATTRS{idVendor}=="2ec2", ATTRS{idProduct}=="0006", MODE="0660", TAG+="uaccess"
+```
+
+Reconnect the Loupedeck device after installing the rule.
+
+On NixOS, keep device setup in your NixOS configuration instead of managing
+`/etc/udev/rules.d` by hand. This repository exposes a NixOS module:
+
+```nix
+{
+  imports = [
+    inputs.loupedeck-linux.nixosModules.default
+  ];
+
+  programs.loupedeck-linux.enable = true;
+}
+```
+
+After rebuilding, reconnect the device and run `pnpm run device:doctor`.
+Without the module, NixOS may expose the serial node as `root:dialout` with
+`0660` permissions, which causes `Permission denied, cannot open /dev/ttyACM*`
+unless the active seat receives `uaccess` permission.
+
+If you are not using flakes, import the module file directly:
+
+```nix
+{
+  imports = [
+    /path/to/loupedeck-linux/nix/modules/nixos.nix
+  ];
+
+  programs.loupedeck-linux.enable = true;
+}
+```
+
+## Doctor
+
+Run the setup doctor after connecting the device:
+
+```bash
+pnpm run device:doctor
+```
+
+The doctor checks:
+
+- Node.js, pnpm, Rust/Cargo, and pkg-config
+- Tauri native libraries visible to pkg-config
+- Loupedeck USB detection via `lsusb`
+- udev rule presence
+- current user read/write access to the USB device node
+- optional runtime utilities
+
+If `pkg-config` or WebKitGTK checks fail outside Nix, enter `nix develop` or
+install the missing distro packages.
+
+## Nix Package
+
+Run the packaged desktop app directly from the flake:
+
+```bash
+nix run github:archfill/loupedeck-linux
+```
+
+Install it into your user profile:
+
+```bash
+nix profile install github:archfill/loupedeck-linux
+loupedeck-linux
+```
+
+Build the package from a checkout:
+
+```bash
+nix build .#packages.x86_64-linux.default
+```
+
+On NixOS, the module can install the package and configure the Loupedeck udev
+permissions at the same time:
+
+```nix
+{
+  inputs.loupedeck-linux.url = "github:archfill/loupedeck-linux";
+
+  outputs = { nixpkgs, loupedeck-linux, ... }: {
+    nixosConfigurations.your-host = nixpkgs.lib.nixosSystem {
+      system = "x86_64-linux";
+      modules = [
+        loupedeck-linux.nixosModules.default
+        ({ pkgs, ... }: {
+          programs.loupedeck-linux = {
+            enable = true;
+            package = loupedeck-linux.packages.${pkgs.system}.default;
+          };
+        })
+      ];
+    };
+  };
+}
+```
+
+After rebuilding, reconnect the device and run `pnpm run device:doctor`.
+
+## Start The Desktop App
+
+Development:
+
+```bash
+nix develop -c pnpm run dev
+```
+
+Production build:
+
+```bash
+nix develop -c pnpm run build
+```
+
+The production desktop binary embeds the built React UI. It does not require a
+fixed web UI port.
+
+## Troubleshooting
+
+### Device Is Not Detected
+
+Run:
+
+```bash
+pnpm run device:doctor
+```
+
+If the device is missing:
+
+1. Confirm the USB device is connected.
+2. Reconnect the device after installing the udev rule.
+3. Confirm no official Loupedeck software is using the device.
+
+Manual USB check:
+
+```bash
+lsusb -d 2ec2:
+```
+
+### Device Node Exists But Access Fails
+
+Reinstall and reload the udev rule:
+
+```bash
+pnpm run device:setup:udev
+```
+
+Then reconnect the device. On some desktops, a full logout/login may be needed
+for seat permissions to refresh.
+
+On NixOS, apply the NixOS module and rebuild instead of writing the rule
+directly. `dialout` group ownership alone is not enough unless your user is in
+that group; the module uses `TAG+="uaccess"` so the active desktop session can
+open both the USB node and the tty node.
+
+### Tauri Build Fails With pkg-config Errors
+
+This means the current shell cannot see the native Linux libraries required by
+Tauri. Use the dev shell:
+
+```bash
+nix develop -c pnpm run build
+```
+
+Or install the non-Nix system packages listed above.
+
+### Stale Processes Hold The Device
+
+Stop stale app, sidecar, or development processes:
+
+```bash
+pnpm run kill
+```
+
+Reconnect the device and start again:
+
+```bash
+nix develop -c pnpm run dev
+```
+
+## Firmware Note
+
+Some firmware versions reported by upstream `foxxyz/loupedeck` users may not
+work reliably on Linux. If the USB device is visible and permissions are correct
+but connection still fails, check upstream firmware-related issues:
+
+- <https://github.com/foxxyz/loupedeck/issues>

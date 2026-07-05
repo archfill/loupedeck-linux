@@ -1,0 +1,118 @@
+{
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "close": "Close",
+    "clear": "Clear"
+  },
+  "app": {
+    "title": "Loupedeck Configuration",
+    "subtitle": "Edit your Loupedeck settings - Click components to edit, drag to reposition",
+    "deviceInfo": {
+      "title": "Device Information",
+      "type": "Type",
+      "grid": "Grid",
+      "knobs": "Knobs",
+      "buttons": "Buttons"
+    },
+    "devicePreview": {
+      "title": "Device Preview",
+      "addButton": "Add Button",
+      "dragHint": "(drag to reposition)"
+    },
+    "systemConstants": {
+      "title": "System Constants"
+    },
+    "saveStatus": {
+      "saving": "Saving...",
+      "saved": "Saved",
+      "error": "Save Error"
+    },
+    "alerts": {
+      "deleteConfirm": "Delete {{name}}?",
+      "gridFull": "Grid is full. No empty space available.",
+      "apiError": "Make sure the desktop app can access the local configuration service"
+    }
+  },
+  "settings": {
+    "title": "Settings",
+    "description": "Update global preferences",
+    "notifications": {
+      "label": "Notification overlay",
+      "description": "Show desktop notifications on the device"
+    }
+  },
+  "editor": {
+    "title": "Edit Component",
+    "icon": {
+      "label": "Icon",
+      "select": "Select Icon",
+      "selectButton": "Please select an icon",
+      "types": {
+        "none": "None",
+        "nerdfont": "NerdFont Icon",
+        "auto": "Auto Resolve (App Name)",
+        "image": "Image File"
+      },
+      "appNameHint": "App Name (appName)",
+      "appNameDescription": "Automatically set from command, but can be manually changed",
+      "current": "(current: {{appName}})",
+      "placeholder": "e.g. google-chrome, firefox"
+    },
+    "label": "Label",
+    "colors": {
+      "background": "Background Color",
+      "text": "Text Color",
+      "led": "LED Color"
+    },
+    "command": "Command",
+    "iconSize": "Icon Size: {{size}}px",
+    "position": {
+      "label": "Position (Read-only)",
+      "col": "Column",
+      "row": "Row",
+      "comingSoon": "Position editing is planned for phase 3"
+    },
+    "actions": {
+      "saveChanges": "Save Changes",
+      "delete": "Delete"
+    }
+  },
+  "iconPicker": {
+    "title": "Select Icon",
+    "searchPlaceholder": "Search... (e.g. play, music, wifi)",
+    "categories": {
+      "all": "All"
+    },
+    "noResults": "No matching icons found",
+    "iconCount": "{{count}} icons",
+    "tooltip": "{{name}}: {{keywords}}"
+  },
+  "preview": {
+    "pageSelector": "Page",
+    "pageActions": {
+      "add": "Add",
+      "delete": "Delete",
+      "editMeta": "Edit Info",
+      "deleteConfirm": "Are you sure you want to delete this page?"
+    },
+    "meta": {
+      "title": "Title",
+      "description": "Description",
+      "titlePlaceholder": "Enter page title",
+      "descriptionPlaceholder": "Enter page description",
+      "defaultTitle": "New Page"
+    },
+    "physicalButtons": {
+      "vol": "Volume",
+      "page": "Page",
+      "btn": "BTN {{id}}"
+    },
+    "screenSize": "{{width}} × {{height}}px"
+  }
+}

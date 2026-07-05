@@ -1,0 +1,30 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Loupedeck Linux",
+  "version": "0.0.1",
+  "identifier": "com.archfill.loupedeck-linux",
+  "build": {
+    "beforeDevCommand": "pnpm --filter @loupedeck-linux/frontend run dev",
+    "devUrl": "http://localhost:5173",
+    "beforeBuildCommand": "pnpm --filter @loupedeck-linux/frontend run build && pnpm --filter @loupedeck-linux/sidecar run build",
+    "frontendDist": "../frontend/dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "Loupedeck Linux",
+        "width": 1280,
+        "height": 900,
+        "minWidth": 960,
+        "minHeight": 640
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": false,
+    "targets": "all"
+  }
+}

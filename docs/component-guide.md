@@ -4,7 +4,7 @@
 
 ### Step 1: Create the Component Class
 
-Create a new file in `apps/backend/src/components/`:
+Create a new file in `apps/desktop/sidecar/src/components/`:
 
 ```typescript
 import type { VibrationUtil } from '../utils/vibration.ts'
@@ -54,7 +54,7 @@ export class MyComponent {
 
 ### Step 2: Define Configuration (Optional)
 
-If the component needs configuration, add to `apps/backend/src/config/configLoader.ts`:
+If the component needs configuration, add to `apps/desktop/sidecar/src/config/configLoader.ts`:
 
 ```typescript
 export interface MyComponentConfig {
@@ -68,7 +68,7 @@ export interface MyComponentConfig {
 
 ### Step 3: Register with GridLayout
 
-In `apps/backend/main.ts`:
+In `apps/desktop/sidecar/main.ts`:
 
 ```typescript
 import { MyComponent } from './src/components/MyComponent.ts'
@@ -129,7 +129,7 @@ cleanup(): void {
 
 ### Button
 
-**Location**: `apps/backend/src/components/Button.ts`
+**Location**: `apps/desktop/sidecar/src/components/Button.ts`
 
 App launcher button with icon and label.
 
@@ -144,7 +144,7 @@ App launcher button with icon and label.
 
 ### Clock
 
-**Location**: `apps/backend/src/components/Clock.ts`
+**Location**: `apps/desktop/sidecar/src/components/Clock.ts`
 
 Digital clock display with time and date.
 
@@ -157,7 +157,7 @@ Digital clock display with time and date.
 
 ### VolumeDisplay
 
-**Location**: `apps/backend/src/components/VolumeDisplay.ts`
+**Location**: `apps/desktop/sidecar/src/components/VolumeDisplay.ts`
 
 Volume indicator with progress bar (overlay component).
 
@@ -170,7 +170,7 @@ Volume indicator with progress bar (overlay component).
 
 ### MediaDisplay
 
-**Location**: `apps/backend/src/components/MediaDisplay.ts`
+**Location**: `apps/desktop/sidecar/src/components/MediaDisplay.ts`
 
 Media player info display (overlay component).
 
@@ -182,7 +182,7 @@ Media player info display (overlay component).
 
 ### WorkspaceButton
 
-**Location**: `apps/backend/src/components/WorkspaceButton.ts`
+**Location**: `apps/desktop/sidecar/src/components/WorkspaceButton.ts`
 
 Hyprland workspace switcher button.
 
@@ -190,7 +190,7 @@ Hyprland workspace switcher button.
 
 ### Text Utilities
 
-**Location**: `apps/backend/src/utils/textUtils.ts`
+**Location**: `apps/desktop/sidecar/src/utils/textUtils.ts`
 
 ```typescript
 import { autoSizeText } from '../utils/textUtils.ts'
@@ -202,7 +202,7 @@ ctx.fillText(text, x, y)
 
 ### Image Loading
 
-**Location**: `apps/backend/src/utils/imageLoader.ts`
+**Location**: `apps/desktop/sidecar/src/utils/imageLoader.ts`
 
 ```typescript
 import { loadImageFile, drawImage } from '../utils/imageLoader.ts'
@@ -213,7 +213,7 @@ drawImage(ctx, image, x, y, width, height, keepAspectRatio)
 
 ### Icon Resolution
 
-**Location**: `apps/backend/src/utils/iconResolver.ts`
+**Location**: `apps/desktop/sidecar/src/utils/iconResolver.ts`
 
 ```typescript
 import { IconResolver } from '../utils/iconResolver.ts'
@@ -225,7 +225,7 @@ const iconPath = await resolver.resolve('firefox')
 
 ## Vibration Patterns
 
-Available patterns in `apps/backend/src/config/constants.ts`:
+Available patterns in `apps/desktop/sidecar/src/config/constants.ts`:
 
 | Pattern   | Description        | Duration     |
 | --------- | ------------------ | ------------ |
