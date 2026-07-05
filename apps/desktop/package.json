@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "WEBKIT_DISABLE_DMABUF_RENDERER=1 tauri dev",
-    "build": "tauri build"
+    "build": "tauri build",
+    "build:appimage": "tauri build --verbose --bundles appimage --config src-tauri/tauri.appimage.conf.json"
   },
   "devDependencies": {
     "@tauri-apps/cli": "^2.11.4"

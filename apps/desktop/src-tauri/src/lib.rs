@@ -51,13 +51,36 @@ struct SidecarProcess {
 
 struct SidecarManager {
     process: Mutex<Option<SidecarProcess>>,
+    project_root: Mutex<Option<PathBuf>>,
 }
 
 impl SidecarManager {
     fn new() -> Self {
         Self {
             process: Mutex::new(None),
+            project_root: Mutex::new(None),
         }
+    }
+
+    fn set_project_root(&self, project_root: PathBuf) -> DesktopResult<()> {
+        let mut slot = self
+            .project_root
+            .lock()
+            .map_err(|_| DesktopError::Sidecar("project root lock was poisoned".to_string()))?;
+        *slot = Some(project_root);
+        Ok(())
+    }
+
+    fn project_root(&self) -> DesktopResult<PathBuf> {
+        if let Ok(root) = env::var("LOUPEDECK_PROJECT_ROOT") {
+            return Ok(PathBuf::from(root));
+        }
+
+        let slot = self
+            .project_root
+            .lock()
+            .map_err(|_| DesktopError::Sidecar("project root lock was poisoned".to_string()))?;
+        Ok(slot.clone().unwrap_or_else(repo_root))
     }
 
     fn status(&self) -> DesktopResult<Value> {
@@ -108,7 +131,7 @@ impl SidecarManager {
             }
         }
 
-        let project_root = repo_root();
+        let project_root = self.project_root()?;
         let mut command = sidecar_command(&project_root);
         let child = command
             .current_dir(&project_root)
@@ -235,7 +258,12 @@ fn spawn_sidecar_stdout_reader(stdout: std::process::ChildStdout) -> Receiver<Va
 fn sidecar_command(project_root: &Path) -> Command {
     let built_sidecar = project_root.join("apps/desktop/sidecar/dist/sidecar.js");
     if !cfg!(debug_assertions) && built_sidecar.exists() {
-        let mut command = Command::new("node");
+        let bundled_node = project_root.join("bin/node");
+        let mut command = if bundled_node.exists() {
+            Command::new(bundled_node)
+        } else {
+            Command::new("node")
+        };
         command.arg(built_sidecar);
         return command;
     }
@@ -243,6 +271,12 @@ fn sidecar_command(project_root: &Path) -> Command {
     let mut command = Command::new("pnpm");
     command.args(["--filter", "@loupedeck-linux/sidecar", "run", "sidecar"]);
     command
+}
+
+fn bundled_project_root(app: &tauri::App) -> Option<PathBuf> {
+    let resource_dir = app.path().resource_dir().ok()?;
+    let sidecar_path = resource_dir.join("apps/desktop/sidecar/dist/sidecar.js");
+    sidecar_path.exists().then_some(resource_dir)
 }
 
 fn repo_root() -> PathBuf {
@@ -535,6 +569,11 @@ pub fn run() {
                 let _ = window.set_title("Loupedeck Linux");
             }
             let sidecar = app.state::<SidecarManager>();
+            if let Some(project_root) = bundled_project_root(app) {
+                if let Err(error) = sidecar.set_project_root(project_root) {
+                    eprintln!("Failed to configure bundled sidecar path: {error}");
+                }
+            }
             if let Err(error) = sidecar.start() {
                 eprintln!("Failed to start sidecar: {error}");
             }
