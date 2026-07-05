@@ -143,7 +143,52 @@ Reconnect the device after installing the rule, then run:
 pnpm run device:doctor
 ```
 
-### Install Application
+### Run Or Install With Nix
+
+Run the packaged desktop app directly from the flake:
+
+```bash
+nix run github:archfill/loupedeck-linux
+```
+
+Install the package into your user profile:
+
+```bash
+nix profile install github:archfill/loupedeck-linux
+loupedeck-linux
+```
+
+On NixOS, use the module to install the app and manage device permissions
+together:
+
+```nix
+{
+  inputs.loupedeck-linux.url = "github:archfill/loupedeck-linux";
+
+  outputs = { nixpkgs, loupedeck-linux, ... }: {
+    nixosConfigurations.your-host = nixpkgs.lib.nixosSystem {
+      system = "x86_64-linux";
+      modules = [
+        loupedeck-linux.nixosModules.default
+        ({ pkgs, ... }: {
+          programs.loupedeck-linux = {
+            enable = true;
+            package = loupedeck-linux.packages.${pkgs.system}.default;
+          };
+        })
+      ];
+    };
+  };
+}
+```
+
+After rebuilding, reconnect the device and run:
+
+```bash
+pnpm run device:doctor
+```
+
+### Development Checkout
 
 ```bash
 # Clone repository
@@ -156,7 +201,7 @@ pnpm install
 # Device setup check
 pnpm run device:doctor
 
-# Start the desktop app
+# Start the desktop app from the checkout
 nix develop -c pnpm run dev
 ```
 
@@ -184,6 +229,7 @@ pnpm run device:doctor  # Check device, udev, and native dependencies
 
 ```bash
 nix develop -c pnpm run build
+nix build .#packages.x86_64-linux.default
 ```
 
 The production desktop binary embeds the built React UI and does not require a

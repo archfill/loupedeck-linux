@@ -126,6 +126,53 @@ The doctor checks:
 If `pkg-config` or WebKitGTK checks fail outside Nix, enter `nix develop` or
 install the missing distro packages.
 
+## Nix Package
+
+Run the packaged desktop app directly from the flake:
+
+```bash
+nix run github:archfill/loupedeck-linux
+```
+
+Install it into your user profile:
+
+```bash
+nix profile install github:archfill/loupedeck-linux
+loupedeck-linux
+```
+
+Build the package from a checkout:
+
+```bash
+nix build .#packages.x86_64-linux.default
+```
+
+On NixOS, the module can install the package and configure the Loupedeck udev
+permissions at the same time:
+
+```nix
+{
+  inputs.loupedeck-linux.url = "github:archfill/loupedeck-linux";
+
+  outputs = { nixpkgs, loupedeck-linux, ... }: {
+    nixosConfigurations.your-host = nixpkgs.lib.nixosSystem {
+      system = "x86_64-linux";
+      modules = [
+        loupedeck-linux.nixosModules.default
+        ({ pkgs, ... }: {
+          programs.loupedeck-linux = {
+            enable = true;
+            package = loupedeck-linux.packages.${pkgs.system}.default;
+          };
+        })
+      ];
+    };
+  };
+}
+```
+
+After rebuilding, reconnect the device and run `pnpm run device:doctor`.
+
 ## Start The Desktop App
 
 Development:

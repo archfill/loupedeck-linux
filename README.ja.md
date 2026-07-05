@@ -144,7 +144,51 @@ pnpm run device:setup:udev
 pnpm run device:doctor
 ```
 
-### アプリケーションのインストール
+### Nix で実行・インストール
+
+flake から package 済みデスクトップアプリを直接実行できます。
+
+```bash
+nix run github:archfill/loupedeck-linux
+```
+
+ユーザー profile にインストールする場合:
+
+```bash
+nix profile install github:archfill/loupedeck-linux
+loupedeck-linux
+```
+
+NixOS では module を使うと、アプリのインストールとデバイス権限設定をまとめて管理できます。
+
+```nix
+{
+  inputs.loupedeck-linux.url = "github:archfill/loupedeck-linux";
+
+  outputs = { nixpkgs, loupedeck-linux, ... }: {
+    nixosConfigurations.your-host = nixpkgs.lib.nixosSystem {
+      system = "x86_64-linux";
+      modules = [
+        loupedeck-linux.nixosModules.default
+        ({ pkgs, ... }: {
+          programs.loupedeck-linux = {
+            enable = true;
+            package = loupedeck-linux.packages.${pkgs.system}.default;
+          };
+        })
+      ];
+    };
+  };
+}
+```
+
+rebuild 後にデバイスを抜き差しし、診断を実行します。
+
+```bash
+pnpm run device:doctor
+```
+
+### 開発 checkout から起動
 
 ```bash
 # リポジトリをクローン
@@ -157,7 +201,7 @@ pnpm install
 # 実機セットアップ確認
 pnpm run device:doctor
 
-# デスクトップアプリを起動
+# checkout からデスクトップアプリを起動
 nix develop -c pnpm run dev
 ```
 
@@ -185,6 +229,7 @@ pnpm run device:doctor  # 実機、udev、native dependency の診断
 
 ```bash
 nix develop -c pnpm run build
+nix build .#packages.x86_64-linux.default
 ```
 
 production desktop binary は build 済み React UI を内包し、ローカル Web UI ポートを
