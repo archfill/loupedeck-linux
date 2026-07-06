@@ -131,14 +131,14 @@ cleanup(): void {
 
 **Location**: `apps/desktop/sidecar/src/components/Button.ts`
 
-App launcher button with icon and label.
+Command button with icon and label.
 
 **Options**:
 
 - `label` - Text label
 - `iconSize` - Icon dimensions
 - `backgroundColor` - Background color
-- `command` - Shell command to execute
+- `command` - Shell command or script path to execute
 - `vibration` - VibrationUtil instance
 - `vibrationPattern` - Pattern name ('tap', 'success', 'error')
 
@@ -180,12 +180,6 @@ Media player info display (overlay component).
 - Playback status
 - Auto-hides after timeout
 
-### WorkspaceButton
-
-**Location**: `apps/desktop/sidecar/src/components/WorkspaceButton.ts`
-
-Hyprland workspace switcher button.
-
 ## Drawing Utilities
 
 ### Text Utilities
@@ -219,8 +213,8 @@ drawImage(ctx, image, x, y, width, height, keepAspectRatio)
 import { IconResolver } from '../utils/iconResolver.ts'
 
 const resolver = new IconResolver()
-const iconPath = await resolver.resolve('firefox')
-// Returns: /usr/share/icons/.../firefox.png
+const iconPath = await resolver.resolve('media-playback-start')
+// Returns: /usr/share/icons/.../media-playback-start.png when available
 ```
 
 ## Vibration Patterns

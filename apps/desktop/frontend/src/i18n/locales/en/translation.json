@@ -60,9 +60,9 @@
         "image": "Image File"
       },
       "appNameHint": "App Name (appName)",
-      "appNameDescription": "Automatically set from command, but can be manually changed",
+      "appNameDescription": "Used only for icon auto-resolution. Leave blank or override it when the command is a script path.",
       "current": "(current: {{appName}})",
-      "placeholder": "e.g. google-chrome, firefox"
+      "placeholder": "e.g. firefox, org.kde.dolphin"
     },
     "label": "Label",
     "colors": {
@@ -70,7 +70,11 @@
       "text": "Text Color",
       "led": "LED Color"
     },
-    "command": "Command",
+    "command": {
+      "label": "Shell command or script path",
+      "placeholder": "e.g. playerctl play-pause or ~/.config/loupedeck-linux/actions/screenshot.sh",
+      "description": "Leave empty to keep this button unassigned. Complex desktop-specific workflows should live in a script."
+    },
     "iconSize": "Icon Size: {{size}}px",
     "position": {
       "label": "Position (Read-only)",

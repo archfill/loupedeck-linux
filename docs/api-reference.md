@@ -65,8 +65,8 @@ Returns component configuration only.
         {
           "type": "button",
           "position": { "col": 1, "row": 0 },
-          "appName": "firefox",
-          "command": "firefox"
+          "appName": "media-playback-start",
+          "command": "playerctl play-pause"
         }
       ]
     }

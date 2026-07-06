@@ -29,6 +29,15 @@ interface ComponentEditorProps {
   onDelete?: () => void
 }
 
+function deriveAppNameFromCommand(command: string): string | undefined {
+  const firstToken = command.trim().split(/\s+/)[0]
+  if (!firstToken) return undefined
+  if (firstToken.includes('=') || firstToken.includes('/') || firstToken.startsWith('~')) {
+    return undefined
+  }
+  return firstToken
+}
+
 // NerdFont Icon Selector Component - Enhanced
 interface NerdFontIconSelectorProps {
   currentIcon?: string
@@ -161,13 +170,15 @@ export function ComponentEditor({
       setEditedComponent(newComponent as ComponentConfig)
     }
 
-    // commandが変更された場合、appNameが空なら自動的にcommandの最初の単語をappNameに設定
+    // commandが変更された場合、appNameが空なら単純なコマンド名だけをアイコン候補にする
     if (path.join('.') === 'command' && typeof value === 'string') {
       const currentAppName = newComponent.appName as string | undefined
       if (!currentAppName) {
-        const firstWord = value.split(' ')[0]
-        newComponent.appName = firstWord
-        setEditedComponent(newComponent as ComponentConfig)
+        const appName = deriveAppNameFromCommand(value)
+        if (appName) {
+          newComponent.appName = appName
+          setEditedComponent(newComponent as ComponentConfig)
+        }
       }
     }
   }
@@ -408,15 +419,16 @@ export function ComponentEditor({
           {getField(['command']) !== undefined ? (
             <div className="space-y-2">
               <Label className="text-base font-semibold text-foreground">
-                {t('editor.command')}
+                {t('editor.command.label')}
               </Label>
               <Input
                 type="text"
                 value={getStringField(['command'])}
                 onChange={(e) => updateField(['command'], e.target.value)}
                 className="font-mono"
-                placeholder="command to execute"
+                placeholder={t('editor.command.placeholder')}
               />
+              <p className="text-xs text-muted-foreground">{t('editor.command.description')}</p>
             </div>
           ) : null}
 

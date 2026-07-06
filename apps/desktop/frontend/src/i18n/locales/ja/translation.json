@@ -60,9 +60,9 @@
         "image": "画像ファイル"
       },
       "appNameHint": "アプリ名（appName）",
-      "appNameDescription": "コマンドから自動設定されますが、手動で変更も可能です",
+      "appNameDescription": "アイコン自動解決だけに使います。command が script path の場合は空欄または手動指定してください",
       "current": "（現在: {{appName}}）",
-      "placeholder": "例: google-chrome, firefox"
+      "placeholder": "例: firefox, org.kde.dolphin"
     },
     "label": "ラベル",
     "colors": {
@@ -70,7 +70,11 @@
       "text": "テキスト色",
       "led": "LED色"
     },
-    "command": "コマンド",
+    "command": {
+      "label": "Shell command または script path",
+      "placeholder": "例: playerctl play-pause または ~/.config/loupedeck-linux/actions/screenshot.sh",
+      "description": "空欄の場合、このボタンは未割り当てです。desktop 固有の複雑な処理は script にしてください"
+    },
     "iconSize": "アイコンサイズ: {{size}}px",
     "position": {
       "label": "位置（読み取り専用）",

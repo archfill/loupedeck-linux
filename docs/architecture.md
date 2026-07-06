@@ -103,12 +103,12 @@ Extends `Screen` to manage multiple components:
 
 Coordinate between device events and system utilities:
 
-| Handler          | Knob   | Function                     |
-| ---------------- | ------ | ---------------------------- |
-| VolumeHandler    | knobTL | Volume control, mute toggle  |
-| MediaHandler     | knobCL | Next/previous track          |
-| PageHandler      | knobBL | Page navigation              |
-| WorkspaceHandler | -      | Hyprland workspace switching |
+| Handler               | Knob   | Function                           |
+| --------------------- | ------ | ---------------------------------- |
+| VolumeHandler         | knobTL | Volume control, mute toggle        |
+| MediaHandler          | knobCL | Next/previous track                |
+| PageHandler           | knobCL | Config-driven page navigation      |
+| PhysicalButtonHandler | -      | Configured page or command actions |
 
 ## Event Flow
 

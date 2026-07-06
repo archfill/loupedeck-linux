@@ -218,6 +218,72 @@ nix develop -c pnpm run build
 The production desktop binary embeds the built React UI. It does not require a
 fixed web UI port.
 
+## Custom Actions
+
+Loupedeck Linux does not try to know every desktop environment. Buttons execute
+the `command` value from your config, so desktop-specific behavior should be
+configured as a shell command or a script that exists on your system.
+
+The settings UI writes:
+
+```text
+~/.config/loupedeck-linux/config.json
+```
+
+Simple commands can be stored directly:
+
+```json
+{
+  "type": "button",
+  "position": { "col": 1, "row": 0 },
+  "appName": "media-playback-start",
+  "options": {
+    "label": "Play/Pause",
+    "bgColor": "#222222",
+    "borderColor": "#555555",
+    "textColor": "#ffffff"
+  },
+  "command": "playerctl play-pause"
+}
+```
+
+For anything more environment-specific, put the logic in a script and point the
+button at that script:
+
+```json
+{
+  "type": "button",
+  "position": { "col": 2, "row": 0 },
+  "options": {
+    "label": "Screenshot",
+    "bgColor": "#222222",
+    "borderColor": "#555555",
+    "textColor": "#ffffff"
+  },
+  "command": "~/.config/loupedeck-linux/actions/screenshot.sh"
+}
+```
+
+Examples you can adapt:
+
+```bash
+# Hyprland workspace
+hyprctl dispatch workspace 1
+
+# GNOME screenshot
+gnome-screenshot -i
+
+# KDE screenshot
+spectacle -r
+
+# MPRIS media control
+playerctl play-pause
+```
+
+`appName` is only used for icon auto-resolution. It does not have to match the
+shell command, and script-based actions can leave it empty or set it to a
+desktop icon name manually.
+
 AppImage build on a non-Nix Linux environment with the native Tauri packages
 installed:
 

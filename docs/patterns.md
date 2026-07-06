@@ -165,7 +165,7 @@ import { AppLauncher } from './src/utils/appLauncher.ts'
 const appLauncher = new AppLauncher(vibration)
 
 // Launch with feedback
-await appLauncher.launch('firefox')
+await appLauncher.launch('~/.config/loupedeck-linux/actions/open-browser.sh')
 // Success: vibrates 'success' pattern
 // Error: vibrates 'error' pattern
 ```
@@ -176,7 +176,7 @@ await appLauncher.launch('firefox')
 import { exec } from 'child_process'
 import { logger } from './src/utils/logger.ts'
 
-exec('firefox', (error) => {
+exec('~/.config/loupedeck-linux/actions/open-browser.sh', (error) => {
   if (error) {
     logger.error(`Failed to launch: ${error.message}`)
   }

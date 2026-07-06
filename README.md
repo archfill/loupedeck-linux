@@ -29,11 +29,11 @@ currently untested in this app.
 ## Portability Status
 
 Generic Linux desktop support is still in progress. The app currently targets
-Loupedeck Live S, and some bundled default actions are examples that only work
-when the matching desktop tools are installed, such as Firefox, Thunderbird,
-`playerctl`, `wpctl`, `grim`, and `wl-copy`. The built-in workspace page is also
-still tied to Hyprland behavior and may not work on other desktops or window
-managers yet.
+Loupedeck Live S. Optional media controls and user-added launcher or screenshot
+actions only work when the matching desktop tools are installed, such as
+`playerctl`, `wpctl`, `grim`, and `wl-copy`. Workspace, screenshot, and app
+launcher workflows should be configured as user commands or scripts that match
+your desktop environment.
 
 Personal helper scripts and local agent settings are intentionally not part of
 the supported setup. If an action does not work on your system today, edit
