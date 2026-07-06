@@ -1,6 +1,6 @@
 {
   "name": "loupedeck-linux",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "packageManager": "pnpm@11.10.0",
   "description": "Loupedeck Live S Linux controller desktop application",
   "license": "MIT",

@@ -1,6 +1,6 @@
 {
   "name": "@loupedeck-linux/sidecar",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Loupedeck Live S Linux controller sidecar",
   "license": "MIT",
   "private": true,
