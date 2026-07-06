@@ -26,6 +26,10 @@ import {
   VOLUME_DISPLAY_TIMEOUT_MS,
 } from '../config/constants.ts'
 
+function firstParam(value: string | string[] | undefined): string | undefined {
+  return Array.isArray(value) ? value[0] : value
+}
+
 /**
  * APIサーバークラス
  */
@@ -130,7 +134,7 @@ export class ApiServer {
 
     // アイコン解決（Web UIプレビュー用）
     this.app.get('/api/icon/resolve/:appName', (req: Request, res: Response) => {
-      const { appName } = req.params
+      const appName = firstParam(req.params.appName)
       if (!appName) {
         res.status(400).json({ error: 'appName is required' })
         return
@@ -331,7 +335,7 @@ export class ApiServer {
     this.app.delete('/api/pages/:pageNum', (req: Request, res: Response) => {
       let tempPath: string | null = null
       try {
-        const { pageNum } = req.params
+        const pageNum = firstParam(req.params.pageNum)
         if (!pageNum) {
           res.status(400).json({
             success: false,
@@ -413,7 +417,7 @@ export class ApiServer {
     this.app.put('/api/pages/:pageNum/meta', (req: Request, res: Response) => {
       let tempPath: string | null = null
       try {
-        const { pageNum } = req.params
+        const pageNum = firstParam(req.params.pageNum)
         const { title, description } = req.body
         if (!pageNum) {
           res.status(400).json({

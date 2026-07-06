@@ -77,11 +77,29 @@ export class GridLayout extends Screen {
    * @param page - ページ番号
    */
   clearPage(page: number): void {
-    if (this.pages.has(page)) {
-      this.pages.set(page, [])
-      this.pageMaps.set(page, new Map())
-      logger.debug(`Cleared page ${page}`)
+    this.pages.set(page, [])
+    this.pageMaps.set(page, new Map())
+    logger.debug(`Cleared page ${page}`)
+  }
+
+  /**
+   * レイアウトが管理するページ一覧を置き換える
+   * @param pageNumbers - 管理対象のページ番号
+   */
+  resetPages(pageNumbers: number[]): void {
+    this.pages = new Map()
+    this.pageMaps = new Map()
+
+    for (const pageNumber of pageNumbers) {
+      this.pages.set(pageNumber, [])
+      this.pageMaps.set(pageNumber, new Map())
     }
+
+    if (!this.pages.has(this.currentPage)) {
+      this.currentPage = pageNumbers[0] ?? 1
+    }
+
+    logger.debug(`Reset pages: ${pageNumbers.join(', ')}`)
   }
 
   /**

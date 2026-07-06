@@ -6,7 +6,6 @@
 
 import { AppLauncher } from '../utils/appLauncher.js'
 import { GridLayout } from '../components/GridLayout.js'
-import { WorkspaceButton } from '../components/WorkspaceButton.js'
 import { VibrationUtil } from '../utils/vibration.js'
 import type { ButtonComponent } from '../config/configLoader.js'
 import { logger } from '../utils/logger.js'
@@ -20,7 +19,6 @@ export class PhysicalButtonHandler {
   constructor(
     private appLauncher: AppLauncher,
     private layout: GridLayout,
-    private workspaceButtons: WorkspaceButton[],
     private vibration: VibrationUtil | null,
     private buttonConfigs: Map<number, ButtonComponent>
   ) {}
@@ -49,7 +47,7 @@ export class PhysicalButtonHandler {
     // 特殊構文: page:N
     if (command.startsWith('page:')) {
       const pageNum = Number.parseInt(command.slice(5), 10)
-      if (Number.isNaN(pageNum) || pageNum < 1 || pageNum > 2) {
+      if (Number.isNaN(pageNum) || !this.layout.getAllPages().includes(pageNum)) {
         logger.warn(`無効なページ番号: ${command}`)
         if (this.vibration) {
           await this.vibration.vibratePattern(VIBRATION_PATTERNS.ERROR)
@@ -67,7 +65,7 @@ export class PhysicalButtonHandler {
   /**
    * ページを切り替える
    *
-   * @param pageNum - ページ番号 (1 または 2)
+   * @param pageNum - ページ番号
    */
   private async switchPage(pageNum: number): Promise<void> {
     await this.layout.switchPage(pageNum)
@@ -77,14 +75,6 @@ export class PhysicalButtonHandler {
     }
 
     logger.info(`ページ${pageNum}に切り替えました`)
-
-    // ページ2の場合はワークスペースボタンの状態を更新
-    if (pageNum === 2) {
-      for (const wsButton of this.workspaceButtons) {
-        await wsButton.updateActiveState()
-      }
-      await this.layout.update()
-    }
   }
 
   /**

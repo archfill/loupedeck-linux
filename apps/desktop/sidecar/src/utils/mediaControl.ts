@@ -19,6 +19,8 @@ export interface MediaMetadata {
  * playerctlを使用してメディアプレーヤーを制御
  */
 export class MediaControl {
+  private available = false
+
   /**
    * 初期化
    */
@@ -26,10 +28,11 @@ export class MediaControl {
     try {
       // playerctlが利用可能か確認
       await execAsync('which playerctl')
+      this.available = true
       logger.info('✓ MediaControl: playerctlが見つかりました')
     } catch {
+      this.available = false
       logger.warn('⚠ MediaControl: playerctlが見つかりません')
-      throw new Error('playerctlがインストールされていません')
     }
   }
 
@@ -38,6 +41,10 @@ export class MediaControl {
    * @returns 現在の状態（'Playing' または 'Paused'）
    */
   async togglePlayPause(): Promise<'Playing' | 'Paused' | 'Stopped'> {
+    if (!this.available) {
+      return 'Stopped'
+    }
+
     try {
       await execAsync('playerctl play-pause')
       const status = await this.getStatus()
@@ -53,6 +60,10 @@ export class MediaControl {
    * 次のトラックへ
    */
   async next(): Promise<void> {
+    if (!this.available) {
+      return
+    }
+
     try {
       await execAsync('playerctl next')
       logger.info('メディア: 次のトラック')
@@ -65,6 +76,10 @@ export class MediaControl {
    * 前のトラックへ
    */
   async previous(): Promise<void> {
+    if (!this.available) {
+      return
+    }
+
     try {
       await execAsync('playerctl previous')
       logger.info('メディア: 前のトラック')
@@ -78,6 +93,10 @@ export class MediaControl {
    * @returns 'Playing', 'Paused', 'Stopped'
    */
   async getStatus(): Promise<'Playing' | 'Paused' | 'Stopped'> {
+    if (!this.available) {
+      return 'Stopped'
+    }
+
     try {
       const { stdout } = await execAsync('playerctl status')
       const status = stdout.trim()
@@ -95,6 +114,15 @@ export class MediaControl {
    * @returns { title, artist, album, status }
    */
   async getMetadata(): Promise<MediaMetadata> {
+    if (!this.available) {
+      return {
+        title: 'メディアなし',
+        artist: '',
+        album: '',
+        status: 'Stopped',
+      }
+    }
+
     try {
       const [title, artist, album, status] = await Promise.all([
         execAsync('playerctl metadata title').then((r) => r.stdout.trim()),

@@ -1,10 +1,7 @@
 import { LoupedeckDevice, type ConnectionState } from '../device/LoupedeckDevice.ts'
-import type { VibrationUtil } from '../utils/vibration.ts'
 import { GridLayout } from '../components/GridLayout.ts'
-import { WorkspaceButton } from '../components/WorkspaceButton.ts'
 import { VolumeControl } from '../utils/volumeControl.ts'
 import { MediaControl } from '../utils/mediaControl.ts'
-import { HyprlandControl } from '../utils/hyprlandControl.ts'
 import { VolumeHandler } from '../handlers/VolumeHandler.ts'
 import { PageHandler } from '../handlers/PageHandler.ts'
 import { PhysicalButtonHandler } from '../handlers/PhysicalButtonHandler.ts'
@@ -45,12 +42,9 @@ export type DeviceRuntime = {
  */
 async function buildComponents(
   layout: GridLayout,
-  deps: ComponentDependencies,
-  hyprlandControl: HyprlandControl,
-  vibration: VibrationUtil | null
+  deps: ComponentDependencies
 ): Promise<{
   componentsMap: Map<string, GeneratedComponent>
-  workspaceButtons: WorkspaceButton[]
   volumeDisplay: VolumeDisplay | undefined
   mediaDisplay: MediaDisplay | undefined
   notificationDisplay: NotificationDisplay | undefined
@@ -62,52 +56,42 @@ async function buildComponents(
   const pages = convertToPageConfig(config)
 
   const componentsMap = new Map<string, GeneratedComponent>()
-  const componentsList: GeneratedComponent[] = []
 
   const page1 = pages[1]
   if (!page1) {
     throw new Error('ページ1の設定が見つかりません')
   }
 
-  // ページ1のコンポーネントを生成
-  logger.info('ページ1のコンポーネントを動的生成中...')
-  for (const [name, config] of Object.entries(page1.components)) {
-    try {
-      const component = createComponent(name, config, deps)
-      componentsMap.set(name, component)
-      componentsList.push(component)
-      logger.debug(`✓ コンポーネント生成: ${name}`)
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error)
-      logger.warn(`⚠️ コンポーネント生成失敗: ${name} - ${message}`)
-    }
-  }
+  const configPageNumbers = Object.keys(pages)
+    .map((pageNum) => Number(pageNum))
+    .sort((a, b) => a - b)
 
-  // レイアウトをクリアして新しいコンポーネントを追加
-  layout.clearPage(1)
-  layout.addComponents(componentsList, 1)
+  layout.resetPages(configPageNumbers)
 
-  // ページ2: ワークスペース切替ボタン
-  const workspaceButtons: WorkspaceButton[] = []
-  layout.clearPage(2)
+  for (const pageNum of configPageNumbers) {
+    const page = pages[pageNum]
+    if (!page) continue
 
-  for (let i = 1; i <= 10; i++) {
-    let col: number
-    let row: number
+    const componentsList: GeneratedComponent[] = []
+    logger.info(`ページ${pageNum}のコンポーネントを動的生成中...`)
 
-    if (i <= 5) {
-      col = i - 1
-      row = 1
-    } else {
-      col = i - 6
-      row = 2
+    for (const [name, config] of Object.entries(page.components)) {
+      try {
+        const component = createComponent(name, config, deps)
+        componentsMap.set(`${pageNum}:${name}`, component)
+        if (!componentsMap.has(name)) {
+          componentsMap.set(name, component)
+        }
+        componentsList.push(component)
+        logger.debug(`✓ コンポーネント生成: ${name}`)
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error)
+        logger.warn(`⚠️ コンポーネント生成失敗: ${name} - ${message}`)
+      }
     }
 
-    const wsButton = new WorkspaceButton(col, row, i, hyprlandControl, {
-      vibration: vibration,
-    })
-    workspaceButtons.push(wsButton)
-    layout.addComponent(wsButton, 2)
+    layout.clearPage(pageNum)
+    layout.addComponents(componentsList, pageNum)
   }
 
   // 特殊なコンポーネントの参照を取得
@@ -117,11 +101,16 @@ async function buildComponents(
     NotificationDisplay | undefined
 
   logger.info('配置完了:')
-  logger.info('\n【ページ1: アプリケーション】')
-  for (const [name, config] of Object.entries(page1.components)) {
-    if ('position' in config) {
-      const label = 'options' in config && 'label' in config.options ? config.options.label : name
-      logger.info(`  - ${label}: (列${config.position.col}, 行${config.position.row})`)
+  for (const pageNum of configPageNumbers) {
+    const page = pages[pageNum]
+    if (!page) continue
+
+    logger.info(`\n【ページ${pageNum}: ${page.meta.title}】`)
+    for (const [name, config] of Object.entries(page.components)) {
+      if ('position' in config) {
+        const label = 'options' in config && 'label' in config.options ? config.options.label : name
+        logger.info(`  - ${label}: (列${config.position.col}, 行${config.position.row})`)
+      }
     }
   }
 
@@ -132,7 +121,6 @@ async function buildComponents(
 
   return {
     componentsMap,
-    workspaceButtons,
     volumeDisplay,
     mediaDisplay,
     notificationDisplay,
@@ -154,9 +142,6 @@ export function createDeviceRuntime(): DeviceRuntime {
 
       const mediaControl = new MediaControl()
       await mediaControl.initialize()
-
-      const hyprlandControl = new HyprlandControl()
-      await hyprlandControl.initialize()
 
       const notificationListener = new NotificationListener()
 
@@ -249,13 +234,8 @@ export function createDeviceRuntime(): DeviceRuntime {
         }
 
         // コンポーネントを生成してレイアウトに追加
-        const initialBuildResult = await buildComponents(
-          currentLayout,
-          deps,
-          hyprlandControl,
-          vibration
-        )
-        let { componentsMap, workspaceButtons } = initialBuildResult
+        const initialBuildResult = await buildComponents(currentLayout, deps)
+        let { componentsMap } = initialBuildResult
         const { physicalButtonConfigs } = initialBuildResult
         currentVolumeDisplay = initialBuildResult.volumeDisplay
         currentMediaDisplay = initialBuildResult.mediaDisplay
@@ -304,15 +284,11 @@ export function createDeviceRuntime(): DeviceRuntime {
           logger.warn('⚠️ notificationDisplay が見つかりません')
         }
 
-        logger.info('\n【ページ2: ワークスペース切替】')
-        logger.info('  - 中段（行1）: ワークスペース1-5')
-        logger.info('  - 下段（行2）: ワークスペース6-10')
         logger.info('\n【ノブ操作】')
         logger.info('  - 上段ノブ（knobTL）: 回転で音量調整、クリックでミュート切替')
-        logger.info('  - 中段ノブ（knobCL）: 回転でページ切替、クリックでページ1に戻る')
+        logger.info('  - 中段ノブ（knobCL）: 回転でページ切替、クリックで最初のページに戻る')
         logger.info('\n【ページ切替】')
-        logger.info('  - 物理ボタン0（左下）: ページ1へ切り替え')
-        logger.info('  - 物理ボタン1（左下から2番目）: ページ2へ切り替え')
+        logger.info('  - 物理ボタン: 設定ファイルの page:N コマンドでページ切替')
         logger.info('\n(Ctrl+C で終了)\n')
 
         // 自動更新を開始
@@ -337,13 +313,12 @@ export function createDeviceRuntime(): DeviceRuntime {
         )
 
         // ページハンドラーを作成
-        let pageHandler = new PageHandler(currentLayout, workspaceButtons, vibration)
+        let pageHandler = new PageHandler(currentLayout, vibration)
 
         // 物理ボタンハンドラーを作成
         let physicalButtonHandler = new PhysicalButtonHandler(
           appLauncher,
           currentLayout,
-          workspaceButtons,
           vibration,
           physicalButtonConfigs
         )
@@ -406,9 +381,8 @@ export function createDeviceRuntime(): DeviceRuntime {
             }
 
             // コンポーネントを再生成
-            const result = await buildComponents(currentLayout, deps, hyprlandControl, vibration)
+            const result = await buildComponents(currentLayout, deps)
             componentsMap = result.componentsMap
-            workspaceButtons = result.workspaceButtons
             currentVolumeDisplay = result.volumeDisplay
             currentMediaDisplay = result.mediaDisplay
             currentNotificationDisplay = result.notificationDisplay
@@ -427,11 +401,10 @@ export function createDeviceRuntime(): DeviceRuntime {
               currentLayout,
               vibration
             )
-            pageHandler = new PageHandler(currentLayout, workspaceButtons, vibration)
+            pageHandler = new PageHandler(currentLayout, vibration)
             physicalButtonHandler = new PhysicalButtonHandler(
               appLauncher,
               currentLayout,
-              workspaceButtons,
               vibration,
               updatedPhysicalButtonConfigs
             )

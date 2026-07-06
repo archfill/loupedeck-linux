@@ -2,7 +2,6 @@ import { logger } from '../utils/logger.js'
 import { KNOB_IDS, VIBRATION_PATTERNS } from '../config/constants.ts'
 import type { GridLayout } from '../components/GridLayout.ts'
 import type { VibrationUtil } from '../utils/vibration.ts'
-import type { WorkspaceButton } from '../components/WorkspaceButton.ts'
 
 /**
  * ページ切替イベントハンドラー
@@ -11,20 +10,13 @@ import type { WorkspaceButton } from '../components/WorkspaceButton.ts'
 export class PageHandler {
   private layout: GridLayout
   private vibration: VibrationUtil | null
-  private workspaceButtons: WorkspaceButton[]
 
   /**
    * @param layout - グリッドレイアウト
-   * @param workspaceButtons - ワークスペースボタンの配列
    * @param vibration - 振動ユーティリティ（オプショナル）
    */
-  constructor(
-    layout: GridLayout,
-    workspaceButtons: WorkspaceButton[],
-    vibration: VibrationUtil | null = null
-  ) {
+  constructor(layout: GridLayout, vibration: VibrationUtil | null = null) {
     this.layout = layout
-    this.workspaceButtons = workspaceButtons
     this.vibration = vibration
   }
 
@@ -38,30 +30,30 @@ export class PageHandler {
 
     // knobCL（中央左のノブ）をページ切替に使用
     if (id === KNOB_IDS.CENTER_LEFT) {
+      const pages = this.layout.getAllPages()
+      if (pages.length <= 1) {
+        logger.info('切り替え可能なページがありません')
+        if (this.vibration) {
+          await this.vibration.vibratePattern(VIBRATION_PATTERNS.WARNING)
+        }
+        return
+      }
+
       const currentPage = this.layout.getCurrentPage()
-      let targetPage: number
+      const currentIndex = Math.max(0, pages.indexOf(currentPage))
+      const direction = delta > 0 ? 1 : -1
+      const targetIndex = (currentIndex + direction + pages.length) % pages.length
+      const targetPage = pages[targetIndex] ?? pages[0]!
 
       if (delta > 0) {
-        // 時計回り：次のページ
-        targetPage = currentPage === 1 ? 2 : 1
         logger.info(`📄 次のページ: ${targetPage}`)
       } else {
-        // 反時計回り：前のページ
-        targetPage = currentPage === 1 ? 2 : 1
         logger.info(`📄 前のページ: ${targetPage}`)
       }
 
       try {
         // ページを切り替え
         await this.layout.switchPage(targetPage)
-
-        // ページ2に切り替えた時は、ワークスペースボタンのアクティブ状態を更新
-        if (targetPage === 2) {
-          for (const wsButton of this.workspaceButtons) {
-            await wsButton.updateActiveState()
-          }
-          await this.layout.update()
-        }
 
         // 振動フィードバック
         if (this.vibration) {
@@ -88,9 +80,10 @@ export class PageHandler {
     if (id === KNOB_IDS.CENTER_LEFT) {
       logger.info('🔘 ノブ knobCL クリック - ページ1に戻る')
 
+      const firstPage = this.layout.getAllPages()[0] ?? 1
       const currentPage = this.layout.getCurrentPage()
-      if (currentPage === 1) {
-        logger.info('既にページ1です')
+      if (currentPage === firstPage) {
+        logger.info(`既にページ${firstPage}です`)
         if (this.vibration) {
           await this.vibration.vibratePattern(VIBRATION_PATTERNS.WARNING)
         }
@@ -98,15 +91,15 @@ export class PageHandler {
       }
 
       try {
-        // ページ1に切り替え
-        await this.layout.switchPage(1)
+        // 最初のページに切り替え
+        await this.layout.switchPage(firstPage)
 
         // 振動フィードバック（SUCCESS）
         if (this.vibration) {
           await this.vibration.vibratePattern(VIBRATION_PATTERNS.SUCCESS)
         }
 
-        logger.info('✓ ページ1に戻りました')
+        logger.info(`✓ ページ${firstPage}に戻りました`)
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error)
         logger.error(`ページ切り替えに失敗: ${message}`)
